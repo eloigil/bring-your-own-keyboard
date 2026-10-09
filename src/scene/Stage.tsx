@@ -23,7 +23,7 @@ export function Stage({ children, onPointerMissed }: { children: ReactNode; onPo
         cellColor="#bdb7c8"
         sectionSize={100}
         sectionThickness={1.4}
-        sectionColor="#a39cb2"
+        sectionColor="#b8b2c5"
         fadeDistance={330}
         fadeStrength={1.3}
         fadeFrom={0}

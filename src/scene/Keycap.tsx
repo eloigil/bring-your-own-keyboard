@@ -13,6 +13,17 @@ const RED = new THREE.Color('#e5484d')
 const ACCENT = new THREE.Color('#5b5bd6')
 
 // Keycap and switch geometries are shared between keys with the same shape (a TKL needs only a handful).
+/**
+ * A see-through cap's base colour also tints the light passing through it (three multiplies transmission by it),
+ * so the clearer the plastic, the closer to white it stays — otherwise the colour is applied twice and goes murky.
+ * Frosted (half transmission) keeps its full milky colour; clear only gets a touch of it.
+ */
+function bodyColor(color: string, material: KeycapMaterial) {
+  const g = KEYCAP_MATERIALS[material].glass
+  if (!g) return color
+  return '#' + new THREE.Color('#ffffff').lerp(new THREE.Color(color), Math.min(1, (1 - g.transmission) * 2)).getHexString()
+}
+
 const capCache = new Map<string, THREE.BufferGeometry>()
 function capGeometry(w: number, d: number, height: number, tilt: number, inset: number) {
   const key = [w, d, height, tilt, inset].map((v) => v.toFixed(2)).join()
@@ -68,8 +79,7 @@ export function Keycap({ k, family, color, profile, row, stemColor, housingColor
   const invalidate = useThree((s) => s.invalidate)
   const tint = (t: number) => {
     if (!mat.current) return
-    const g = KEYCAP_MATERIALS[material].glass
-    const c = mat.current.color.set(g && g.transmission >= 1 ? '#ffffff' : color) // fully clear caps carry their colour only as a tint
+    const c = mat.current.color.set(bodyColor(color, material))
     if (selected) c.lerp(ACCENT, 0.35)
     if (invalid) c.lerp(RED, 0.45 + 0.35 * Math.sin(t * 5))
   }
@@ -90,7 +100,7 @@ export function Keycap({ k, family, color, profile, row, stemColor, housingColor
           // travelling through it; reflections come from the scene environment, scaled up only on these caps
           <meshPhysicalMaterial
             ref={mat}
-            color={m.glass.transmission < 1 ? color : '#ffffff'}
+            color={bodyColor(color, material)}
             transmission={m.glass.transmission}
             thickness={4}
             ior={1.58}

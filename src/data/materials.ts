@@ -37,6 +37,6 @@ export const KEYCAP_MATERIALS: Record<KeycapMaterial, KeycapLook> = {
     note: 'Polycarbonate: see-through to the switch and LED.',
     roughness: 0.07,
     glow: 0.4,
-    glass: { transmission: 1, tintDistance: 7, reflections: 14, clearcoat: 1 },
+    glass: { transmission: 0.9, tintDistance: 7, reflections: 14, clearcoat: 1 },
   },
 }

@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber'
-import { ContactShadows, OrbitControls } from '@react-three/drei'
+import { ContactShadows, Grid, OrbitControls } from '@react-three/drei'
 import type { ReactNode } from 'react'
 
 /** Neutral studio: soft light-grey backdrop, key + fill light, contact shadow. No remote HDR, works offline. */
@@ -14,6 +14,20 @@ export function Stage({ children, onPointerMissed }: { children: ReactNode; onPo
       </directionalLight>
       <directionalLight position={[200, 120, -150]} intensity={0.6} />
       {children}
+      {/* scale reference: 1 cm cells, 10 cm sections, fading out in a circle around the board (fadeFrom 0 = from the origin) */}
+      <Grid
+        position={[0, -0.1, 0]}
+        args={[1200, 1200]}
+        cellSize={10}
+        cellThickness={0.8}
+        cellColor="#bdb7c8"
+        sectionSize={100}
+        sectionThickness={1.4}
+        sectionColor="#8f879f"
+        fadeDistance={330}
+        fadeStrength={1.3}
+        fadeFrom={0}
+      />
       <ContactShadows position={[0, -0.2, 0]} scale={700} blur={2.6} opacity={0.35} far={60} resolution={1024} />
       <OrbitControls enableDamping makeDefault maxPolarAngle={Math.PI / 2.1} minDistance={120} maxDistance={900} />
     </Canvas>

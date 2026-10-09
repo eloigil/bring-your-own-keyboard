@@ -30,6 +30,7 @@ Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 
 ## Look and Feel
 - A simple, neutral environment like ShipShaper's for the MVP. Reference: ShipShaper.
+- A floor grid under the board for scale (1 cm cells, 10 cm sections), fading out in a circle around the board.
 - The overall goal is the Tiny Glade feel (simple actions, satisfying responses), not an engineering tool. Source: `scope.md > Inspiration & Identity`.
 - No other visual preferences (fonts, palette) were established; the spec should take its cue from ShipShaper.
 

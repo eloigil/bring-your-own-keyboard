@@ -95,19 +95,22 @@ export interface Pocket {
   dir: Pt
   /** How far the pocket reaches in from the mouth (mm). */
   depth: number
-  /** Current fill (mm), grown from the keys outward: 0 = open, depth = flush. The case edge sits depth - d in from the mouth. */
-  d: number
+  /** Current fill as a fraction, grown from the keys outward: 0 = open, 1 = flush. */
+  t: number
 }
 
-export interface PocketFill { x: number; y: number; d: number }
+/** A saved orb setting: `t` (0 = open, 1 = flush) for the pocket whose mouth is near (x, y). */
+export interface PocketFill { x: number; y: number; t: number }
 
 const MIN_POCKET_AREA = 40 // mm²; smaller dips are just rounding noise
+const AUTO_FILL_DEPTH = 8 // mm; shallower cut-ins are filled flush and get no orb
 const ANCHOR_MATCH = 19 // mm; a saved fill belongs to the pocket whose mouth is this close
 
 /**
  * The case outline plus its pockets. Each body (a split half) is handled on its own:
  * snug = keys + bezel with internal gaps always filled; each pocket between snug and the
- * convex hull is filled from its mouth by its saved depth, or by a smooth default (closing).
+ * convex hull is filled by growing the keys' outline outward into it (so no voids get trapped):
+ * by the orb's saved fraction, or by a smooth default (closing). Shallow cut-ins are always filled.
  */
 export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [], margin = BEZEL): { outline: Poly[]; pockets: Pocket[] } {
   if (!keys.length) return { outline: [], pockets: [] }
@@ -136,26 +139,32 @@ export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [],
       const deep = poly.reduce((m, q) => (Math.abs(depthOf(q)) > Math.abs(depthOf(m)) ? q : m), poly[0])
       if (depthOf(deep) < 0) n = [-n[0], -n[1]]
       const depth = Math.abs(depthOf(deep))
+      if (depth < AUTO_FILL_DEPTH) {
+        parts.push(pocketPath)
+        continue
+      }
+      // how far the keys' outline must grow to cover the whole pocket
+      const bodyPoly = fromPath(body)
+      const reach = Math.max(...poly.map((q) => Math.min(...bodyPoly.map((a, i) => segDist(q, a, bodyPoly[(i + 1) % bodyPoly.length])))))
 
       const saved = fills
         .map((f) => ({ f, dist: Math.hypot(f.x - mouth[0], f.y - mouth[1]) }))
         .filter((m) => m.dist < ANCHOR_MATCH)
         .sort((a, b) => a.dist - b.dist)[0]?.f
-      let fill: Path[], d: number
+      let fill: Path[], t: number
       if (saved) {
-        d = Math.min(saved.d, depth)
-        // fill grows out from the keys: everything except the band of width (depth - d) next to the mouth
-        fill = d <= 0 ? [] : difference([pocketPath], difference(hullPath, offset(hullPath, -(depth - d))))
+        t = Math.max(0, Math.min(1, saved.t))
+        fill = t <= 0 ? [] : t >= 1 ? [pocketPath] : intersection([pocketPath], offset([body], reach * t))
       } else {
         fill = intersection([pocketPath], smooth)
-        d = depth * Math.min(1, pathsArea(fill) / Math.abs(area(poly)))
+        t = Math.min(1, pathsArea(fill) / Math.abs(area(poly)))
       }
       parts.push(...fill)
-      pockets.push({ mouth, dir: n, depth, d })
+      pockets.push({ mouth, dir: n, depth, t })
     }
   }
-  // light closing seals the seams between body and fills
-  const outline = offset(offset(union(parts.map(fromPath)), 1), -1).map(fromPath)
+  // light closing seals the seams between body and fills; enclosed voids are always filled
+  const outline = offset(offset(union(parts.map(fromPath)), 1), -1).map(fromPath).filter((r) => area(r) > 0)
   return { outline, pockets }
 }
 

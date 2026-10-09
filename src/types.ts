@@ -35,8 +35,8 @@ export interface Design {
     snap: 'snap' | 'free'
     ledEffect: LedEffect
   }
-  /** Pocket depths set by orbs, anchored at the pocket's mouth (mm, layout coords). */
-  pocketFills: { x: number; y: number; d: number }[]
+  /** Pocket fills set by orbs (t: 0 = open, 1 = flush), anchored at the pocket's mouth (mm, layout coords). */
+  pocketFills: { x: number; y: number; t: number }[]
 }
 
 export type Step = 'Layout' | 'Components' | 'LEDs' | 'Export'

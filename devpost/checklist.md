@@ -127,3 +127,4 @@ Activity mode:
 - Case outline now fills gaps between key groups and smooths pockets per body (closing, CLOSE = 30 mm) — checkpoint 1: the learner saw odd gaps and a thin slot beside the arrow cluster; tight outline-following looked unreal there.
 - Added per-pocket fill orbs to slice 3 (PRD Layout Step, spec Case Geometry/Scene/Data Model) — learner chose per-pocket control over a single global one; replaces the 'deleting a corner key leaves a notch' criterion with orb-controlled depth.
 - Case walls use creased normals — curved walls showed vertical banding from flat per-face shading.
+- Pocket fill now grows the keys' outline outward by a 0–1 fraction (was a band measured from the mouth), enclosed voids are dropped, and cut-ins under 8 mm auto-fill with no orb — checkpoint 2: partial fills trapped a void so the plate overhung the wall, and tiny cut-ins couldn't be adjusted.

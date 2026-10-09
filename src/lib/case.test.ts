@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { area, caseMesh, caseOutline, caseShape, contains, keyCorners } from './case'
+import { area, caseMesh, caseOutline, caseShape, contains, keyCorners, type PocketFill } from './case'
 import { alice, split, tkl } from './layout'
 
 describe('caseOutline', () => {
@@ -57,29 +57,60 @@ describe('caseMesh', () => {
   })
 })
 
+function distToOutline(polys: [number, number][][], [px, py]: [number, number]) {
+  let m = Infinity
+  for (const r of polys)
+    for (let i = 0; i < r.length; i++) {
+      const [ax, ay] = r[i], [bx, by] = r[(i + 1) % r.length]
+      const dx = bx - ax, dy = by - ay
+      const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1)))
+      m = Math.min(m, Math.hypot(px - ax - t * dx, py - ay - t * dy))
+    }
+  return m
+}
+
 describe('pockets', () => {
   const keys = tkl()
   const pause = keys.find((k) => k.legend === 'Pause')!
   const center: [number, number] = [(pause.x + 0.5) * 19.05, (pause.y + 0.5) * 19.05]
   const without = keys.filter((k) => k !== pause)
-  const pocketAt = (fills: { x: number; y: number; d: number }[] = []) =>
+  const pocketAt = (fills: PocketFill[] = []) =>
     caseShape(without, 'MX', fills).pockets.find((p) => Math.hypot(p.mouth[0] - center[0], p.mouth[1] - center[1]) < 30)!
 
   it('finds a pocket where a corner key was removed', () => {
     expect(pocketAt()).toBeDefined()
-    expect(pocketAt().depth).toBeGreaterThan(5)
   })
 
-  it('opens the pocket at d=0 and fills it flush at d=depth', () => {
-    const p = pocketAt()
-    const open = caseShape(without, 'MX', [{ x: p.mouth[0], y: p.mouth[1], d: 0 }]).outline
-    const flush = caseShape(without, 'MX', [{ x: p.mouth[0], y: p.mouth[1], d: p.depth }]).outline
-    expect(contains(open, center)).toBe(false)
-    expect(contains(flush, center)).toBe(true)
+  it('opens the pocket at t=0 and fills it flush at t=1', () => {
+    const { mouth } = pocketAt()
+    expect(contains(caseShape(without, 'MX', [{ x: mouth[0], y: mouth[1], t: 0 }]).outline, center)).toBe(false)
+    expect(contains(caseShape(without, 'MX', [{ x: mouth[0], y: mouth[1], t: 1 }]).outline, center)).toBe(true)
   })
 
-  it('reports the saved depth on the matching pocket', () => {
+  it('reports the saved fill on the matching pocket', () => {
     const p = pocketAt()
-    expect(pocketAt([{ x: p.mouth[0] + 3, y: p.mouth[1], d: 4 }]).d).toBeCloseTo(4)
+    expect(pocketAt([{ x: p.mouth[0] + 3, y: p.mouth[1], t: 0.4 }]).t).toBeCloseTo(0.4)
+  })
+
+  it('never traps a void inside the case, at any fill', () => {
+    for (const make of [tkl, split, alice]) {
+      const ks = make().filter((k) => !['Ctrl', 'Win'].includes(k.legend ?? ''))
+      for (const p of caseShape(ks, 'MX').pockets)
+        for (const t of [0, 0.3, 0.6, 1]) {
+          const outline = caseShape(ks, 'MX', [{ x: p.mouth[0], y: p.mouth[1], t }]).outline
+          expect(outline.every((r) => area(r) > 0)).toBe(true)
+          const mesh = caseMesh(ks, 'MX', [{ x: p.mouth[0], y: p.mouth[1], t }])!
+          // nothing of the case (plate included) sticks out past the outline
+          const pos = mesh.attributes.position
+          for (let i = 0; i < pos.count; i += 7) {
+            const q: [number, number] = [pos.getX(i), pos.getZ(i)]
+            expect(contains(outline, q) || distToOutline(outline, q) < 0.6).toBe(true)
+          }
+        }
+    }
+  })
+
+  it('fills shallow cut-ins automatically, without an orb', () => {
+    expect(caseShape(split(), 'MX').pockets.every((p) => p.depth >= 8)).toBe(true)
   })
 })

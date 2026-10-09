@@ -52,6 +52,6 @@ describe('key editing', () => {
   it('keeps one saved fill per pocket', () => {
     useDesign.getState().setPocketFill(100, 50, 3)
     useDesign.getState().setPocketFill(105, 50, 6)
-    expect(useDesign.getState().design.pocketFills).toEqual([{ x: 105, y: 50, d: 6 }])
+    expect(useDesign.getState().design.pocketFills).toEqual([{ x: 105, y: 50, t: 6 }])
   })
 })

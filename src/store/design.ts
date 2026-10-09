@@ -43,7 +43,7 @@ interface State {
   moveKey: (id: string, x: number, y: number) => void
   addKey: () => void
   deleteKey: (id: string) => void
-  setPocketFill: (x: number, y: number, d: number) => void
+  setPocketFill: (x: number, y: number, t: number) => void
 }
 
 /** Pocket fills closer than this (mm) to a new one are the same pocket. */
@@ -75,11 +75,11 @@ export const useDesign = create<State>()(
         }),
       deleteKey: (id) =>
         set((s) => ({ preset: null, selectedId: null, design: { ...s.design, keys: s.design.keys.filter((k) => k.id !== id) } })),
-      setPocketFill: (x, y, d) =>
+      setPocketFill: (x, y, t) =>
         set((s) => ({
           design: {
             ...s.design,
-            pocketFills: [...s.design.pocketFills.filter((f) => Math.hypot(f.x - x, f.y - y) >= SAME_POCKET), { x, y, d }],
+            pocketFills: [...s.design.pocketFills.filter((f) => Math.hypot(f.x - x, f.y - y) >= SAME_POCKET), { x, y, t }],
           },
         })),
     }),
@@ -95,3 +95,6 @@ export const useDesign = create<State>()(
     },
   ),
 )
+
+// dev-only handle for poking at the design from the browser console
+if (import.meta.env.DEV) (window as unknown as { byokb: typeof useDesign }).byokb = useDesign

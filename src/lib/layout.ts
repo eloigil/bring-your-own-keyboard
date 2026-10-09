@@ -3,6 +3,9 @@ import type { Key } from '../types'
 /** A row item: a key width, or a negative number for a gap of that size. */
 type Row = { y: number; x?: number; items: (number | string)[] }
 
+/** Snap a position to the 0.25u drag grid. */
+export const snap = (v: number) => Math.round(v * 4) / 4
+
 let nextId = 0
 export const newId = () => `k${Date.now().toString(36)}${(nextId++).toString(36)}`
 

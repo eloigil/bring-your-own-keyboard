@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defaultDesign, loadDesign } from './design'
+import { defaultDesign, loadDesign, useDesign } from './design'
 import { PRESETS } from '../lib/layout'
 import { keyCorners } from '../lib/case'
 
@@ -32,4 +32,26 @@ describe('presets', () => {
           expect(overlap, `${keys[i].legend} overlaps ${keys[j].legend}`).toBe(false)
         }
     })
+})
+
+describe('key editing', () => {
+  it('snaps moved keys to the 0.25u grid', () => {
+    const id = useDesign.getState().design.keys[0].id
+    useDesign.getState().moveKey(id, 3.13, 7.9)
+    const k = useDesign.getState().design.keys.find((k) => k.id === id)!
+    expect([k.x, k.y]).toEqual([3.25, 8])
+  })
+  it('adds and deletes keys', () => {
+    const n = useDesign.getState().design.keys.length
+    useDesign.getState().addKey()
+    const id = useDesign.getState().selectedId!
+    expect(useDesign.getState().design.keys).toHaveLength(n + 1)
+    useDesign.getState().deleteKey(id)
+    expect(useDesign.getState().design.keys).toHaveLength(n)
+  })
+  it('keeps one saved fill per pocket', () => {
+    useDesign.getState().setPocketFill(100, 50, 3)
+    useDesign.getState().setPocketFill(105, 50, 6)
+    expect(useDesign.getState().design.pocketFills).toEqual([{ x: 105, y: 50, d: 6 }])
+  })
 })

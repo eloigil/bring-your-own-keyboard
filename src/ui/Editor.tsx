@@ -1,16 +1,23 @@
+import { useEffect } from 'react'
 import { Stage } from '../scene/Stage'
 import { Board } from '../scene/Board'
-import { familyOf, useDesign } from '../store/design'
+import { useDesign } from '../store/design'
 import { StepsPanel } from './StepsPanel'
 import { OptionsPanel } from './OptionsPanel'
 
 export function Editor() {
-  const keys = useDesign((s) => s.design.keys)
-  const family = useDesign((s) => familyOf(s.design.board.switchId))
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const { selectedId, deleteKey } = useDesign.getState()
+      if (selectedId && (e.key === 'Delete' || e.key === 'Backspace') && !(e.target instanceof HTMLInputElement)) deleteKey(selectedId)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
   return (
     <>
-      <Stage>
-        <Board keys={keys} family={family} />
+      <Stage onPointerMissed={() => useDesign.getState().select(null)}>
+        <Board />
       </Stage>
       <StepsPanel />
       <OptionsPanel />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { area, caseMesh, caseOutline, contains, keyCorners } from './case'
+import { area, caseMesh, caseOutline, caseShape, contains, keyCorners } from './case'
 import { alice, split, tkl } from './layout'
 
 describe('caseOutline', () => {
@@ -54,5 +54,32 @@ describe('caseMesh', () => {
     }
     expect(min.y).toBeCloseTo(0)
     expect(back).toBeGreaterThan(front + 5)
+  })
+})
+
+describe('pockets', () => {
+  const keys = tkl()
+  const pause = keys.find((k) => k.legend === 'Pause')!
+  const center: [number, number] = [(pause.x + 0.5) * 19.05, (pause.y + 0.5) * 19.05]
+  const without = keys.filter((k) => k !== pause)
+  const pocketAt = (fills: { x: number; y: number; d: number }[] = []) =>
+    caseShape(without, 'MX', fills).pockets.find((p) => Math.hypot(p.mouth[0] - center[0], p.mouth[1] - center[1]) < 30)!
+
+  it('finds a pocket where a corner key was removed', () => {
+    expect(pocketAt()).toBeDefined()
+    expect(pocketAt().depth).toBeGreaterThan(5)
+  })
+
+  it('opens the pocket at d=0 and fills it flush at d=depth', () => {
+    const p = pocketAt()
+    const open = caseShape(without, 'MX', [{ x: p.mouth[0], y: p.mouth[1], d: 0 }]).outline
+    const flush = caseShape(without, 'MX', [{ x: p.mouth[0], y: p.mouth[1], d: p.depth }]).outline
+    expect(contains(open, center)).toBe(false)
+    expect(contains(flush, center)).toBe(true)
+  })
+
+  it('reports the saved depth on the matching pocket', () => {
+    const p = pocketAt()
+    expect(pocketAt([{ x: p.mouth[0] + 3, y: p.mouth[1], d: 4 }]).d).toBeCloseTo(4)
   })
 })

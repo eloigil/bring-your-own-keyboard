@@ -29,7 +29,7 @@ Build mode: fast
   Learner check: Open the editor, click through the steps, pick a few presets, refresh the page, and check that your last board is still there.
   Commit: `Add editor shell, presets, and saved design`
 
-- [ ] **3. Drag, add, and delete keys while the case follows**
+- [x] **3. Drag, add, and delete keys while the case follows**
   Becomes usable: Select a key and drag it (0.25u grid), add a key, delete a key, and the case reshapes live with eased motion. Each pocket in the case has an orb you drag to set its depth. Overlapping keys pulse red.
   Why now: This is the interactive kernel, the "drag a wall" moment. Validation lands here because dragging is the first way to create overlaps.
   PRD ref: `prd.md > Layout Step` (Single-key editing, Living case), `prd.md > States and Boundaries` (Invalid design)

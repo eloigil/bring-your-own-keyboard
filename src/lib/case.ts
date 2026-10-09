@@ -53,16 +53,117 @@ function offset(paths: Path[], margin: number): Path[] {
   return out
 }
 
-/** The case outline: one polygon per separate body (a split board gives two). Holes have negative area. */
-export function caseOutline(keys: Key[], family: Family, margin = BEZEL): Poly[] {
-  if (!keys.length) return []
-  // Each separate body (a split half) is smoothed on its own so halves never merge: grow past the bezel,
-  // then shrink back. Fills gaps and pockets narrower than ~2×CLOSE (Esc→F1, beside the arrows);
-  // bigger cut-outs (a removed block of keys, a thumb cluster) stay.
-  const bodies = offset(union(keys.map((k) => keyCorners(k, family))), margin).filter((p) => ClipperLib.Clipper.Area(p) > 0)
-  return union(bodies.map((b) => offset(offset([b], CLOSE), -CLOSE).map(fromPath)).flat())
-    .map(fromPath)
+function clip(type: number, subject: Path[], clipPaths: Path[]): Path[] {
+  const c = new ClipperLib.Clipper()
+  c.AddPaths(subject, ClipperLib.PolyType.ptSubject, true)
+  c.AddPaths(clipPaths, ClipperLib.PolyType.ptClip, true)
+  const out: Path[] = []
+  c.Execute(type, out, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero)
+  return out
 }
+const difference = (a: Path[], b: Path[]) => clip(ClipperLib.ClipType.ctDifference, a, b)
+const intersection = (a: Path[], b: Path[]) => clip(ClipperLib.ClipType.ctIntersection, a, b)
+const pathsArea = (ps: Path[]) => ps.reduce((n, p) => n + ClipperLib.Clipper.Area(p), 0) / (S * S)
+
+/** Convex hull (monotone chain). */
+function hull(pts: Poly): Poly {
+  const p = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  const cross = (o: Pt, a: Pt, b: Pt) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+  const half = (list: Poly) => {
+    const h: Poly = []
+    for (const q of list) {
+      while (h.length >= 2 && cross(h[h.length - 2], h[h.length - 1], q) <= 0) h.pop()
+      h.push(q)
+    }
+    h.pop()
+    return h
+  }
+  return [...half(p), ...half([...p].reverse())]
+}
+
+function segDist([px, py]: Pt, [ax, ay]: Pt, [bx, by]: Pt) {
+  const dx = bx - ax, dy = by - ay
+  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1)))
+  return Math.hypot(px - ax - t * dx, py - ay - t * dy)
+}
+
+/** A dip in the case edge, between the keys' snug outline and the body's convex hull. */
+export interface Pocket {
+  /** Center of the pocket's opening on the hull (mm). Saved fills are anchored here. */
+  mouth: Pt
+  /** Unit vector from the mouth into the pocket. */
+  dir: Pt
+  /** How far the pocket reaches in from the mouth (mm). */
+  depth: number
+  /** Current fill (mm), grown from the keys outward: 0 = open, depth = flush. The case edge sits depth - d in from the mouth. */
+  d: number
+}
+
+export interface PocketFill { x: number; y: number; d: number }
+
+const MIN_POCKET_AREA = 40 // mm²; smaller dips are just rounding noise
+const ANCHOR_MATCH = 19 // mm; a saved fill belongs to the pocket whose mouth is this close
+
+/**
+ * The case outline plus its pockets. Each body (a split half) is handled on its own:
+ * snug = keys + bezel with internal gaps always filled; each pocket between snug and the
+ * convex hull is filled from its mouth by its saved depth, or by a smooth default (closing).
+ */
+export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [], margin = BEZEL): { outline: Poly[]; pockets: Pocket[] } {
+  if (!keys.length) return { outline: [], pockets: [] }
+  const bodies = offset(union(keys.map((k) => keyCorners(k, family))), margin).filter((p) => ClipperLib.Clipper.Area(p) > 0)
+  const pockets: Pocket[] = []
+  const parts: Path[] = []
+  for (const body of bodies) {
+    const h = hull(fromPath(body))
+    const hullPath = [toPath(h)]
+    const smooth = offset(offset([body], CLOSE), -CLOSE) // the default look
+    parts.push(body)
+    for (const pocketPath of difference(hullPath, [body])) {
+      const poly = fromPath(pocketPath)
+      if (Math.abs(area(poly)) < MIN_POCKET_AREA) continue
+      // mouth: the pocket's vertices lying on the hull edge; its two farthest-apart ends span the opening
+      const onHull = poly.filter((q) => h.some((a, i) => segDist(q, a, h[(i + 1) % h.length]) < 0.5))
+      if (onHull.length < 2) continue
+      let [A, B] = [onHull[0], onHull[1]], best = -1
+      for (const a of onHull) for (const b of onHull) {
+        const dd = Math.hypot(a[0] - b[0], a[1] - b[1])
+        if (dd > best) { best = dd; A = a; B = b }
+      }
+      const mouth: Pt = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2]
+      let n: Pt = [-(B[1] - A[1]) / best, (B[0] - A[0]) / best]
+      const depthOf = (q: Pt) => (q[0] - mouth[0]) * n[0] + (q[1] - mouth[1]) * n[1]
+      const deep = poly.reduce((m, q) => (Math.abs(depthOf(q)) > Math.abs(depthOf(m)) ? q : m), poly[0])
+      if (depthOf(deep) < 0) n = [-n[0], -n[1]]
+      const depth = Math.abs(depthOf(deep))
+
+      const saved = fills
+        .map((f) => ({ f, dist: Math.hypot(f.x - mouth[0], f.y - mouth[1]) }))
+        .filter((m) => m.dist < ANCHOR_MATCH)
+        .sort((a, b) => a.dist - b.dist)[0]?.f
+      let fill: Path[], d: number
+      if (saved) {
+        d = Math.min(saved.d, depth)
+        // fill grows out from the keys: everything except the band of width (depth - d) next to the mouth
+        fill = d <= 0 ? [] : difference([pocketPath], difference(hullPath, offset(hullPath, -(depth - d))))
+      } else {
+        fill = intersection([pocketPath], smooth)
+        d = depth * Math.min(1, pathsArea(fill) / Math.abs(area(poly)))
+      }
+      parts.push(...fill)
+      pockets.push({ mouth, dir: n, depth, d })
+    }
+  }
+  // light closing seals the seams between body and fills
+  const outline = offset(offset(union(parts.map(fromPath)), 1), -1).map(fromPath)
+  return { outline, pockets }
+}
+
+/** The case outline: one polygon per separate body (a split board gives two). Holes have negative area. */
+export const caseOutline = (keys: Key[], family: Family, fills: PocketFill[] = []) => caseShape(keys, family, fills).outline
+
+/** Area (mm²) where two polygons overlap. */
+export const overlapArea = (a: Poly, b: Poly) => pathsArea(intersection([toPath(a)], [toPath(b)]))
 
 /** Signed area in mm² (positive = outer boundary in clipper's orientation). */
 export const area = (poly: Poly) => ClipperLib.Clipper.Area(toPath(poly)) / (S * S)
@@ -121,8 +222,8 @@ function extrude(rings: Poly[], holes: Poly[], from: number, to: number, bevel: 
  * The 3D case: a hollow tray (floor + walls) with a plate holding the switch cutouts,
  * tilted so the back is higher. Returned in mm, world orientation (Y up, layout y → +Z).
  */
-export function caseMesh(keys: Key[], family: Family): THREE.BufferGeometry | null {
-  const outer = caseOutline(keys, family)
+export function caseMesh(keys: Key[], family: Family, fills: PocketFill[] = []): THREE.BufferGeometry | null {
+  const outer = caseOutline(keys, family, fills)
   if (!outer.length) return null
   const inner = offset(outer.map(toPath), -WALL).map(fromPath)
   // inner rings flipped become the holes of the wall ring
@@ -150,6 +251,9 @@ export function caseMesh(keys: Key[], family: Family): THREE.BufferGeometry | nu
   return toCreasedNormals(merged, (40 * Math.PI) / 180)
 }
 
+/** World height of the wall top at depth `zWorld`. */
+export const wallTopAt = (zWorld: number, maxZ: number, family: Family) => CASE_HEIGHT[family] + tiltLift(zWorld, maxZ)
+
 /** World height of the plate top under a point at layout depth `zWorld`. */
 export function plateTopAt(zWorld: number, maxZ: number, family: Family) {
   const H = CASE_HEIGHT[family]
@@ -157,9 +261,3 @@ export function plateTopAt(zWorld: number, maxZ: number, family: Family) {
   return y + (y / H) * tiltLift(zWorld, maxZ)
 }
 
-/** Largest world Z of the case (front edge), needed to place keys on the tilted plate. */
-export function caseFrontZ(keys: Key[], family: Family) {
-  let m = -Infinity
-  for (const p of caseOutline(keys, family)) for (const [, y] of p) m = Math.max(m, y)
-  return m
-}

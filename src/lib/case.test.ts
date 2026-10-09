@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { area, caseMesh, caseOutline, caseShape, contains, keyCorners, type PocketFill } from './case'
+import * as THREE from 'three'
+import { area, caseMesh, caseOutline, caseShape, contains, keyCorners, wallTopAt, type PocketFill } from './case'
 import { alice, PRESETS, split, tkl } from './layout'
 
 describe('caseOutline', () => {
@@ -100,6 +101,23 @@ describe('pockets', () => {
     const { mouth } = pocketAt()
     expect(contains(caseShape(without, 'MX', [{ x: mouth[0], y: mouth[1], t: 0 }]).outline, center)).toBe(false)
     expect(contains(caseShape(without, 'MX', [{ x: mouth[0], y: mouth[1], t: 1 }]).outline, center)).toBe(true)
+  })
+
+  it('a filled pocket is solid at top-face height (no recessed or stacked plate)', () => {
+    for (const gone of ['Pause', 'F6', 'F1']) {
+      const ks = keys.filter((k) => k.legend !== gone)
+      const k = keys.find((k) => k.legend === gone)!
+      const c: [number, number] = [(k.x + 0.5) * 19.05, (k.y + 0.5) * 19.05]
+      const fills = caseShape(ks, 'MX').pockets.map((p) => ({ x: p.mouth[0], y: p.mouth[1], t: 1 }))
+      const mesh = caseMesh(ks, 'MX', fills)!
+      const hits = new THREE.Raycaster(new THREE.Vector3(c[0], 500, c[1]), new THREE.Vector3(0, -1, 0))
+        .intersectObject(new THREE.Mesh(mesh, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })))
+        .map((h) => Math.round(h.point.y * 10) / 10)
+        .filter((y, i, a) => a.indexOf(y) === i) // a ray on a shared triangle edge reports it twice
+      const maxZ = Math.max(...caseOutline(ks, 'MX', fills).flat().map((q) => q[1]))
+      expect(hits[0], gone).toBeCloseTo(wallTopAt(c[1], maxZ, 'MX'), 0)
+      expect(hits, gone).toHaveLength(2) // top face, then the bottom — nothing in between
+    }
   })
 
   it('reports the saved fill on the matching pocket', () => {

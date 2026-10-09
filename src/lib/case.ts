@@ -19,6 +19,8 @@ export const TILT_DEG = 6 // typing angle
 const PLATE_T = 1.5
 const PLATE_RECESS = 2.5 // plate top sits this far below the wall top
 const FLOOR_T = 2
+const WELL_GAP = 0.75 // mm of clearance between keycaps and the well's edge
+const WELL_CLOSE = 2 // mm; only hairline cracks between keys merge into the well; any key-sized gap stays at top height
 
 /** A key's footprint corners in mm, rotated around its center. */
 export function keyCorners(k: Key, family: Family, inset = 0, size?: number): Poly {
@@ -256,14 +258,18 @@ function extrude(rings: Poly[], holes: Poly[], from: number, to: number, bevel: 
 export function caseMesh(keys: Key[], family: Family, fills: PocketFill[] = []): THREE.BufferGeometry | null {
   const outer = caseOutline(keys, family, fills)
   if (!outer.length) return null
-  const inner = offset(outer.map(toPath), -WALL).map(fromPath)
-  // inner rings flipped become the holes of the wall ring
+  // The well: the recess the plate sits in. It covers only the keys (small gaps between key groups merge),
+  // never closer than WALL to the outside. Everything else — bezel and filled pockets — is full top height.
+  const keyArea = union(keys.map((k) => keyCorners(k, family)))
+  const well = intersection(offset(offset(keyArea, WELL_CLOSE + WELL_GAP), -WELL_CLOSE), offset(outer.map(toPath), -WALL))
+  const inner = well.map(fromPath)
+  // well rings become the holes of the top body
   const wallHoles = inner.filter((r) => area(r) > 0)
   const cutouts = keys.map((k) => keyCorners(k, family, 0, CUTOUT[family]).slice().reverse())
 
   const H = CASE_HEIGHT[family]
   const parts = [
-    ...extrude(outer, wallHoles, 0, H, 1.2), // walls, rounded top edge
+    ...extrude(outer, wallHoles, 0, H, 1.2), // case body up to the top face, rounded top edge
     ...extrude(inner, [], 0, FLOOR_T, 0), // floor
     ...extrude(inner, cutouts, H - PLATE_RECESS - PLATE_T, H - PLATE_RECESS, 0), // plate
   ]

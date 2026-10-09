@@ -116,7 +116,7 @@ export interface Pocket {
   dir: Pt
   /** How far the pocket reaches in from the mouth (mm). */
   depth: number
-  /** Current fill as a fraction, grown from the keys outward: 0 = open, 1 = flush. */
+  /** Current fill as a fraction: 0 = open, 1 = flush. The pocket's edge is a straight wall `depth × (1 - t)` in from the mouth. */
   t: number
 }
 
@@ -130,8 +130,8 @@ const ANCHOR_MATCH = 19 // mm; a saved fill belongs to the pocket whose mouth is
 /**
  * The case outline plus its pockets. Each body (a split half) is handled on its own:
  * snug = keys + bezel with internal gaps always filled; each pocket between snug and the
- * convex hull is filled by growing the keys' outline outward into it (so no voids get trapped):
- * by the orb's saved fraction, or by a smooth default (closing). Shallow cut-ins are always filled.
+ * convex hull is filled behind a straight wall parallel to its opening, slid in by the orb's saved
+ * fraction, or by a smooth default (closing). Shallow cut-ins are always filled; enclosed voids are dropped.
  */
 export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [], margin = BEZEL): { outline: Poly[]; pockets: Pocket[] } {
   if (!keys.length) return { outline: [], pockets: [] }
@@ -167,9 +167,6 @@ export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [],
         parts.push(pocketPath)
         continue
       }
-      // how far the keys' outline must grow to cover the whole pocket
-      const rings = body.map(fromPath)
-      const reach = Math.max(...poly.map((q) => Math.min(...rings.flatMap((r) => r.map((a, i) => segDist(q, a, r[(i + 1) % r.length]))))))
 
       const saved = fills
         .map((f) => ({ f, dist: Math.hypot(f.x - mouth[0], f.y - mouth[1]) }))
@@ -178,7 +175,17 @@ export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [],
       let fill: Path[], t: number
       if (saved) {
         t = Math.max(0, Math.min(1, saved.t))
-        fill = t <= 0 ? [] : t >= 1 ? [pocketPath] : intersection([pocketPath], offset(body, reach * t))
+        // a straight wall parallel to the mouth, slid in by (1 - t) of the depth: the keys' side of it is solid
+        const cut = depth * (1 - t)
+        const [ux, uy] = [-n[1], n[0]] // along the mouth
+        const far = 1e4
+        const behind: Poly = [
+          [mouth[0] + n[0] * cut - ux * far, mouth[1] + n[1] * cut - uy * far],
+          [mouth[0] + n[0] * cut + ux * far, mouth[1] + n[1] * cut + uy * far],
+          [mouth[0] + n[0] * far + ux * far, mouth[1] + n[1] * far + uy * far],
+          [mouth[0] + n[0] * far - ux * far, mouth[1] + n[1] * far - uy * far],
+        ]
+        fill = t <= 0 ? [] : t >= 1 ? [pocketPath] : intersection([pocketPath], [toPath(behind)])
       } else {
         fill = intersection([pocketPath], smooth)
         t = Math.min(1, pathsArea(fill) / Math.abs(area(poly)))

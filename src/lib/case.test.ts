@@ -120,6 +120,27 @@ describe('pockets', () => {
     }
   })
 
+  it('a part-filled pocket ends in a straight wall parallel to its opening (even in an L-shaped corner)', () => {
+    let checked = 0
+    for (const make of [tkl, split, alice]) {
+      const ks = make()
+      for (const p of caseShape(ks, 'MX').pockets) {
+        const at = (t: number) => caseShape(ks, 'MX', [{ x: p.mouth[0], y: p.mouth[1], t }]).outline
+        const open = at(0), flush = at(1), half = at(0.5)
+        const cut = p.depth * 0.5
+        // points of the half-filled outline that are new: off both the open and the flush outline
+        const mids = half.flatMap((r) => r.map((a, i) => [(a[0] + r[(i + 1) % r.length][0]) / 2, (a[1] + r[(i + 1) % r.length][1]) / 2] as [number, number]))
+        const fresh = [...half.flat(), ...mids].filter((v) => distToOutline(open, v) > 1.5 && distToOutline(flush, v) > 1.5)
+        checked += fresh.length
+        for (const v of fresh) {
+          const dv = (v[0] - p.mouth[0]) * p.dir[0] + (v[1] - p.mouth[1]) * p.dir[1]
+          expect(Math.abs(dv - cut), `${make.name} pocket at ${p.mouth.map(Math.round)}`).toBeLessThan(1.5)
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(5)
+  })
+
   it('reports the saved fill on the matching pocket', () => {
     const p = pocketAt()
     expect(pocketAt([{ x: p.mouth[0] + 3, y: p.mouth[1], t: 0.4 }]).t).toBeCloseTo(0.4)

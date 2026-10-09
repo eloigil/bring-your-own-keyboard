@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Key } from '../types'
@@ -91,9 +91,18 @@ export function Board() {
 function Eased({ target, rotation, children }: { target: [number, number, number]; rotation: [number, number, number]; children: React.ReactNode }) {
   const ref = useRef<THREE.Group>(null)
   const goal = useMemo(() => new THREE.Vector3(...target), [target[0], target[1], target[2]])
-  useFrame((_, dt) => ref.current?.position.lerp(goal, 1 - Math.exp(-dt * 18)))
+  const invalidate = useThree((s) => s.invalidate)
+  // start at the target; afterwards only the frame loop moves it (a position prop would snap it on every render)
+  useLayoutEffect(() => void ref.current?.position.copy(goal), []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => invalidate(), [goal, invalidate])
+  useFrame((state, dt) => {
+    const p = ref.current?.position
+    if (!p || p.distanceToSquared(goal) < 1e-4) return p?.copy(goal)
+    p.lerp(goal, 1 - Math.exp(-dt * 18))
+    state.invalidate() // keep drawing until it arrives
+  })
   return (
-    <group ref={ref} position={target} rotation={rotation}>
+    <group ref={ref} rotation={rotation}>
       {children}
     </group>
   )

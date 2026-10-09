@@ -5,10 +5,11 @@ import type { ReactNode } from 'react'
 /** Neutral studio: soft light-grey backdrop, key + fill light, contact shadow. No remote HDR, works offline. */
 export function Stage({ children, onPointerMissed }: { children: ReactNode; onPointerMissed?: () => void }) {
   return (
-    <Canvas shadows onPointerMissed={onPointerMissed} camera={{ position: [0, 380, 440], fov: 35, near: 1, far: 5000 }} dpr={[1, 2]}>
+    // frameloop="demand": draw only when something changes (orbit, drag, animation) — idle costs nothing
+    <Canvas shadows frameloop="demand" onPointerMissed={onPointerMissed} camera={{ position: [0, 380, 440], fov: 35, near: 1, far: 5000 }} dpr={[1, 1.5]}>
       <color attach="background" args={['#e9e8ec']} />
       <hemisphereLight args={['#ffffff', '#c9c6cf', 1.4]} />
-      <directionalLight position={[-150, 300, 200]} intensity={2.2} castShadow shadow-mapSize={[2048, 2048]}>
+      <directionalLight position={[-150, 300, 200]} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]}>
         <orthographicCamera attach="shadow-camera" args={[-300, 300, 300, -300, 1, 1000]} />
       </directionalLight>
       <directionalLight position={[200, 120, -150]} intensity={0.6} />

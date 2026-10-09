@@ -9,7 +9,6 @@ import { familyOf, useDesign } from '../store/design'
 import { Case } from './Case'
 import { Keycap } from './Keycap'
 import { PocketOrb } from './PocketOrb'
-import { ResizeHandle } from './ResizeHandle'
 import { hitLocal } from './pointer'
 import { componentFootprint, keyRows } from '../lib/layout'
 import { Knob } from './Knob'
@@ -52,15 +51,14 @@ export function Board() {
 
   // Board centre; frozen while dragging so the board doesn't slide under the pointer.
   const [dragging, setDragging] = useState<{ id: string; grab: [number, number] } | null>(null)
-  const [resizing, setResizing] = useState(false)
   const [center, setCenter] = useState(() => new THREE.Vector3())
   useEffect(() => {
-    if (dragging || resizing) return
+    if (dragging) return
     const pts = shape.outline.flat()
     if (!pts.length) return
     const xs = pts.map((q) => q[0]), zs = pts.map((q) => q[1])
     setCenter(new THREE.Vector3(-(Math.min(...xs) + Math.max(...xs)) / 2, 0, -(Math.min(...zs) + Math.max(...zs)) / 2))
-  }, [shape, dragging, resizing])
+  }, [shape, dragging])
 
   const controls = useThree((s) => s.controls) as { enabled: boolean } | null
   const dragHeight = CASE_HEIGHT[family] + SWITCH_TRAVEL_HEIGHT[family]
@@ -149,21 +147,6 @@ export function Board() {
           </Eased>
         )
       })}
-      {shaping && keys.length > 0 && (() => {
-        const xs = shape.outline.flat().map((q) => q[0]), zs = shape.outline.flat().map((q) => q[1])
-        const zMid = (Math.min(...zs) + Math.max(...zs)) / 2
-        return (
-          <ResizeHandle
-            x={Math.max(...xs) + 8}
-            y={wallTopAt(zMid, maxZ, family, tiltDeg) / 2}
-            z={zMid}
-            minXmm={Math.min(...keys.map((k) => k.x)) * p.x}
-            pitch={p.x}
-            offset={center}
-            onDragging={setResizing}
-          />
-        )
-      })()}
       {shaping && shape.pockets.map((pk) => <PocketOrb key={`${pk.mouth[0].toFixed(0)},${pk.mouth[1].toFixed(0)}`} pocket={pk} maxZ={maxZ} family={family} offset={center} tilt={tiltDeg} />)}
     </group>
   )

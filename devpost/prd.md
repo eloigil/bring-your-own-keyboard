@@ -14,7 +14,7 @@ Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 1. The user opens BYOKb and lands on a short **3D landing page** that explains the project, then enters the editor.
 2. The **editor** opens with a default **tenkeyless (TKL)** keyboard in 3D. The left panel shows the steps; the right panel shows the options for the current step.
 3. **Layout step:** they pick a starting preset.
-3b. **Build step:** they drag the board's edge to resize it (60% ↔ full with numpad), grab single keys to move, add, or delete them, and drag pocket orbs. The case follows the outline of the keys live.
+3b. **Build step:** they grab single keys to move, add, or delete them, and drag pocket orbs. The case follows the outline of the keys live.
 4. **Components step:** they set switches, keycaps, and the knob for the whole board, and double-click any element to override its config. They add a knob and drag it into place; neighboring keys snap aside.
 5. **LEDs step:** they paint per-key colors and/or pick an animated effect, and see it lit in 3D.
 6. **Export step:** they see their build and download the case STL and firmware (including the LED pattern).
@@ -38,17 +38,14 @@ Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 
 ### Layout Step
 Source: `scope.md > The POC Boundary` items 1–2.
-Covers two UI steps: **Layout** (presets only) and **Build** (everything else below: resize, key editing, pocket orbs).
+Covers two UI steps: **Layout** (presets only) and **Build** (everything else below: key editing, pocket orbs).
 - **Presets, in categories:** Standard (40%, 60%, 65%, 75%, TKL, 96%, Full), Ergonomic (Alice, Arisu, Row split), Split columnar (Corne, Lily58, Sofle, Kyria), Ortholinear (Planck, Preonic, Ortho pad), Small (Numpad, Macropad). Choosing one replaces the current layout. TKL is the default.
-- **Board resize:** drag the board's edge to grow or shrink it.
-- **Snap toggle:** in *snap* mode, resizing jumps between 60%, 65%, 75%, TKL and Full, swapping in that layout (custom edits reset). In *freeform* mode, it stops anywhere in quarter-key steps: keys past the edge are removed, and growing adds 1u keys to each straight row in the new strip.
 - **Single-key editing:** select a key to move it, add a key, or delete a key.
 - **Living case:** the case follows the outline of the keys (not a bounding rectangle) and updates live as keys change.
 - **Typing angle slider:** in the Layout step, 0–12° (default 6°). The case wedge and the keys follow it live, and the angle is saved with the design.
 - **Pocket fill orbs:** wherever the case dips inward (a pocket, e.g. beside the arrows or the V of an Alice), a small orb sits in the pocket. Dragging it decides how deep the pocket goes: out to the edge fills it flush, inward opens it up. Untouched pockets start fully filled (flush), so every board starts as a clean solid shape.
 - [ ] The editor opens with a TKL keyboard visible in 3D.
 - [ ] Choosing the 60% preset visibly changes the board and its case to a 60% layout.
-- [ ] Dragging the edge in autosnap mode lands only on standard sizes; in freeform it stops between them.
 - [ ] Moving a key outward makes the case extend to cover it.
 - [ ] Each pocket shows an orb; dragging it to the edge fills the pocket flush, dragging it inward deepens the pocket (e.g. a deleted corner key's notch can be opened fully).
 - [ ] Gaps between key groups inside the board (Esc→F1, between F-key groups) are always filled.
@@ -98,9 +95,8 @@ Source: `scope.md > The POC Boundary` items 4–5.
 - The game-like design experience is the kernel. PCB tools already exist; none feel like a game.
 - The editor opens on a TKL instead of an empty space or a picker, so the user can start playing immediately.
 - Left panel = steps, right panel = options for the step.
-- Layout is split in two: **Layout** only picks a starting preset (clean preview, no orbs, keys fixed), **Build** is the full build (drag/add/delete keys, pocket orbs, resize, and the components: switches, keycaps, knob) — picking a start and shaping are different activities, and the orbs no longer clutter later steps.
+- Layout is split in two: **Layout** only picks a starting preset (clean preview, no orbs, keys fixed), **Build** is the full build (drag/add/delete keys, pocket orbs, and the components: switches, keycaps, knob) — picking a start and shaping are different activities, and the orbs no longer clutter later steps.
 - Switches, keycaps, the knob, and other components share one Components step.
-- A snap/freeform toggle exists because both kinds of editing are useful.
 - The case follows the key outline, not a rectangle.
 - Each pocket in the case gets its own draggable orb to set its depth (chosen over a single global control, accepting the extra complexity). Internal gaps are always filled.
 - A whole-board config plus a double-click override per element.
@@ -118,7 +114,7 @@ Source: `scope.md > The POC Boundary` items 4–5.
 ## What We're Building
 - A 3D landing page → editor
 - The editor with Layout, Components, LEDs, and Export steps, as described above
-- Presets, resize with the snap/freeform toggle, single-key editing, and the outline-following case
+- Presets, single-key editing, and the outline-following case
 - A switch and keycap catalog with board-wide config and per-element override
 - A knob component with snap-aside behavior
 - LED painting and effects
@@ -139,6 +135,7 @@ Source: `scope.md > The POC Boundary` items 4–5.
 - Customizable scene and environment themes.
 
 ## Non-Goals
+- **No board resize handle.** Built in slice 4, then cut by the learner: picking a preset and editing keys cover sizing.
 - Not a CAD or PCB editor. No engineering UI.
 - No backend or user accounts.
 - No purchasing inside the app.

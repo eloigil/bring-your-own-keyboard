@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Design, Key, Step } from '../types'
-import { PRESETS, newId, resizeFree, snap, snapAside, snapSize, type PresetName } from '../lib/layout'
+import { PRESETS, newId, snap, snapAside, type PresetName } from '../lib/layout'
 import { TILT_DEG, TILT_MAX } from '../lib/case'
 
 export const STORAGE_KEY = 'byokb-design'
@@ -11,7 +11,7 @@ export function defaultDesign(): Design {
     version: 1,
     keys: PRESETS.TKL(),
     components: [],
-    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', snap: 'snap', ledEffect: 'none', tiltDeg: TILT_DEG, ledColor: '#ff8a1f' },
+    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', ledEffect: 'none', tiltDeg: TILT_DEG, ledColor: '#ff8a1f' },
     pocketFills: [],
   }
 }
@@ -65,9 +65,6 @@ interface State {
   setKeycaps: (patch: { profileId?: string; keycapColor?: string }) => void
   /** Give one key its own switch/keycap settings; null clears them. */
   setOverride: (keyId: string, patch: Key['override'] | null) => void
-  setSnapMode: (mode: 'snap' | 'free') => void
-  /** Resize from the board's left edge to `width` units, by the current snap mode. */
-  resizeTo: (width: number) => void
 }
 
 /** Pocket fills closer than this (mm) to a new one are the same pocket. */
@@ -121,18 +118,6 @@ export const useDesign = create<State>()(
           selectedId: null,
           design: { ...s.design, keys: s.design.keys.filter((k) => k.id !== id), components: s.design.components.filter((c) => c.id !== id) },
         })),
-      setSnapMode: (mode) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, snap: mode } } })),
-      resizeTo: (width) => {
-        const s = get()
-        if (s.design.board.snap === 'snap') {
-          const name = snapSize(width)
-          if (name !== s.preset) s.setPreset(name)
-        } else {
-          const keys = resizeFree(s.design.keys, width)
-          if (keys.length !== s.design.keys.length || keys.some((k, i) => k !== s.design.keys[i]))
-            set({ preset: null, selectedId: null, design: { ...s.design, keys } })
-        }
-      },
       setSwitch: (switchId) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, switchId } } })),
       setKeycaps: (patch) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, ...patch } } })),
       setOverride: (keyId, patch) =>

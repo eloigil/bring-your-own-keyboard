@@ -56,27 +56,6 @@ describe('key editing', () => {
   })
 })
 
-describe('resizing the board', () => {
-  it('snap mode swaps in the nearest standard size', () => {
-    const s = useDesign.getState()
-    s.setPreset('TKL')
-    s.setSnapMode('snap')
-    useDesign.getState().resizeTo(15.4)
-    expect(useDesign.getState().preset).toBe('60%')
-    useDesign.getState().resizeTo(21)
-    expect(useDesign.getState().preset).toBe('Full')
-  })
-  it('freeform trims keys past the edge and keeps the rest', () => {
-    const s = useDesign.getState()
-    s.setPreset('TKL')
-    s.setSnapMode('free')
-    useDesign.getState().resizeTo(15)
-    const { keys } = useDesign.getState().design
-    expect(Math.max(...keys.map((k) => k.x + k.w))).toBeLessThanOrEqual(15)
-    expect(useDesign.getState().preset).toBeNull()
-  })
-})
-
 describe('switches and keycaps', () => {
   it('a per-key override changes only that key, and reset clears it', () => {
     useDesign.getState().setPreset('TKL')

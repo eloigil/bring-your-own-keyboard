@@ -21,7 +21,7 @@ PRD ref: `prd.md > The Core Journey`.
 
 1. **Landing.** `App` shows `Landing`: a slowly rotating sample keyboard plus a short pitch. "Start building" switches `view` to the editor.
 2. **Editor opens.** The store loads the saved design from `localStorage`, or the TKL preset on first use. The scene renders the keys, and `caseOutline(keys, switchFamily)` → `caseMesh(outline)` renders the case.
-3. **Layout.** Dragging a key updates its `x/y` in the store, snapped to a 0.25u grid. The outline and mesh recompute, at most once per animation frame. Resizing the board or picking a preset replaces the key list. After every change, `validate(design)` marks overlapping items, and the scene tints them red.
+3. **Layout.** Dragging a key updates its `x/y` in the store, snapped to a 0.25u grid. The outline and mesh recompute, at most once per animation frame. Picking a preset replaces the key list. After every change, `validate(design)` marks overlapping items, and the scene tints them red.
 4. **Components.** Choosing a switch sets `board.switchId`. If the family changes (MX ↔ Choc), the unit size in mm changes, so the case and spacing shrink or grow automatically. Double-clicking a key sets its `override`. Dropping the knob runs `snapAside`, which shifts the overlapping keys in that row to the right.
 5. **LEDs.** Painting writes `key.led = '#ff0000'`, and choosing an effect sets `board.ledEffect`. `Leds` animates the emissive colors in `useFrame`. Painted keys override the effect on those keys.
 6. **Export.** If `validate` reports issues, the buttons are disabled with a message. Otherwise **STL** runs the case mesh through `STLExporter` and downloads it, and **Firmware** runs `qmk(design)`, which generates `keyboard.json` + `keymap.c` + a README, zipped with fflate.
@@ -74,7 +74,7 @@ From `prd.md > Look and Feel`: a simple neutral environment like ShipShaper's, a
 ## Components
 
 ### Store (`src/store/design.ts`)
-Holds the design and the actions (`moveKey`, `addKey`, `deleteKey`, `setPreset`, `resizeBoard`, `setSwitch`, `setKeycap`, `setOverride`, `addKnob`, `moveComponent`, `paintKey`, `setEffect`). Persists to `localStorage` under `byokb-design`, with a `version` for resets.
+Holds the design and the actions (`moveKey`, `addKey`, `deleteKey`, `setPreset`, `setSwitch`, `setKeycap`, `setOverride`, `addKnob`, `moveComponent`, `paintKey`, `setEffect`). Persists to `localStorage` under `byokb-design`, with a `version` for resets.
 PRD ref: `prd.md > States and Boundaries`.
 
 ### Landing (`src/ui/Landing.tsx`)
@@ -91,7 +91,6 @@ PRD ref: `prd.md > Screens and Layout`.
 - `Case.tsx` — renders the mesh from `caseMesh`.
 - `Knob.tsx` — a cylinder knob, draggable.
 - `Leds.tsx` — per-key emissive underglow; animates effects in `useFrame`.
-- `ResizeHandle.tsx` — a handle on the board's right edge.
 - `PocketOrb.tsx` — one orb per pocket, placed between `mouth` and `deep` by its fill; dragging projects the pointer onto that line and writes the depth to the store (orbit controls paused while dragging).
 PRD ref: `prd.md > Layout Step`, `prd.md > Components Step`, `prd.md > LEDs Step`.
 
@@ -103,7 +102,6 @@ PRD ref: `prd.md > Layout Step` (Living case), `prd.md > Export Step`.
 
 ### Layout Logic (`src/lib/layout.ts`)
 - **Presets:** 19 layouts grouped in `PRESET_CATEGORIES` (Standard, Ergonomic, Split columnar, Ortholinear, Small) as key arrays in `u` (KLE-like); split columnar boards share a `columnar()` builder (6 columns, per-column stagger, mirrored thumb clusters). Layouts are approximations of the named boards, not exact replicas.
-- `resizeBoard(keys, width, mode)`: *snap* picks the nearest preset width; *free* removes keys beyond the width or fills rows with 1u keys up to it.
 - `snapAside(keys, component)`: keys in the rows the component overlaps, at or right of it, shift right by its width.
 PRD ref: `prd.md > Layout Step`, `prd.md > Components Step`.
 
@@ -142,7 +140,7 @@ interface Component { id: string; type: 'knob'; x: Unit; y: Unit }
 interface Design {
   version: 1;
   keys: Key[]; components: Component[];
-  board: { switchId: string; profileId: string; keycapColor: string; snap: 'snap' | 'free';
+  board: { switchId: string; profileId: string; keycapColor: string;
            ledEffect: 'none' | 'breathing' | 'wave' | 'reactive'; tiltDeg: number /* typing angle, 0–12°, default 6 */; ledColor: string /* effect colour */ };
   /** Pocket fills set by orbs (t: 0 = open, 1 = flush), anchored at the pocket's mouth (mm, layout coords). */
   pocketFills: { x: number; y: number; t: number }[];
@@ -175,7 +173,7 @@ BYOKb/
 │   │   ├── OptionsPanel.tsx  # right: picks the step's options
 │   │   └── options/
 │   │       ├── LayoutOptions.tsx   # preset picker
-│   │       ├── ShapeOptions.tsx    # add/delete keys, resize
+│   │       ├── ShapeOptions.tsx    # add/delete keys
 │   │       ├── ComponentsOptions.tsx
 │   │       ├── LedOptions.tsx
 │   │       └── ExportOptions.tsx
@@ -186,11 +184,10 @@ BYOKb/
 │   │   ├── Case.tsx
 │   │   ├── Knob.tsx
 │   │   ├── Leds.tsx
-│   │   └── ResizeHandle.tsx
 │   ├── lib/
 │   │   ├── units.ts          # u → mm per switch family
 │   │   ├── case.ts           # caseOutline, caseMesh   (the kernel)
-│   │   ├── layout.ts         # presets, resizeBoard, snapAside
+│   │   ├── layout.ts         # presets, keyRows, snapAside
 │   │   ├── validate.ts
 │   │   ├── exportStl.ts
 │   │   ├── qmk.ts

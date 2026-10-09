@@ -249,41 +249,6 @@ export const PRESET_CATEGORIES: { name: string; presets: PresetName[] }[] = [
   { name: 'Small', presets: ['Numpad', 'Macropad'] },
 ]
 
-/** Standard sizes the resize handle snaps between, by board width in units (65% and 75% are both 16u; 75% sits just past it). */
-export const SNAP_SIZES: { name: PresetName; width: number }[] = [
-  { name: '60%', width: 15 },
-  { name: '65%', width: 16 },
-  { name: '75%', width: 16.75 },
-  { name: 'TKL', width: 18.25 },
-  { name: 'Full', width: 22.5 },
-]
-
-/** The standard size nearest to a dragged width. */
-export const snapSize = (width: number): PresetName =>
-  SNAP_SIZES.reduce((best, s) => (Math.abs(s.width - width) < Math.abs(best.width - width) ? s : best)).name
-
-export const boardBounds = (keys: Key[]) => ({
-  minX: Math.min(...keys.map((k) => k.x)),
-  maxX: Math.max(...keys.map((k) => k.x + k.w)),
-})
-
-/**
- * Freeform resize to `width` units (measured from the board's left edge): keys past the new right edge
- * are removed; when growing, each straight row gets 1u keys in the new strip past the old edge.
- */
-export function resizeFree(keys: Key[], width: number): Key[] {
-  if (!keys.length) return keys
-  const { minX, maxX } = boardBounds(keys)
-  const edge = minX + Math.max(1, snap(width))
-  const kept = keys.filter((k) => k.x + k.w <= edge + 1e-6)
-  const rows = new Map<number, number>() // row y → its right edge (straight keys only)
-  for (const k of kept) if (k.rot === 0 && k.h === 1) rows.set(k.y, Math.max(rows.get(k.y) ?? -Infinity, k.x + k.w))
-  const added: Key[] = []
-  // only the new strip past the old edge gets keys; rows that ended short of it (e.g. a TKL's Caps row) keep their gap
-  for (const [y, right] of rows) for (let x = Math.max(right, maxX); x + 1 <= edge + 1e-6; x += 1) added.push({ id: newId(), x, y, w: 1, h: 1, rot: 0 })
-  return [...kept, ...added]
-}
-
 /**
  * Keycap row (0 = back) for each key, for sculpted profiles: rows are the board's rounded y positions,
  * and a board with more than 5 rows folds the extra back rows (e.g. a TKL's F-row) into row 0.

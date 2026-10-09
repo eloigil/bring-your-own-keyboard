@@ -32,7 +32,6 @@ export interface Design {
     switchId: string
     profileId: string
     keycapColor: string
-    snap: 'snap' | 'free'
     ledEffect: LedEffect
     /** Typing angle in degrees (back raised). */
     tiltDeg: number

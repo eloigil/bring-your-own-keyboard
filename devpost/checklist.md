@@ -39,7 +39,7 @@ Build mode: fast
   Learner check: Drag a corner key outward and watch the case stretch, delete one and drag its pocket orb in and out, drop a key on top of another and see the red pulse.
   Commit: `Add live key editing with reshaping case and overlap warnings`
 
-- [x] **4. Resize the whole board with snap or freeform**
+- [x] **4. Resize the whole board with snap or freeform** — CUT after it was built (see Revisions)
   Becomes usable: A handle on the board's right edge resizes it. In *snap* mode it jumps between standard sizes (60 → 65 → 75 → TKL → full). In *freeform* it adds or removes keys anywhere in between. A toggle in the Build options switches mode.
   Why now: Completes the Layout step on top of slice 3's editing.
   PRD ref: `prd.md > Layout Step` (Board resize, Snap toggle)
@@ -143,3 +143,4 @@ Activity mode:
 - Per-key overrides open from the selected key (single click or double-click) in the Build panel instead of a double-click-only popup; per-key switches are limited to the board's family (MX and Choc need different plates); Choc boards get low-profile caps (0.55× height). Catalog lives in `src/lib/catalog.ts` + `src/data/switches.json` (52 switches).
 - Knob keys slide aside on drop (pointer up), not continuously while dragging — continuous shifting would push keys further on every move. The knob counts as a 1u footprint for the case, well, plate cutout and overlap checks.
 - LEDs render as an additive underglow halo plus the keycap's emissive (shared live colour per key) — a plain plane under the cap only showed as thin slivers. Effects run in a chosen colour (`board.ledColor`, wave is rainbow); reactive lights keys on hover. Only an active effect keeps the frame loop running.
+- Board resize (slice 4) cut by the learner after it was built: handle, Snap/Freeform toggle, `resizeFree`/`snapSize` and their tests removed; presets and key editing cover sizing. The unused `board.snap` field was dropped from the data model (old saves keep it harmlessly).

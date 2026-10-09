@@ -9,7 +9,7 @@ Build mode: fast
 
 ## Slices
 
-- [ ] **1. Three test boards render with a real-looking case**
+- [x] **1. Three test boards render with a real-looking case**
   Becomes usable: A running app showing a TKL, a column-staggered split, and an Alice-style rotated board in the neutral studio scene, each with a rounded, beveled, tilted case computed from its keys. A toggle switches between them.
   Why now: This is the kernel and the learner's recorded doubt ("flat and blocky", "curved or ergonomic layouts"). If the case approach fails, everything else changes, so it's proven before anything is built on top. It also confirms the clipper2-js API.
   PRD ref: `prd.md > Layout Step` (Living case), `prd.md > Look and Feel`
@@ -122,3 +122,5 @@ Reflection:
 Activity mode:
 
 ## Revisions
+- Case outline library switched from clipper2-js to clipper-lib (the spec's fallback) — clipper2-js 1.2.4 broke offsets when union results contained duplicate points, and even after trimming them the rounded outline came out with the wrong area.
+- Added `src/types.ts` for the shared `Key` type — the case geometry needs it before the store exists (slice 2).

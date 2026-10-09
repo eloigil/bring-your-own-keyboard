@@ -10,7 +10,7 @@ BYOKb is a single web page that runs entirely in the browser. There's no server 
 
 - **The design** is one object: the keys (position, size, rotation), the components (the knob), the board-wide switch and keycap choice, per-key overrides, and the LEDs. It lives in one **store** (zustand), and the browser saves it to `localStorage` on every change, so a refresh keeps the design.
 - **The 3D scene** (react-three-fiber) draws whatever the store says: keycaps, switches, the knob, the LEDs, and the case.
-- **The case** is computed, not modeled. Each key's footprint becomes a rectangle. The rectangles are merged into one outline and grown outward with rounded corners (clipper2). The outline is extruded into 3D with beveled edges, and then tilted into a typing-angle wedge. Moving a key changes the rectangles, which changes the outline, which changes the case. That chain is the kernel.
+- **The case** is computed, not modeled. Each key's footprint becomes a rectangle. The rectangles are merged into one outline and grown outward with rounded corners (clipper-lib). The outline is extruded into 3D with beveled edges, and then tilted into a typing-angle wedge. Moving a key changes the rectangles, which changes the outline, which changes the case. That chain is the kernel.
 - **The panels** on the left (steps) and right (options) edit the store; the scene updates.
 - **Export** turns the same case mesh into an STL file, and turns the same key list into a QMK firmware folder zipped for download. What you see is what you print and flash.
 
@@ -49,11 +49,11 @@ Versions checked with `npm view` on 2026-10-09. Let Vite's template choose compa
 | @react-three/fiber | 9.8 | Learner's choice: three.js as React components | https://r3f.docs.pmnd.rs |
 | @react-three/drei | 10.7 | OrbitControls, ContactShadows, Html helpers | https://drei.docs.pmnd.rs |
 | zustand | 5.0 | One design store + `persist` to localStorage | https://zustand.docs.pmnd.rs |
-| clipper2-js | 1.2 | Polygon union and rounded offset for the case outline | https://www.npmjs.com/package/clipper2-js |
+| clipper-lib | 6.4 | Polygon union and rounded offset for the case outline (replaced clipper2-js, see checklist Revisions) | https://www.npmjs.com/package/clipper-lib |
 | fflate | 0.8 | Zips the firmware folder in the browser | https://github.com/101arrowz/fflate |
 | Vitest | (latest) | Fast checks for the pure geometry, validation, and firmware logic | https://vitest.dev |
 
-**Verify early:** clipper2-js is a smaller community port. In build step 1, confirm that its `Union` + `InflatePaths` (round join) API works as expected. Fallback: `clipper-lib` (older JS port with the same concepts).
+**Verified in slice 1:** clipper2-js produced wrong offsets, so the build uses the fallback `clipper-lib`.
 
 ## Where It Runs and How Someone Tries It
 - **Runtime:** a browser (Chrome recommended), with Node 22 to run the dev server. No API keys.
@@ -226,6 +226,5 @@ None at runtime. No APIs, no keys, no hosting. Everything is an npm package bund
 **Learner uncertainty and how it's checked:** will the computed case look "flat and blocky, not like a real case", and can it handle "curved or ergonomic layouts"? Clarified with the plan for rounded joins, bevels, and the vertex tilt. Rotated and staggered keys are just rotated polygons. **Check:** build step 1 renders a TKL, a column-staggered split, and an Alice-style rotated layout with the full case treatment. The learner judges them visually before anything is built on top. If it fails, change the case approach first.
 
 **Open, resolve during the build:**
-- clipper2-js API fit (fallback: clipper-lib).
 - ShipShaper's actual look, to check at the first visual step.
 - How exactly the split preset's halves export: one STL with two bodies (default), and one QMK matrix as if hand-wired to one controller. True split firmware (two controllers) is deferred.

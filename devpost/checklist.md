@@ -30,13 +30,13 @@ Build mode: fast
   Commit: `Add editor shell, presets, and saved design`
 
 - [ ] **3. Drag, add, and delete keys while the case follows**
-  Becomes usable: Select a key and drag it (0.25u grid), add a key, delete a key, and the case reshapes live with eased motion. Overlapping keys pulse red.
+  Becomes usable: Select a key and drag it (0.25u grid), add a key, delete a key, and the case reshapes live with eased motion. Each pocket in the case has an orb you drag to set its depth. Overlapping keys pulse red.
   Why now: This is the interactive kernel, the "drag a wall" moment. Validation lands here because dragging is the first way to create overlaps.
   PRD ref: `prd.md > Layout Step` (Single-key editing, Living case), `prd.md > States and Boundaries` (Invalid design)
   Spec ref: `spec.md > Scene (src/scene/)`, `spec.md > Validation (src/lib/validate.ts)`, `spec.md > Case Geometry`
-  Build: Selection and drag in `Board.tsx`, add/delete actions and buttons, per-frame outline recompute, `validate.ts`, and the red pulse.
-  Verify (mechanical): Tests confirm that `validate` flags two overlapping keys and clears once separated, and that `moveKey` snaps to 0.25u. In the browser, dragging a key outward visibly extends the case (screenshot check).
-  Learner check: Drag a corner key outward and watch the case stretch, delete one and see the notch, drop a key on top of another and see the red pulse.
+  Build: Selection and drag in `Board.tsx`, add/delete actions and buttons, per-frame outline recompute, `pockets()` in `case.ts`, `PocketOrb.tsx` with `pocketFills` in the store, `validate.ts`, and the red pulse.
+  Verify (mechanical): Tests confirm that `validate` flags two overlapping keys and clears once separated, that `moveKey` snaps to 0.25u, that a TKL with Pause deleted has a pocket there, and that fill d=0 leaves the notch open while d=depth makes the outline contain the Pause center. In the browser, dragging a key outward visibly extends the case (screenshot check).
+  Learner check: Drag a corner key outward and watch the case stretch, delete one and drag its pocket orb in and out, drop a key on top of another and see the red pulse.
   Commit: `Add live key editing with reshaping case and overlap warnings`
 
 - [ ] **4. Resize the whole board with snap or freeform**
@@ -101,7 +101,7 @@ Build mode: fast
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 1: does the computed case look real? (decides whether the case approach stands)
+- [x] Early usable behavior explored — after slice 1: does the computed case look real? (decides whether the case approach stands)
 - [ ] Kernel interaction explored — after slice 3: does dragging keys and watching the case feel like play?
 - [ ] Final kick-the-tires exploration and feedback completed
 
@@ -124,3 +124,6 @@ Activity mode:
 ## Revisions
 - Case outline library switched from clipper2-js to clipper-lib (the spec's fallback) — clipper2-js 1.2.4 broke offsets when union results contained duplicate points, and even after trimming them the rounded outline came out with the wrong area.
 - Added `src/types.ts` for the shared `Key` type — the case geometry needs it before the store exists (slice 2).
+- Case outline now fills gaps between key groups and smooths pockets per body (closing, CLOSE = 30 mm) — checkpoint 1: the learner saw odd gaps and a thin slot beside the arrow cluster; tight outline-following looked unreal there.
+- Added per-pocket fill orbs to slice 3 (PRD Layout Step, spec Case Geometry/Scene/Data Model) — learner chose per-pocket control over a single global one; replaces the 'deleting a corner key leaves a notch' criterion with orb-controlled depth.
+- Case walls use creased normals — curved walls showed vertical banding from flat per-face shading.

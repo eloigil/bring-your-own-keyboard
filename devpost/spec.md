@@ -92,10 +92,12 @@ PRD ref: `prd.md > Screens and Layout`.
 - `Knob.tsx` — a cylinder knob, draggable.
 - `Leds.tsx` — per-key emissive underglow; animates effects in `useFrame`.
 - `ResizeHandle.tsx` — a handle on the board's right edge.
+- `PocketOrb.tsx` — one orb per pocket, placed between `mouth` and `deep` by its fill; dragging projects the pointer onto that line and writes the depth to the store (orbit controls paused while dragging).
 PRD ref: `prd.md > Layout Step`, `prd.md > Components Step`, `prd.md > LEDs Step`.
 
 ### Case Geometry (`src/lib/case.ts`)
 - `caseOutline(keys, components, family)` → polygons. Each key/component footprint is converted to mm (MX 19.05 mm/u; Choc 18 × 17 mm/u), rotated, unioned, then inflated by a bezel margin with round joins. Split boards naturally produce two polygons.
+- `pockets(keys, family, fills)` → for each body: snug outline (keys + bezel, holes filled) vs. its convex hull; each region in between is a pocket with `mouth` (center of its opening on the hull), `deep` (its deepest point) and `depth`. A pocket's fill is the band of width `d` inside the hull; untouched pockets default to the closing (CLOSE) result. `caseOutline` = snug ∪ fills, lightly rounded.
 - `caseMesh(outline, family)` → `BufferGeometry`. `ExtrudeGeometry` with bevel, switch cutout holes (MX 14 mm, Choc 13.8 mm), then the vertex tilt for the typing angle.
 PRD ref: `prd.md > Layout Step` (Living case), `prd.md > Export Step`.
 
@@ -142,6 +144,8 @@ interface Design {
   keys: Key[]; components: Component[];
   board: { switchId: string; profileId: string; keycapColor: string; snap: 'snap' | 'free';
            ledEffect: 'none' | 'breathing' | 'wave' | 'reactive' };
+  /** Pocket depths set by orbs, anchored at the pocket's mouth (mm, layout coords). d = mm filled from the mouth. */
+  pocketFills: { x: number; y: number; d: number }[];
 }
 // UI-only, not persisted: view ('landing'|'editor'), step, selectedId
 ```
@@ -208,6 +212,7 @@ None at runtime. No APIs, no keys, no hosting. Everything is an npm package bund
 ## What Was Simplified and Why
 - **An extruded, beveled, tilted case** instead of a CAD-modeled case with curved walls. Keeps one fast `keys → outline → mesh` function for both preview and STL. Fuller version: a CSG/CAD kernel (e.g. OpenCascade WASM).
 - **An assumed hand-wired Pico** instead of firmware for a real PCB. No PCB exists in the PoC. Fuller version: generated from the PCB netlist when PCB generation lands.
+- **Pocket identity by mouth position** instead of tracking pockets through edits. A saved depth follows the pocket whose opening is nearest (within ~1u); if a pocket disappears its depth is dropped. Fuller version: topological pocket tracking.
 - **A near-square, arbitrary key matrix** instead of physical rows/columns. Fits any board on one controller; costs wiring readability, which the README's wiring table covers.
 - **Approximate keycap shapes** instead of exact profile models. Enough to see the difference between profiles.
 - **A hand-built switch catalog**, labeled best-effort. There's no free switch database.

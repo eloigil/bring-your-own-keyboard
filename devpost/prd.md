@@ -41,10 +41,13 @@ Source: `scope.md > The POC Boundary` items 1–2.
 - **Snap toggle:** in *autosnap* mode, resizing snaps to the standard sizes. In *freeform* mode, it stops anywhere, adding or removing keys.
 - **Single-key editing:** select a key to move it, add a key, or delete a key.
 - **Living case:** the case follows the outline of the keys (not a bounding rectangle) and updates live as keys change.
+- **Pocket fill orbs:** wherever the case dips inward (a pocket, e.g. beside the arrows or the V of an Alice), a small orb sits in the pocket. Dragging it decides how deep the pocket goes: out to the edge fills it flush, inward opens it up. Untouched pockets get a smooth default fill.
 - [ ] The editor opens with a TKL keyboard visible in 3D.
 - [ ] Choosing the 60% preset visibly changes the board and its case to a 60% layout.
 - [ ] Dragging the edge in autosnap mode lands only on standard sizes; in freeform it stops between them.
-- [ ] Deleting a corner key leaves a notch in the case outline; moving a key outward makes the case extend to cover it.
+- [ ] Moving a key outward makes the case extend to cover it.
+- [ ] Each pocket shows an orb; dragging it to the edge fills the pocket flush, dragging it inward deepens the pocket (e.g. a deleted corner key's notch can be opened fully).
+- [ ] Gaps between key groups inside the board (Esc→F1, between F-key groups) are always filled.
 
 ### Components Step
 Source: `scope.md > The POC Boundary` items 3 and 6.
@@ -93,6 +96,7 @@ Source: `scope.md > The POC Boundary` items 4–5.
 - Switches, keycaps, the knob, and other components share one Components step.
 - A snap/freeform toggle exists because both kinds of editing are useful.
 - The case follows the key outline, not a rectangle.
+- Each pocket in the case gets its own draggable orb to set its depth (chosen over a single global control, accepting the extra complexity). Internal gaps are always filled.
 - A whole-board config plus a double-click override per element.
 - The switch catalog is as complete as possible, grouped by brand → type → model.
 - LEDs support per-key painting and animated effects, off until configured, then visible in all steps.

@@ -11,6 +11,8 @@ import type { KeycapMaterial } from '../types'
 const GAP = 1.2 // mm between neighbouring caps
 const RED = new THREE.Color('#e5484d')
 const ACCENT = new THREE.Color('#5b5bd6')
+/** The scene environment is kept faint for everything else; clear caps scale it back up to read as glossy plastic. */
+const CLEAR_REFLECTIONS = 14
 
 // Keycap and switch geometries are shared between keys with the same shape (a TKL needs only a handful).
 const capCache = new Map<string, THREE.BufferGeometry>()
@@ -68,12 +70,12 @@ export function Keycap({ k, family, color, profile, row, stemColor, housingColor
   const invalidate = useThree((s) => s.invalidate)
   const tint = (t: number) => {
     if (!mat.current) return
-    const c = mat.current.color.set(color)
+    const c = mat.current.color.set(material === 'clear' ? '#ffffff' : color)
     if (selected) c.lerp(ACCENT, 0.35)
     if (invalid) c.lerp(RED, 0.45 + 0.35 * Math.sin(t * 5))
   }
-  useEffect(() => (tint(0), invalidate()), [color, selected, invalid]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => void (mat.current && (mat.current.emissive = glow)), [glow])
+  useEffect(() => (tint(0), invalidate()), [color, selected, invalid, material]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => void (mat.current && (mat.current.emissive = glow)), [glow, material])
   // only an invalid key keeps the frame loop running (for its pulse)
   useFrame(({ clock, invalidate }) => {
     if (!invalid) return
@@ -84,15 +86,34 @@ export function Keycap({ k, family, color, profile, row, stemColor, housingColor
     <>
       <mesh geometry={geometry} castShadow>
         {/* how much backlight the cap lets through depends on its plastic (see data/materials.ts) */}
-        <meshStandardMaterial
-          ref={mat}
-          color={color}
-          roughness={m.roughness}
-          transparent={m.opacity < 1}
-          opacity={m.opacity}
-          depthWrite={m.opacity >= 1}
-          emissiveIntensity={m.glow}
-        />
+        {material === 'clear' ? (
+          // polycarbonate: real transmission and refraction; the cap colour only tints light travelling through it,
+          // and it reads by its reflections (needs the scene's environment, strong only on these caps)
+          <meshPhysicalMaterial
+            ref={mat}
+            color="#ffffff"
+            transmission={1}
+            thickness={4}
+            ior={1.58}
+            roughness={0.07}
+            clearcoat={1}
+            clearcoatRoughness={0.03}
+            attenuationColor={color}
+            attenuationDistance={7}
+            envMapIntensity={CLEAR_REFLECTIONS}
+            emissiveIntensity={m.glow}
+          />
+        ) : (
+          <meshStandardMaterial
+            ref={mat}
+            color={color}
+            roughness={m.roughness}
+            transparent={m.opacity < 1}
+            opacity={m.opacity}
+            depthWrite={m.opacity >= 1}
+            emissiveIntensity={m.glow}
+          />
+        )}
       </mesh>
       <mesh geometry={sw.housing}>
         <meshStandardMaterial color={housingColor} roughness={0.6} />

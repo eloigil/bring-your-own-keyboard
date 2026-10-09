@@ -1,12 +1,12 @@
 import { Canvas } from '@react-three/fiber'
-import { ContactShadows, Grid, OrbitControls } from '@react-three/drei'
+import { ContactShadows, Environment, Grid, Lightformer, OrbitControls } from '@react-three/drei'
 import type { ReactNode } from 'react'
 import { useDesign } from '../store/design'
 
 // Light studio by default; "dark" dims the room so the backlight and LEDs read like they would at night.
 const ROOM = {
-  light: { bg: '#e9e8ec', sky: 1.4, key: 2.2, fill: 0.6, cell: '#bdb7c8', section: '#b8b2c5', shadow: 0.35 },
-  dark: { bg: '#0f0e13', sky: 0.12, key: 0.3, fill: 0.08, cell: '#24222c', section: '#2e2b38', shadow: 0.6 },
+  light: { bg: '#e9e8ec', sky: 1.4, key: 2.2, fill: 0.6, cell: '#bdb7c8', section: '#b8b2c5', shadow: 0.35, env: 0.12 },
+  dark: { bg: '#0f0e13', sky: 0.12, key: 0.3, fill: 0.08, cell: '#24222c', section: '#2e2b38', shadow: 0.6, env: 0.04 },
 }
 
 /** Studio: backdrop, key + fill light, contact shadow, scale grid. No remote HDR, works offline. */
@@ -21,6 +21,12 @@ export function Stage({ children, onPointerMissed }: { children: ReactNode; onPo
         <orthographicCamera attach="shadow-camera" args={[-300, 300, 300, -300, 1, 1000]} />
       </directionalLight>
       <directionalLight position={[200, 120, -150]} intensity={r.fill} />
+      {/* soft studio reflections, built from shapes (no HDR download): faint on everything, clear caps scale it up */}
+      <Environment resolution={128} environmentIntensity={r.env}>
+        <Lightformer form="rect" intensity={3} position={[0, 400, 0]} rotation-x={Math.PI / 2} scale={[600, 300, 1]} />
+        <Lightformer form="rect" intensity={1.5} position={[-500, 150, 200]} rotation-y={Math.PI / 2} scale={[400, 120, 1]} />
+        <Lightformer form="rect" intensity={1} position={[500, 100, -200]} rotation-y={-Math.PI / 2} scale={[300, 100, 1]} />
+      </Environment>
       {children}
       {/* scale reference: 1 cm cells, 10 cm sections, fading out in a circle around the board (fadeFrom 0 = from the origin) */}
       <Grid

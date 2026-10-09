@@ -130,7 +130,7 @@ export function Board() {
                 row={rows.get(k.id) ?? 2}
                 stemColor={switchById(k.override?.switchId ?? board.switchId).stemColor}
                 housingColor={board.switchColor}
-                opacity={board.keycapOpacity}
+                material={board.keycapMaterial}
                 invalid={invalid.has(k.id)}
                 selected={shaping && k.id === selectedId}
                 glow={glowOf(k.id)}

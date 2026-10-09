@@ -1,6 +1,8 @@
 import { useDesign } from '../../store/design'
 import { familyOf, switchById, switchGroups } from '../../lib/catalog'
 import { PROFILES } from '../../data/keycaps'
+import { KEYCAP_MATERIALS } from '../../data/materials'
+import type { KeycapMaterial } from '../../types'
 
 const SWATCHES = ['#f4f2ec', '#2b2b30', '#e8d6b8', '#9fb7d6', '#f2b8c6', '#b9d8b0', '#ff8a1f', '#5b5bd6']
 const HOUSINGS = ['#2c2b31', '#f2f2f2', '#c9cdd4', '#f3a6c8', '#a68bd8', '#9fd3e6', '#ff8a1f']
@@ -52,11 +54,14 @@ export function ComponentsOptions() {
           ))}
           <input type="color" value={board.keycapColor} onChange={(e) => setKeycaps({ keycapColor: e.target.value })} title="Custom colour" />
         </div>
-        <label className="slider" title="See-through caps let the backlight through">
-          <span className="label">Transparency</span>
-          <input type="range" min={0} max={0.8} step={0.05} value={1 - board.keycapOpacity} onChange={(e) => setKeycaps({ keycapOpacity: Math.round((1 - Number(e.target.value)) * 100) / 100 })} />
-          <span>{Math.round((1 - board.keycapOpacity) * 100)}%</span>
-        </label>
+        <div className="grid">
+          {(Object.keys(KEYCAP_MATERIALS) as KeycapMaterial[]).map((id) => (
+            <button key={id} className={`tile ${board.keycapMaterial === id ? 'active' : ''}`} onClick={() => setKeycaps({ keycapMaterial: id })}>
+              {KEYCAP_MATERIALS[id].name}
+            </button>
+          ))}
+        </div>
+        <p className="muted">{KEYCAP_MATERIALS[board.keycapMaterial].note}</p>
       </section>
       <section>
         <h3>Components</h3>

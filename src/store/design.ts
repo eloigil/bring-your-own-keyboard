@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Design, Key, Step } from '../types'
+import type { Design, Key, KeycapMaterial, Step } from '../types'
 import { PRESETS, newId, snap, snapAside, type PresetName } from '../lib/layout'
 import { TILT_DEG, TILT_MAX } from '../lib/case'
 
@@ -11,7 +11,7 @@ export function defaultDesign(): Design {
     version: 1,
     keys: PRESETS.TKL(),
     components: [],
-    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', ledEffect: 'none', tiltDeg: TILT_DEG, ledColor: '#ff8a1f', keycapOpacity: 1, switchColor: '#2c2b31' },
+    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', ledEffect: 'none', tiltDeg: TILT_DEG, ledColor: '#ff8a1f', keycapMaterial: 'solid', switchColor: '#2c2b31' },
     pocketFills: [],
   }
 }
@@ -62,7 +62,7 @@ interface State {
   setLedColor: (c: string) => void
   clearLeds: () => void
   setSwitch: (id: string) => void
-  setKeycaps: (patch: { profileId?: string; keycapColor?: string; keycapOpacity?: number; switchColor?: string }) => void
+  setKeycaps: (patch: { profileId?: string; keycapColor?: string; keycapMaterial?: KeycapMaterial; switchColor?: string }) => void
   /** Dark room to see the LEDs; a viewing preference, saved but not part of the design. */
   dark: boolean
   toggleDark: () => void

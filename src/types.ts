@@ -22,6 +22,8 @@ export interface Component {
   y: Unit
 }
 
+export type KeycapMaterial = 'solid' | 'frosted' | 'clear'
+
 export type LedEffect = 'none' | 'breathing' | 'wave' | 'reactive'
 
 export interface Design {
@@ -37,8 +39,8 @@ export interface Design {
     tiltDeg: number
     /** Colour the LED effect runs in. */
     ledColor: string
-    /** Keycap opacity: 1 = solid, lower = see-through (lets the backlight through). */
-    keycapOpacity: number
+    /** Keycap plastic: solid (PBT/ABS), frosted (milky translucent) or clear (polycarbonate). */
+    keycapMaterial: KeycapMaterial
     /** Switch housing colour. */
     switchColor: string
   }

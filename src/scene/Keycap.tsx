@@ -5,6 +5,8 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import type { Key } from '../types'
 import { CUTOUT, PITCH, SWITCH_TRAVEL_HEIGHT, type Family } from '../lib/units'
 import { rowShape, type Profile } from '../data/keycaps'
+import { KEYCAP_MATERIALS } from '../data/materials'
+import type { KeycapMaterial } from '../types'
 
 const GAP = 1.2 // mm between neighbouring caps
 const RED = new THREE.Color('#e5484d')
@@ -48,15 +50,15 @@ function switchGeometry(family: Family) {
 }
 
 /** A keycap on its switch, positioned by its parent at the keycap's bottom. Pulses red when invalid, tinted when selected. */
-export function Keycap({ k, family, color, profile, row, stemColor, housingColor, opacity, invalid, selected, glow }: {
+export function Keycap({ k, family, color, profile, row, stemColor, housingColor, material, invalid, selected, glow }: {
   k: Key; family: Family; color: string; profile: Profile; row: number; stemColor: string; housingColor: string
-  /** 1 = solid cap; lower lets the backlight through */
-  opacity: number
+  material: KeycapMaterial
   invalid?: boolean; selected?: boolean
   /** The key's live LED colour (black when off), shared with its underglow. */
   glow: THREE.Color
 }) {
   const p = PITCH[family]
+  const m = KEYCAP_MATERIALS[material]
   const shape = rowShape(profile, row)
   // Choc switches take low-profile caps: same profile character at a bit over half the height
   const height = family === 'Choc' ? shape.height * 0.55 : shape.height, tilt = family === 'Choc' ? shape.tilt * 0.5 : shape.tilt
@@ -81,15 +83,15 @@ export function Keycap({ k, family, color, profile, row, stemColor, housingColor
   return (
     <>
       <mesh geometry={geometry} castShadow>
-        {/* backlight only shows through a cap as much as the cap is see-through; a solid cap blocks it */}
+        {/* how much backlight the cap lets through depends on its plastic (see data/materials.ts) */}
         <meshStandardMaterial
           ref={mat}
           color={color}
-          roughness={opacity < 1 ? 0.35 : 0.7}
-          transparent={opacity < 1}
-          opacity={opacity}
-          depthWrite={opacity >= 1}
-          emissiveIntensity={1.2 * (1 - opacity)}
+          roughness={m.roughness}
+          transparent={m.opacity < 1}
+          opacity={m.opacity}
+          depthWrite={m.opacity >= 1}
+          emissiveIntensity={m.glow}
         />
       </mesh>
       <mesh geometry={sw.housing}>

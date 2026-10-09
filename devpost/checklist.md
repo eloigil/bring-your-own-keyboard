@@ -49,7 +49,7 @@ Build mode: fast
   Learner check: Drag the edge with snap on (does it jump between known sizes?), then switch to freeform and stop halfway.
   Commit: `Add board resize with snap and freeform modes`
 
-- [ ] **5. Choose switches and keycaps, board-wide or per key**
+- [x] **5. Choose switches and keycaps, board-wide or per key**
   Becomes usable: The Components step: a switch catalog grouped brand → type → model and keycap color and profile, applied board-wide. Double-click any key to override it. Switching MX ↔ Choc changes the spacing and the case.
   Why now: Switch family changes the geometry, so it must exist before export.
   PRD ref: `prd.md > Components Step`
@@ -140,3 +140,4 @@ Activity mode:
 - Untouched pockets now start flush (t = 1) and the closing-based default is gone — learner found the initial partly-filled shapes weird.
 - Added a typing-angle slider (0–12°, default 6°) to the Layout step (learner moved it from Build); `board.tiltDeg` is saved, and older saves get 6° — learner's request after checkpoint 2.
 - Freeform growth fills only the new strip past the old edge (not short rows like a TKL's Caps row); snap swaps in the preset, resetting custom edits — found while writing slice 4's tests.
+- Per-key overrides open from the selected key (single click or double-click) in the Build panel instead of a double-click-only popup; per-key switches are limited to the board's family (MX and Choc need different plates); Choc boards get low-profile caps (0.55× height). Catalog lives in `src/lib/catalog.ts` + `src/data/switches.json` (52 switches).

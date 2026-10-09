@@ -283,3 +283,14 @@ export function resizeFree(keys: Key[], width: number): Key[] {
   for (const [y, right] of rows) for (let x = Math.max(right, maxX); x + 1 <= edge + 1e-6; x += 1) added.push({ id: newId(), x, y, w: 1, h: 1, rot: 0 })
   return [...kept, ...added]
 }
+
+/**
+ * Keycap row (0 = back) for each key, for sculpted profiles: rows are the board's rounded y positions,
+ * and a board with more than 5 rows folds the extra back rows (e.g. a TKL's F-row) into row 0.
+ */
+export function keyRows(keys: Key[]): Map<string, number> {
+  const rowOf = (k: Key) => Math.round(k.y + k.h / 2 - 0.5)
+  const distinct = [...new Set(keys.map(rowOf))].sort((a, b) => a - b)
+  const extra = Math.max(0, distinct.length - 5)
+  return new Map(keys.map((k) => [k.id, Math.max(0, distinct.indexOf(rowOf(k)) - extra)]))
+}

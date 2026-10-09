@@ -1,0 +1,68 @@
+import { useDesign } from '../../store/design'
+import { familyOf, switchById, switchGroups } from '../../lib/catalog'
+import { PROFILES } from '../../data/keycaps'
+
+const SWATCHES = ['#f4f2ec', '#2b2b30', '#e8d6b8', '#9fb7d6', '#f2b8c6', '#b9d8b0', '#ff8a1f', '#5b5bd6']
+
+function SwitchSelect({ value, onChange, family, allowDefault }: { value: string; onChange: (id: string) => void; family?: 'MX' | 'Choc'; allowDefault?: boolean }) {
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)}>
+      {allowDefault && <option value="">Board switch</option>}
+      {switchGroups(family ? (s) => s.family === family : undefined).map(([label, list]) => (
+        <optgroup key={label} label={label}>
+          {list.map((s) => (
+            <option key={s.id} value={s.id}>{s.model} — {s.forceG} g</option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
+  )
+}
+
+export function ComponentsOptions() {
+  const board = useDesign((s) => s.design.board)
+  const selected = useDesign((s) => s.design.keys.find((k) => k.id === s.selectedId))
+  const { setSwitch, setKeycaps, setOverride } = useDesign.getState()
+  const sw = switchById(board.switchId)
+  return (
+    <>
+      <section>
+        <h3>Switches</h3>
+        <SwitchSelect value={board.switchId} onChange={setSwitch} />
+        <p className="muted">
+          {sw.brand} {sw.model}: {sw.type}, {sw.forceG} g, {sw.family === 'Choc' ? 'low-profile (Choc spacing, slimmer case)' : 'MX'}. Specs are best-effort.
+        </p>
+      </section>
+      <section>
+        <h3>Keycaps</h3>
+        <select value={board.profileId} onChange={(e) => setKeycaps({ profileId: e.target.value })}>
+          {PROFILES.map((p) => <option key={p.id} value={p.id}>{p.name} profile</option>)}
+        </select>
+        <div className="swatches">
+          {SWATCHES.map((c) => (
+            <button key={c} className={`swatch ${c === board.keycapColor ? 'active' : ''}`} style={{ background: c }} title={c} onClick={() => setKeycaps({ keycapColor: c })} />
+          ))}
+          <input type="color" value={board.keycapColor} onChange={(e) => setKeycaps({ keycapColor: e.target.value })} title="Custom colour" />
+        </div>
+      </section>
+      {selected && (
+        <section className="selected">
+          <h3>Selected key{selected.legend ? `: ${selected.legend}` : ''}</h3>
+          <div className="swatches">
+            {SWATCHES.map((c) => (
+              <button key={c} className={`swatch ${c === selected.override?.keycapColor ? 'active' : ''}`} style={{ background: c }} title={c} onClick={() => setOverride(selected.id, { keycapColor: c })} />
+            ))}
+            <input type="color" value={selected.override?.keycapColor ?? board.keycapColor} onChange={(e) => setOverride(selected.id, { keycapColor: e.target.value })} title="Custom colour" />
+          </div>
+          <select value={selected.override?.profileId ?? ''} onChange={(e) => setOverride(selected.id, { profileId: e.target.value || undefined })}>
+            <option value="">Board profile</option>
+            {PROFILES.map((p) => <option key={p.id} value={p.id}>{p.name} profile</option>)}
+          </select>
+          {/* a key can only use a switch of the board's family: MX and Choc need different plates */}
+          <SwitchSelect value={selected.override?.switchId ?? ''} onChange={(id) => setOverride(selected.id, { switchId: id || undefined })} family={familyOf(board.switchId)} allowDefault />
+          <button className="tile" onClick={() => setOverride(selected.id, null)}>Reset this key</button>
+        </section>
+      )}
+    </>
+  )
+}

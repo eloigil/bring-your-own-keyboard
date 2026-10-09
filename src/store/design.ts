@@ -1,8 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Design, Step } from '../types'
+import type { Design, Key, Step } from '../types'
 import { PRESETS, newId, resizeFree, snap, snapSize, type PresetName } from '../lib/layout'
-import type { Family } from '../lib/units'
 import { TILT_DEG, TILT_MAX } from '../lib/case'
 
 export const STORAGE_KEY = 'byokb-design'
@@ -32,8 +31,7 @@ export function loadDesign(raw: unknown): Design {
   return Number.isFinite(d.board.tiltDeg) ? d : { ...d, board: { ...d.board, tiltDeg: TILT_DEG } }
 }
 
-// ponytail: family from the switch id until the catalog lands in slice 5
-export const familyOf = (switchId: string): Family => (switchId.includes('choc') ? 'Choc' : 'MX')
+export { familyOf } from '../lib/catalog'
 
 interface State {
   design: Design
@@ -48,6 +46,10 @@ interface State {
   deleteKey: (id: string) => void
   setPocketFill: (x: number, y: number, t: number) => void
   setTilt: (deg: number) => void
+  setSwitch: (id: string) => void
+  setKeycaps: (patch: { profileId?: string; keycapColor?: string }) => void
+  /** Give one key its own switch/keycap settings; null clears them. */
+  setOverride: (keyId: string, patch: Key['override'] | null) => void
   setSnapMode: (mode: 'snap' | 'free') => void
   /** Resize from the board's left edge to `width` units, by the current snap mode. */
   resizeTo: (width: number) => void
@@ -94,6 +96,15 @@ export const useDesign = create<State>()(
             set({ preset: null, selectedId: null, design: { ...s.design, keys } })
         }
       },
+      setSwitch: (switchId) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, switchId } } })),
+      setKeycaps: (patch) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, ...patch } } })),
+      setOverride: (keyId, patch) =>
+        set((s) => ({
+          design: {
+            ...s.design,
+            keys: s.design.keys.map((k) => (k.id !== keyId ? k : { ...k, override: patch ? { ...k.override, ...patch } : undefined })),
+          },
+        })),
       setTilt: (deg) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, tiltDeg: Math.max(0, Math.min(TILT_MAX, deg)) } } })),
       setPocketFill: (x, y, t) =>
         set((s) => ({

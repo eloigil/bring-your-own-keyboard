@@ -72,3 +72,10 @@ button:disabled { opacity: 0.4; cursor: default; }
 .slider input { flex: 1; accent-color: var(--accent); }
 .slider span { width: 40px; text-align: right; font-variant-numeric: tabular-nums; font-size: 13px; }
 .cta { margin-top: 20px; }
+select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 13px; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 4px 8px; align-items: center; }
+.swatch { width: 24px; height: 24px; padding: 0; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line); }
+.swatch.active { box-shadow: 0 0 0 2px var(--accent); }
+.swatches input[type='color'] { width: 28px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer; }
+.selected { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 4px; }
+.selected .tile { width: calc(100% - 8px); margin: 0 4px; }

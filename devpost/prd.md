@@ -57,7 +57,7 @@ Covers two UI steps: **Layout** (presets only) and **Build** (everything else be
 Lives in the **Build** UI step, alongside the shape tools.
 Source: `scope.md > The POC Boundary` items 3 and 6.
 - **Whole-board config:** switches and keycaps apply to every key by default.
-- **Per-element override:** double-click a key (or component) to give it its own config. Everything else keeps the board config.
+- **Per-element override:** select (click or double-click) a key to give it its own colour, profile or switch in the Build panel; "Reset this key" clears it. A key's switch must match the board's family (MX or Choc). Everything else keeps the board config.
 - **Switches:** a catalog grouped by **brand → type → model**, as complete as possible (e.g. Cherry MX Red, Kailh Choc Brown). Switching between families with different spacing (MX vs. Choc) changes the layout spacing and the case.
 - **Keycaps:** color and profile (e.g. Cherry, OEM, SA, DSA, XDA). The profile changes the keycap shape and row sculpt in 3D.
 - **Knob (and other components):** add the component, drag it anywhere on the board, and neighboring keys auto-snap and rearrange to make room.

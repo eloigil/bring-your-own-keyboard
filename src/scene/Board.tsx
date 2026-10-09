@@ -11,6 +11,9 @@ import { Keycap } from './Keycap'
 import { PocketOrb } from './PocketOrb'
 import { ResizeHandle } from './ResizeHandle'
 import { hitLocal } from './pointer'
+import { keyRows } from '../lib/layout'
+import { profileById } from '../data/keycaps'
+import { switchById } from '../lib/catalog'
 
 /** Plate slope: the plate tilts a little less than the wall top because it sits lower. */
 function plateTilt(family: Family, tiltDeg: number) {
@@ -26,6 +29,9 @@ export function Board() {
   const family = useDesign((s) => familyOf(s.design.board.switchId))
   const selectedId = useDesign((s) => s.selectedId)
   const tiltDeg = useDesign((s) => s.design.board.tiltDeg)
+  const board = useDesign((s) => s.design.board)
+  const rows = useMemo(() => keyRows(keys), [keys])
+  const modColor = useMemo(() => '#' + new THREE.Color(board.keycapColor).lerp(new THREE.Color('#6f7380'), 0.4).getHexString(), [board.keycapColor])
   const shaping = useDesign((s) => s.step === 'Build') // dragging keys and pocket orbs only in the Build step
   const p = PITCH[family]
 
@@ -80,7 +86,16 @@ export function Board() {
         return (
           <Eased key={k.id} target={target} rotation={[tilt, (-k.rot * Math.PI) / 180, 0]}>
             <group onPointerDown={onDown(k)} onPointerMove={onMove} onPointerUp={onUp}>
-              <Keycap k={k} family={family} color={k.w > 1 ? '#a9adb6' : '#f4f2ec'} invalid={invalid.has(k.id)} selected={shaping && k.id === selectedId} />
+              <Keycap
+                k={k}
+                family={family}
+                color={k.override?.keycapColor ?? (k.w > 1 ? modColor : board.keycapColor)}
+                profile={profileById(k.override?.profileId ?? board.profileId)}
+                row={rows.get(k.id) ?? 2}
+                stemColor={switchById(k.override?.switchId ?? board.switchId).stemColor}
+                invalid={invalid.has(k.id)}
+                selected={shaping && k.id === selectedId}
+              />
             </group>
           </Eased>
         )

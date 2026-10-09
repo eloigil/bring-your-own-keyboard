@@ -1,0 +1,470 @@
+[
+ {
+  "id": "cherry-mx-red",
+  "brand": "Cherry",
+  "type": "linear",
+  "model": "MX Red",
+  "family": "MX",
+  "stemColor": "#d6323a",
+  "forceG": 45
+ },
+ {
+  "id": "cherry-mx-black",
+  "brand": "Cherry",
+  "type": "linear",
+  "model": "MX Black",
+  "family": "MX",
+  "stemColor": "#2b2b2b",
+  "forceG": 60
+ },
+ {
+  "id": "cherry-mx-silent-red",
+  "brand": "Cherry",
+  "type": "linear",
+  "model": "MX Silent Red",
+  "family": "MX",
+  "stemColor": "#e0566a",
+  "forceG": 45
+ },
+ {
+  "id": "cherry-mx-silent-black",
+  "brand": "Cherry",
+  "type": "linear",
+  "model": "MX Silent Black",
+  "family": "MX",
+  "stemColor": "#3a3a3a",
+  "forceG": 60
+ },
+ {
+  "id": "cherry-mx-speed-silver",
+  "brand": "Cherry",
+  "type": "linear",
+  "model": "MX Speed Silver",
+  "family": "MX",
+  "stemColor": "#b8bcc4",
+  "forceG": 45
+ },
+ {
+  "id": "cherry-mx-brown",
+  "brand": "Cherry",
+  "type": "tactile",
+  "model": "MX Brown",
+  "family": "MX",
+  "stemColor": "#7a4a2a",
+  "forceG": 55
+ },
+ {
+  "id": "cherry-mx-clear",
+  "brand": "Cherry",
+  "type": "tactile",
+  "model": "MX Clear",
+  "family": "MX",
+  "stemColor": "#e8eef2",
+  "forceG": 65
+ },
+ {
+  "id": "cherry-mx-blue",
+  "brand": "Cherry",
+  "type": "clicky",
+  "model": "MX Blue",
+  "family": "MX",
+  "stemColor": "#2f6fd0",
+  "forceG": 60
+ },
+ {
+  "id": "cherry-mx-green",
+  "brand": "Cherry",
+  "type": "clicky",
+  "model": "MX Green",
+  "family": "MX",
+  "stemColor": "#3c9a4a",
+  "forceG": 80
+ },
+ {
+  "id": "gateron-red",
+  "brand": "Gateron",
+  "type": "linear",
+  "model": "Red",
+  "family": "MX",
+  "stemColor": "#d63a3a",
+  "forceG": 45
+ },
+ {
+  "id": "gateron-black",
+  "brand": "Gateron",
+  "type": "linear",
+  "model": "Black",
+  "family": "MX",
+  "stemColor": "#222222",
+  "forceG": 60
+ },
+ {
+  "id": "gateron-yellow",
+  "brand": "Gateron",
+  "type": "linear",
+  "model": "Yellow",
+  "family": "MX",
+  "stemColor": "#e8c62e",
+  "forceG": 50
+ },
+ {
+  "id": "gateron-clear",
+  "brand": "Gateron",
+  "type": "linear",
+  "model": "Clear",
+  "family": "MX",
+  "stemColor": "#eef2f4",
+  "forceG": 35
+ },
+ {
+  "id": "gateron-milky-yellow",
+  "brand": "Gateron",
+  "type": "linear",
+  "model": "Milky Yellow",
+  "family": "MX",
+  "stemColor": "#efd25a",
+  "forceG": 50
+ },
+ {
+  "id": "gateron-oil-king",
+  "brand": "Gateron",
+  "type": "linear",
+  "model": "Oil King",
+  "family": "MX",
+  "stemColor": "#1e1e1e",
+  "forceG": 55
+ },
+ {
+  "id": "gateron-ink-black-v2",
+  "brand": "Gateron",
+  "type": "linear",
+  "model": "Ink Black V2",
+  "family": "MX",
+  "stemColor": "#151515",
+  "forceG": 60
+ },
+ {
+  "id": "gateron-brown",
+  "brand": "Gateron",
+  "type": "tactile",
+  "model": "Brown",
+  "family": "MX",
+  "stemColor": "#7a4a2a",
+  "forceG": 55
+ },
+ {
+  "id": "gateron-baby-kangaroo",
+  "brand": "Gateron",
+  "type": "tactile",
+  "model": "Baby Kangaroo",
+  "family": "MX",
+  "stemColor": "#e9a3c4",
+  "forceG": 59
+ },
+ {
+  "id": "gateron-blue",
+  "brand": "Gateron",
+  "type": "clicky",
+  "model": "Blue",
+  "family": "MX",
+  "stemColor": "#2f6fd0",
+  "forceG": 60
+ },
+ {
+  "id": "gateron-green",
+  "brand": "Gateron",
+  "type": "clicky",
+  "model": "Green",
+  "family": "MX",
+  "stemColor": "#3c9a4a",
+  "forceG": 80
+ },
+ {
+  "id": "kailh-box-red",
+  "brand": "Kailh",
+  "type": "linear",
+  "model": "Box Red",
+  "family": "MX",
+  "stemColor": "#d6323a",
+  "forceG": 45
+ },
+ {
+  "id": "kailh-speed-silver",
+  "brand": "Kailh",
+  "type": "linear",
+  "model": "Speed Silver",
+  "family": "MX",
+  "stemColor": "#b8bcc4",
+  "forceG": 50
+ },
+ {
+  "id": "kailh-box-brown",
+  "brand": "Kailh",
+  "type": "tactile",
+  "model": "Box Brown",
+  "family": "MX",
+  "stemColor": "#7a4a2a",
+  "forceG": 50
+ },
+ {
+  "id": "kailh-speed-copper",
+  "brand": "Kailh",
+  "type": "tactile",
+  "model": "Speed Copper",
+  "family": "MX",
+  "stemColor": "#c46b3a",
+  "forceG": 50
+ },
+ {
+  "id": "kailh-box-white",
+  "brand": "Kailh",
+  "type": "clicky",
+  "model": "Box White",
+  "family": "MX",
+  "stemColor": "#f2f2f2",
+  "forceG": 55
+ },
+ {
+  "id": "kailh-box-jade",
+  "brand": "Kailh",
+  "type": "clicky",
+  "model": "Box Jade",
+  "family": "MX",
+  "stemColor": "#2f9e7a",
+  "forceG": 65
+ },
+ {
+  "id": "kailh-box-navy",
+  "brand": "Kailh",
+  "type": "clicky",
+  "model": "Box Navy",
+  "family": "MX",
+  "stemColor": "#25356e",
+  "forceG": 75
+ },
+ {
+  "id": "kailh-choc-choc-red",
+  "brand": "Kailh Choc",
+  "type": "linear",
+  "model": "Choc Red",
+  "family": "Choc",
+  "stemColor": "#d6323a",
+  "forceG": 50
+ },
+ {
+  "id": "kailh-choc-choc-black",
+  "brand": "Kailh Choc",
+  "type": "linear",
+  "model": "Choc Black",
+  "family": "Choc",
+  "stemColor": "#2b2b2b",
+  "forceG": 60
+ },
+ {
+  "id": "kailh-choc-choc-pink",
+  "brand": "Kailh Choc",
+  "type": "linear",
+  "model": "Choc Pink",
+  "family": "Choc",
+  "stemColor": "#ee8fb8",
+  "forceG": 20
+ },
+ {
+  "id": "kailh-choc-choc-sunset",
+  "brand": "Kailh Choc",
+  "type": "linear",
+  "model": "Choc Sunset",
+  "family": "Choc",
+  "stemColor": "#f08a3c",
+  "forceG": 40
+ },
+ {
+  "id": "kailh-choc-choc-brown",
+  "brand": "Kailh Choc",
+  "type": "tactile",
+  "model": "Choc Brown",
+  "family": "Choc",
+  "stemColor": "#7a4a2a",
+  "forceG": 60
+ },
+ {
+  "id": "kailh-choc-choc-robin",
+  "brand": "Kailh Choc",
+  "type": "tactile",
+  "model": "Choc Robin",
+  "family": "Choc",
+  "stemColor": "#5fb7c9",
+  "forceG": 50
+ },
+ {
+  "id": "kailh-choc-choc-white",
+  "brand": "Kailh Choc",
+  "type": "clicky",
+  "model": "Choc White",
+  "family": "Choc",
+  "stemColor": "#f2f2f2",
+  "forceG": 60
+ },
+ {
+  "id": "kailh-choc-choc-blue",
+  "brand": "Kailh Choc",
+  "type": "clicky",
+  "model": "Choc Blue",
+  "family": "Choc",
+  "stemColor": "#2f6fd0",
+  "forceG": 50
+ },
+ {
+  "id": "akko-cs-jelly-pink",
+  "brand": "Akko",
+  "type": "linear",
+  "model": "CS Jelly Pink",
+  "family": "MX",
+  "stemColor": "#f3a6c8",
+  "forceG": 45
+ },
+ {
+  "id": "akko-cs-jelly-black",
+  "brand": "Akko",
+  "type": "linear",
+  "model": "CS Jelly Black",
+  "family": "MX",
+  "stemColor": "#2a2a2a",
+  "forceG": 50
+ },
+ {
+  "id": "akko-cs-rose-red",
+  "brand": "Akko",
+  "type": "linear",
+  "model": "CS Rose Red",
+  "family": "MX",
+  "stemColor": "#d6455e",
+  "forceG": 43
+ },
+ {
+  "id": "akko-cs-silver",
+  "brand": "Akko",
+  "type": "linear",
+  "model": "CS Silver",
+  "family": "MX",
+  "stemColor": "#b8bcc4",
+  "forceG": 43
+ },
+ {
+  "id": "akko-cs-lavender-purple",
+  "brand": "Akko",
+  "type": "tactile",
+  "model": "CS Lavender Purple",
+  "family": "MX",
+  "stemColor": "#a68bd8",
+  "forceG": 36
+ },
+ {
+  "id": "akko-cs-jelly-purple",
+  "brand": "Akko",
+  "type": "tactile",
+  "model": "CS Jelly Purple",
+  "family": "MX",
+  "stemColor": "#8e5fd0",
+  "forceG": 50
+ },
+ {
+  "id": "akko-cs-jelly-white",
+  "brand": "Akko",
+  "type": "clicky",
+  "model": "CS Jelly White",
+  "family": "MX",
+  "stemColor": "#f2f2f2",
+  "forceG": 50
+ },
+ {
+  "id": "durock-alpaca",
+  "brand": "Durock",
+  "type": "linear",
+  "model": "Alpaca",
+  "family": "MX",
+  "stemColor": "#f0d9e6",
+  "forceG": 62
+ },
+ {
+  "id": "durock-pom-linear",
+  "brand": "Durock",
+  "type": "linear",
+  "model": "POM Linear",
+  "family": "MX",
+  "stemColor": "#f2f2f2",
+  "forceG": 63
+ },
+ {
+  "id": "durock-t1",
+  "brand": "Durock",
+  "type": "tactile",
+  "model": "T1",
+  "family": "MX",
+  "stemColor": "#7f5ac8",
+  "forceG": 67
+ },
+ {
+  "id": "durock-dolphin",
+  "brand": "Durock",
+  "type": "tactile",
+  "model": "Dolphin",
+  "family": "MX",
+  "stemColor": "#7fb8d8",
+  "forceG": 62
+ },
+ {
+  "id": "zeal-tealios-v2",
+  "brand": "Zeal",
+  "type": "linear",
+  "model": "Tealios V2",
+  "family": "MX",
+  "stemColor": "#2fb8b0",
+  "forceG": 67
+ },
+ {
+  "id": "zeal-zealios-v2",
+  "brand": "Zeal",
+  "type": "tactile",
+  "model": "Zealios V2",
+  "family": "MX",
+  "stemColor": "#a33a3a",
+  "forceG": 67
+ },
+ {
+  "id": "drop-holy-panda-x",
+  "brand": "Drop",
+  "type": "tactile",
+  "model": "Holy Panda X",
+  "family": "MX",
+  "stemColor": "#f2c94c",
+  "forceG": 67
+ },
+ {
+  "id": "outemu-red",
+  "brand": "Outemu",
+  "type": "linear",
+  "model": "Red",
+  "family": "MX",
+  "stemColor": "#d6323a",
+  "forceG": 50
+ },
+ {
+  "id": "outemu-brown",
+  "brand": "Outemu",
+  "type": "tactile",
+  "model": "Brown",
+  "family": "MX",
+  "stemColor": "#7a4a2a",
+  "forceG": 55
+ },
+ {
+  "id": "outemu-blue",
+  "brand": "Outemu",
+  "type": "clicky",
+  "model": "Blue",
+  "family": "MX",
+  "stemColor": "#2f6fd0",
+  "forceG": 60
+ }
+]

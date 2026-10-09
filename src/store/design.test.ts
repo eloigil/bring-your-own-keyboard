@@ -76,3 +76,22 @@ describe('resizing the board', () => {
     expect(useDesign.getState().preset).toBeNull()
   })
 })
+
+describe('switches and keycaps', () => {
+  it('a per-key override changes only that key, and reset clears it', () => {
+    useDesign.getState().setPreset('TKL')
+    const [a, b] = useDesign.getState().design.keys
+    useDesign.getState().setOverride(a.id, { keycapColor: '#ff0000' })
+    const keys = useDesign.getState().design.keys
+    expect(keys.find((k) => k.id === a.id)!.override?.keycapColor).toBe('#ff0000')
+    expect(keys.find((k) => k.id === b.id)!.override).toBeUndefined()
+    useDesign.getState().setOverride(a.id, null)
+    expect(useDesign.getState().design.keys.find((k) => k.id === a.id)!.override).toBeUndefined()
+  })
+  it('board-wide switch and keycaps are saved on the design', () => {
+    useDesign.getState().setSwitch('kailh-choc-choc-brown')
+    useDesign.getState().setKeycaps({ profileId: 'sa', keycapColor: '#123456' })
+    const { board } = useDesign.getState().design
+    expect([board.switchId, board.profileId, board.keycapColor]).toEqual(['kailh-choc-choc-brown', 'sa', '#123456'])
+  })
+})

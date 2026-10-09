@@ -39,4 +39,4 @@ export interface Design {
   pocketFills: { x: number; y: number; t: number }[]
 }
 
-export type Step = 'Layout' | 'Components' | 'LEDs' | 'Export'
+export type Step = 'Layout' | 'Shape' | 'Components' | 'LEDs' | 'Export'

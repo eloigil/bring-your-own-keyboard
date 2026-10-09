@@ -13,7 +13,8 @@ Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 
 1. The user opens BYOKb and lands on a short **3D landing page** that explains the project, then enters the editor.
 2. The **editor** opens with a default **tenkeyless (TKL)** keyboard in 3D. The left panel shows the steps; the right panel shows the options for the current step.
-3. **Layout step:** they pick a preset, or drag the board's edge to resize it (60% ↔ full with numpad), or grab single keys to move, add, or delete them. The case follows the outline of the keys live.
+3. **Layout step:** they pick a starting preset.
+3b. **Shape step:** they drag the board's edge to resize it (60% ↔ full with numpad), grab single keys to move, add, or delete them, and drag pocket orbs. The case follows the outline of the keys live.
 4. **Components step:** they set switches, keycaps, and the knob for the whole board, and double-click any element to override its config. They add a knob and drag it into place; neighboring keys snap aside.
 5. **LEDs step:** they paint per-key colors and/or pick an animated effect, and see it lit in 3D.
 6. **Export step:** they see their build and download the case STL and firmware (including the LED pattern).
@@ -24,7 +25,7 @@ Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 - **Landing page** — a small three.js scene that explains BYOKb, with a way into the editor.
 - **Editor** — one screen with three regions:
   - **Center:** the 3D keyboard. The user can orbit around it and interact with keys and components.
-  - **Left panel:** the step list: **Layout → Components → LEDs → Export**. The user can move between steps freely, back and forth.
+  - **Left panel:** the step list: **Layout → Shape → Components → LEDs → Export**. The user can move between steps freely, back and forth.
   - **Right panel:** the options for the current step (presets, catalogs, colors, downloads).
 
 ## Look and Feel
@@ -36,6 +37,7 @@ Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 
 ### Layout Step
 Source: `scope.md > The POC Boundary` items 1–2.
+Covers two UI steps: **Layout** (presets only) and **Shape** (everything else below: resize, key editing, pocket orbs).
 - **Presets:** 60%, 65%, 75%, TKL, full (with numpad), split, ortholinear. Choosing one replaces the current layout.
 - **Board resize:** drag the board's edge to grow or shrink it.
 - **Snap toggle:** in *autosnap* mode, resizing snaps to the standard sizes. In *freeform* mode, it stops anywhere, adding or removing keys.
@@ -93,6 +95,7 @@ Source: `scope.md > The POC Boundary` items 4–5.
 - The game-like design experience is the kernel. PCB tools already exist; none feel like a game.
 - The editor opens on a TKL instead of an empty space or a picker, so the user can start playing immediately.
 - Left panel = steps, right panel = options for the step.
+- Layout is split in two: **Layout** only picks a starting preset (clean preview, no orbs, keys fixed), **Shape** is the full build (drag/add/delete keys, pocket orbs, resize) — picking a start and shaping are different activities, and the orbs no longer clutter later steps.
 - Switches, keycaps, the knob, and other components share one Components step.
 - A snap/freeform toggle exists because both kinds of editing are useful.
 - The case follows the key outline, not a rectangle.

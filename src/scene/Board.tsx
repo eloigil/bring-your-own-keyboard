@@ -24,6 +24,7 @@ export function Board() {
   const components = useDesign((s) => s.design.components)
   const family = useDesign((s) => familyOf(s.design.board.switchId))
   const selectedId = useDesign((s) => s.selectedId)
+  const shaping = useDesign((s) => s.step === 'Shape') // dragging keys and pocket orbs only in the Shape step
   const p = PITCH[family]
 
   const shape = useMemo(() => caseShape(keys, family, fills), [keys, family, fills])
@@ -45,6 +46,7 @@ export function Board() {
   const dragHeight = CASE_HEIGHT[family] + SWITCH_TRAVEL_HEIGHT[family]
 
   const onDown = (k: Key) => (e: ThreeEvent<PointerEvent>) => {
+    if (!shaping) return
     e.stopPropagation()
     useDesign.getState().select(k.id)
     const hit = hitLocal(e, dragHeight, center)
@@ -75,12 +77,12 @@ export function Board() {
         return (
           <Eased key={k.id} target={target} rotation={[tilt, (-k.rot * Math.PI) / 180, 0]}>
             <group onPointerDown={onDown(k)} onPointerMove={onMove} onPointerUp={onUp}>
-              <Keycap k={k} family={family} color={k.w > 1 ? '#a9adb6' : '#f4f2ec'} invalid={invalid.has(k.id)} selected={k.id === selectedId} />
+              <Keycap k={k} family={family} color={k.w > 1 ? '#a9adb6' : '#f4f2ec'} invalid={invalid.has(k.id)} selected={shaping && k.id === selectedId} />
             </group>
           </Eased>
         )
       })}
-      {shape.pockets.map((pk) => <PocketOrb key={`${pk.mouth[0].toFixed(0)},${pk.mouth[1].toFixed(0)}`} pocket={pk} maxZ={maxZ} family={family} offset={center} />)}
+      {shaping && shape.pockets.map((pk) => <PocketOrb key={`${pk.mouth[0].toFixed(0)},${pk.mouth[1].toFixed(0)}`} pocket={pk} maxZ={maxZ} family={family} offset={center} />)}
     </group>
   )
 }

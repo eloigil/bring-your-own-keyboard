@@ -44,7 +44,7 @@ Build mode: fast
   Why now: Completes the Layout step on top of slice 3's editing.
   PRD ref: `prd.md > Layout Step` (Board resize, Snap toggle)
   Spec ref: `spec.md > Layout Logic (src/lib/layout.ts)`, `spec.md > Scene (src/scene/)`
-  Build: `resizeBoard` in snap and free modes, `ResizeHandle.tsx`, the snap toggle in `LayoutOptions`.
+  Build: `resizeBoard` in snap and free modes, `ResizeHandle.tsx`, the snap toggle in `ShapeOptions` (Shape step).
   Verify (mechanical): Tests confirm that snap mode always returns a preset width and that free mode removes keys past the width and fills to it.
   Learner check: Drag the edge with snap on (does it jump between known sizes?), then switch to freeform and stop halfway.
   Commit: `Add board resize with snap and freeform modes`
@@ -133,3 +133,4 @@ Activity mode:
 - Pocket fill is now a straight wall parallel to the pocket's opening, slid by the orb (was outward growth from the keys) — checkpoint 2: in L-shaped pockets the growth met on a diagonal, giving a slanted wall the learner didn't expect.
 - Untouched pockets now use the same straight wall (default amount sized like the old smoothing) instead of the rounded closing shape — checkpoint 2: the closing fill added after checkpoint 1 carved curved/diagonal fronts in L-shaped pockets; it had been the default for every untouched pocket since then.
 - Case top edge is now six stacked inset slabs instead of ExtrudeGeometry's bevel — checkpoint 2 (orange paint): with a bevel, three.js triangulates the bevel-shifted contour, which crosses itself at the straight pocket walls' sharp corners and produced board-spanning slanted triangles on the top face; present since the straight walls arrived. Sliver islands under 90 mm² now join the well.
+- Split the Layout step into Layout (pick a starting preset) and Shape (drag/add/delete keys, pocket orbs, resize); orbs and key dragging only active in Shape — learner's request at checkpoint 2.

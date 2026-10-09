@@ -82,7 +82,7 @@ A small r3f canvas with a rotating sample board, the title, a two-line pitch, an
 PRD ref: `prd.md > Screens and Layout`.
 
 ### Editor Shell (`src/ui/Editor.tsx`, `StepsPanel.tsx`, `OptionsPanel.tsx`)
-A full-screen canvas with a left steps card (Layout → Components → LEDs → Export, freely clickable) and a right options card that switches content by step.
+A full-screen canvas with a left steps card (Layout → Shape → Components → LEDs → Export, freely clickable) and a right options card that switches content by step.
 PRD ref: `prd.md > Screens and Layout`.
 
 ### Scene (`src/scene/`)
@@ -174,7 +174,8 @@ BYOKb/
 │   │   ├── StepsPanel.tsx    # left: step list
 │   │   ├── OptionsPanel.tsx  # right: picks the step's options
 │   │   └── options/
-│   │       ├── LayoutOptions.tsx
+│   │       ├── LayoutOptions.tsx   # preset picker
+│   │       ├── ShapeOptions.tsx    # add/delete keys, resize
 │   │       ├── ComponentsOptions.tsx
 │   │       ├── LedOptions.tsx
 │   │       └── ExportOptions.tsx

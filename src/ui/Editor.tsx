@@ -8,8 +8,8 @@ import { OptionsPanel } from './OptionsPanel'
 export function Editor() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const { selectedId, deleteKey } = useDesign.getState()
-      if (selectedId && (e.key === 'Delete' || e.key === 'Backspace') && !(e.target instanceof HTMLInputElement)) deleteKey(selectedId)
+      const { selectedId, deleteKey, step } = useDesign.getState()
+      if (step === 'Shape' && selectedId && (e.key === 'Delete' || e.key === 'Backspace') && !(e.target instanceof HTMLInputElement)) deleteKey(selectedId)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)

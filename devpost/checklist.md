@@ -89,7 +89,7 @@ Build mode: fast
   Learner check: Export both files. Open the STL in a slicer or viewer (or https://www.viewstl.com) and compare it to the screen, then unzip the firmware and skim the README wiring table.
   Commit: `Add STL and QMK firmware export`
 
-- [ ] **8b. Switch lab: browse switches by feel and sound**
+- [x] **8b. Switch lab: browse switches by feel and sound**
   Becomes usable: In Build → Switches, "Open switch lab" opens a large panel: search and filter the catalog; a detailed 3D switch (housing, stem, spring, pins) you can rotate, see through, and press with a slider; a force curve chart with the actuation point and tactile bump or click; feel stats (actuation, bottom-out, pre-travel, travel, bump); a sound profile (thocky/clacky/creamy/clicky/muted, pitch, loudness) with a synthesized ▶ Hear it; and materials. "Use this switch" applies it to the board.
   Why now: Learner's request before the landing page; switch choice is what keyboard builders care most about.
   PRD ref: `prd.md > Components Step` (Switch lab)
@@ -162,3 +162,4 @@ Activity mode:
 - Added per-key size (width presets + custom, 1u/2u height) in Selected key; width changes slide the rest of the row (`resizeKey`) — learner request.
 - Dragging now snaps magnetically: flush against a neighbour's edge / aligned to its row within 0.35u, else the 0.25u grid — learner found the plain grid landed keys slightly too close or too far.
 - Export: firmware structure, keycodes, pin limits (every preset fits one Pico with knob + LEDs), zip contents and STL size/orientation are tested; the firmware has NOT been compiled with QMK here (toolchain not installed) — the README asks the builder to run `qmk lint` first. Unconfigured LEDs leave RGB out of the firmware entirely; layers 1/2 are generated transparent when Fn/Lower/Raise keys exist. The STL is the preview mesh (overlapping slabs, not a single welded shell); slicers merge it, but it hasn't been sliced here.
+- Switch lab built: switch data extended (actuation/bottom-out force, pre/total travel, bump, sound profile/pitch/loudness, smoothness, materials, housing tint); `forceCurve()` models the curve from specs; sound is synthesized with Web Audio (noise burst + body tone per profile). All data and curves are approximate and labelled so; the sound couldn't be listened to during the build (no audio here).

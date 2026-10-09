@@ -6,7 +6,28 @@
   "model": "MX Red",
   "family": "MX",
   "stemColor": "#d6323a",
-  "forceG": 45
+  "actuationG": 45,
+  "bottomOutG": 60,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "cherry-mx-black",
@@ -15,7 +36,28 @@
   "model": "MX Black",
   "family": "MX",
   "stemColor": "#2b2b2b",
-  "forceG": 60
+  "actuationG": 60,
+  "bottomOutG": 80,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "cherry-mx-silent-red",
@@ -24,7 +66,28 @@
   "model": "MX Silent Red",
   "family": "MX",
   "stemColor": "#e0566a",
-  "forceG": 45
+  "actuationG": 45,
+  "bottomOutG": 60,
+  "preTravel": 1.9,
+  "totalTravel": 3.7,
+  "sound": {
+   "profile": "muted",
+   "pitch": "deep",
+   "loudness": 1
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "cherry-mx-silent-black",
@@ -33,7 +96,28 @@
   "model": "MX Silent Black",
   "family": "MX",
   "stemColor": "#3a3a3a",
-  "forceG": 60
+  "actuationG": 60,
+  "bottomOutG": 80,
+  "preTravel": 1.9,
+  "totalTravel": 3.7,
+  "sound": {
+   "profile": "muted",
+   "pitch": "deep",
+   "loudness": 1
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "cherry-mx-speed-silver",
@@ -42,7 +126,28 @@
   "model": "MX Speed Silver",
   "family": "MX",
   "stemColor": "#b8bcc4",
-  "forceG": 45
+  "actuationG": 45,
+  "bottomOutG": 60,
+  "preTravel": 1.2,
+  "totalTravel": 3.4,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 3
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "cherry-mx-brown",
@@ -51,7 +156,32 @@
   "model": "MX Brown",
   "family": "MX",
   "stemColor": "#7a4a2a",
-  "forceG": 55
+  "actuationG": 45,
+  "bottomOutG": 60,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 55,
+   "atMm": 0.9
+  },
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "cherry-mx-clear",
@@ -60,7 +190,32 @@
   "model": "MX Clear",
   "family": "MX",
   "stemColor": "#e8eef2",
-  "forceG": 65
+  "actuationG": 65,
+  "bottomOutG": 95,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 75,
+   "atMm": 0.9
+  },
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "cherry-mx-blue",
@@ -69,7 +224,32 @@
   "model": "MX Blue",
   "family": "MX",
   "stemColor": "#2f6fd0",
-  "forceG": 60
+  "actuationG": 50,
+  "bottomOutG": 60,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 60,
+   "atMm": 1.5
+  },
+  "sound": {
+   "profile": "clicky",
+   "pitch": "high",
+   "loudness": 5
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "cherry-mx-green",
@@ -78,7 +258,32 @@
   "model": "MX Green",
   "family": "MX",
   "stemColor": "#3c9a4a",
-  "forceG": 80
+  "actuationG": 70,
+  "bottomOutG": 80,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 80,
+   "atMm": 1.5
+  },
+  "sound": {
+   "profile": "clicky",
+   "pitch": "high",
+   "loudness": 5
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "gateron-red",
@@ -87,7 +292,28 @@
   "model": "Red",
   "family": "MX",
   "stemColor": "#d63a3a",
-  "forceG": 45
+  "actuationG": 45,
+  "bottomOutG": 55,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "gateron-black",
@@ -96,7 +322,28 @@
   "model": "Black",
   "family": "MX",
   "stemColor": "#222222",
-  "forceG": 60
+  "actuationG": 50,
+  "bottomOutG": 65,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "gateron-yellow",
@@ -105,7 +352,28 @@
   "model": "Yellow",
   "family": "MX",
   "stemColor": "#e8c62e",
-  "forceG": 50
+  "actuationG": 50,
+  "bottomOutG": 67,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "gateron-clear",
@@ -114,7 +382,28 @@
   "model": "Clear",
   "family": "MX",
   "stemColor": "#eef2f4",
-  "forceG": 35
+  "actuationG": 35,
+  "bottomOutG": 45,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "gateron-milky-yellow",
@@ -123,7 +412,28 @@
   "model": "Milky Yellow",
   "family": "MX",
   "stemColor": "#efd25a",
-  "forceG": 50
+  "actuationG": 50,
+  "bottomOutG": 67,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "creamy",
+   "pitch": "deep",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#efe9dc",
+   "bottom": "#efe9dc"
+  }
  },
  {
   "id": "gateron-oil-king",
@@ -132,7 +442,28 @@
   "model": "Oil King",
   "family": "MX",
   "stemColor": "#1e1e1e",
-  "forceG": 55
+  "actuationG": 55,
+  "bottomOutG": 65,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "thocky",
+   "pitch": "deep",
+   "loudness": 3
+  },
+  "smoothness": 5,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "22 mm two-stage",
+   "factoryLubed": true
+  },
+  "housing": {
+   "tint": "smoke",
+   "top": "#4a4a52",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "gateron-ink-black-v2",
@@ -141,7 +472,28 @@
   "model": "Ink Black V2",
   "family": "MX",
   "stemColor": "#151515",
-  "forceG": 60
+  "actuationG": 60,
+  "bottomOutG": 70,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "thocky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 5,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Ink blend",
+   "bottomHousing": "Ink blend",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "smoke",
+   "top": "#4a4a52",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "gateron-brown",
@@ -150,7 +502,32 @@
   "model": "Brown",
   "family": "MX",
   "stemColor": "#7a4a2a",
-  "forceG": 55
+  "actuationG": 45,
+  "bottomOutG": 55,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 55,
+   "atMm": 0.9
+  },
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "gateron-baby-kangaroo",
@@ -159,7 +536,32 @@
   "model": "Baby Kangaroo",
   "family": "MX",
   "stemColor": "#e9a3c4",
-  "forceG": 59
+  "actuationG": 59,
+  "bottomOutG": 67,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 72,
+   "atMm": 0.6
+  },
+  "sound": {
+   "profile": "thocky",
+   "pitch": "deep",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": true
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "gateron-blue",
@@ -168,7 +570,32 @@
   "model": "Blue",
   "family": "MX",
   "stemColor": "#2f6fd0",
-  "forceG": 60
+  "actuationG": 50,
+  "bottomOutG": 60,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 60,
+   "atMm": 1.5
+  },
+  "sound": {
+   "profile": "clicky",
+   "pitch": "high",
+   "loudness": 5
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "gateron-green",
@@ -177,7 +604,32 @@
   "model": "Green",
   "family": "MX",
   "stemColor": "#3c9a4a",
-  "forceG": 80
+  "actuationG": 70,
+  "bottomOutG": 80,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 80,
+   "atMm": 1.5
+  },
+  "sound": {
+   "profile": "clicky",
+   "pitch": "high",
+   "loudness": 5
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "kailh-box-red",
@@ -186,7 +638,28 @@
   "model": "Box Red",
   "family": "MX",
   "stemColor": "#d6323a",
-  "forceG": 45
+  "actuationG": 45,
+  "bottomOutG": 60,
+  "preTravel": 1.8,
+  "totalTravel": 3.6,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "kailh-speed-silver",
@@ -195,7 +668,28 @@
   "model": "Speed Silver",
   "family": "MX",
   "stemColor": "#b8bcc4",
-  "forceG": 50
+  "actuationG": 50,
+  "bottomOutG": 70,
+  "preTravel": 1.1,
+  "totalTravel": 3.5,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 3
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "kailh-box-brown",
@@ -204,7 +698,32 @@
   "model": "Box Brown",
   "family": "MX",
   "stemColor": "#7a4a2a",
-  "forceG": 50
+  "actuationG": 45,
+  "bottomOutG": 60,
+  "preTravel": 1.8,
+  "totalTravel": 3.6,
+  "bump": {
+   "peakG": 55,
+   "atMm": 0.8
+  },
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "kailh-speed-copper",
@@ -213,7 +732,32 @@
   "model": "Speed Copper",
   "family": "MX",
   "stemColor": "#c46b3a",
-  "forceG": 50
+  "actuationG": 40,
+  "bottomOutG": 50,
+  "preTravel": 1.1,
+  "totalTravel": 3.5,
+  "bump": {
+   "peakG": 50,
+   "atMm": 0.4
+  },
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 3
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "kailh-box-white",
@@ -222,7 +766,32 @@
   "model": "Box White",
   "family": "MX",
   "stemColor": "#f2f2f2",
-  "forceG": 55
+  "actuationG": 45,
+  "bottomOutG": 55,
+  "preTravel": 1.8,
+  "totalTravel": 3.6,
+  "bump": {
+   "peakG": 55,
+   "atMm": 1.5
+  },
+  "sound": {
+   "profile": "clicky",
+   "pitch": "high",
+   "loudness": 5
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "kailh-box-jade",
@@ -231,7 +800,32 @@
   "model": "Box Jade",
   "family": "MX",
   "stemColor": "#2f9e7a",
-  "forceG": 65
+  "actuationG": 50,
+  "bottomOutG": 65,
+  "preTravel": 1.8,
+  "totalTravel": 3.6,
+  "bump": {
+   "peakG": 65,
+   "atMm": 1.5
+  },
+  "sound": {
+   "profile": "clicky",
+   "pitch": "high",
+   "loudness": 5
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "kailh-box-navy",
@@ -240,7 +834,32 @@
   "model": "Box Navy",
   "family": "MX",
   "stemColor": "#25356e",
-  "forceG": 75
+  "actuationG": 60,
+  "bottomOutG": 75,
+  "preTravel": 1.8,
+  "totalTravel": 3.6,
+  "bump": {
+   "peakG": 75,
+   "atMm": 1.5
+  },
+  "sound": {
+   "profile": "clicky",
+   "pitch": "high",
+   "loudness": 5
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "kailh-choc-choc-red",
@@ -249,7 +868,28 @@
   "model": "Choc Red",
   "family": "Choc",
   "stemColor": "#d6323a",
-  "forceG": 50
+  "actuationG": 50,
+  "bottomOutG": 60,
+  "preTravel": 1.5,
+  "totalTravel": 3.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 2
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Gold-plated, short",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "kailh-choc-choc-black",
@@ -258,7 +898,28 @@
   "model": "Choc Black",
   "family": "Choc",
   "stemColor": "#2b2b2b",
-  "forceG": 60
+  "actuationG": 60,
+  "bottomOutG": 70,
+  "preTravel": 1.5,
+  "totalTravel": 3.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 2
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Gold-plated, short",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "kailh-choc-choc-pink",
@@ -267,7 +928,28 @@
   "model": "Choc Pink",
   "family": "Choc",
   "stemColor": "#ee8fb8",
-  "forceG": 20
+  "actuationG": 20,
+  "bottomOutG": 30,
+  "preTravel": 1.5,
+  "totalTravel": 3.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 2
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Gold-plated, short",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "kailh-choc-choc-sunset",
@@ -276,7 +958,28 @@
   "model": "Choc Sunset",
   "family": "Choc",
   "stemColor": "#f08a3c",
-  "forceG": 40
+  "actuationG": 40,
+  "bottomOutG": 50,
+  "preTravel": 1.5,
+  "totalTravel": 3.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 2
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Gold-plated, short",
+   "factoryLubed": true
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "kailh-choc-choc-brown",
@@ -285,7 +988,32 @@
   "model": "Choc Brown",
   "family": "Choc",
   "stemColor": "#7a4a2a",
-  "forceG": 60
+  "actuationG": 50,
+  "bottomOutG": 60,
+  "preTravel": 1.5,
+  "totalTravel": 3.0,
+  "bump": {
+   "peakG": 60,
+   "atMm": 0.6
+  },
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 2
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Gold-plated, short",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "kailh-choc-choc-robin",
@@ -294,7 +1022,32 @@
   "model": "Choc Robin",
   "family": "Choc",
   "stemColor": "#5fb7c9",
-  "forceG": 50
+  "actuationG": 40,
+  "bottomOutG": 50,
+  "preTravel": 1.5,
+  "totalTravel": 3.0,
+  "bump": {
+   "peakG": 50,
+   "atMm": 0.5
+  },
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 2
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Gold-plated, short",
+   "factoryLubed": true
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "kailh-choc-choc-white",
@@ -303,7 +1056,32 @@
   "model": "Choc White",
   "family": "Choc",
   "stemColor": "#f2f2f2",
-  "forceG": 60
+  "actuationG": 50,
+  "bottomOutG": 60,
+  "preTravel": 1.5,
+  "totalTravel": 3.0,
+  "bump": {
+   "peakG": 60,
+   "atMm": 0.8
+  },
+  "sound": {
+   "profile": "clicky",
+   "pitch": "high",
+   "loudness": 4
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Gold-plated, short",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "kailh-choc-choc-blue",
@@ -312,7 +1090,32 @@
   "model": "Choc Blue",
   "family": "Choc",
   "stemColor": "#2f6fd0",
-  "forceG": 50
+  "actuationG": 40,
+  "bottomOutG": 50,
+  "preTravel": 1.5,
+  "totalTravel": 3.0,
+  "bump": {
+   "peakG": 50,
+   "atMm": 0.8
+  },
+  "sound": {
+   "profile": "clicky",
+   "pitch": "high",
+   "loudness": 4
+  },
+  "smoothness": 3,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Gold-plated, short",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "akko-cs-jelly-pink",
@@ -321,7 +1124,28 @@
   "model": "CS Jelly Pink",
   "family": "MX",
   "stemColor": "#f3a6c8",
-  "forceG": 45
+  "actuationG": 45,
+  "bottomOutG": 50,
+  "preTravel": 1.9,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "creamy",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "akko-cs-jelly-black",
@@ -330,7 +1154,28 @@
   "model": "CS Jelly Black",
   "family": "MX",
   "stemColor": "#2a2a2a",
-  "forceG": 50
+  "actuationG": 50,
+  "bottomOutG": 60,
+  "preTravel": 1.9,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "creamy",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "akko-cs-rose-red",
@@ -339,7 +1184,28 @@
   "model": "CS Rose Red",
   "family": "MX",
   "stemColor": "#d6455e",
-  "forceG": 43
+  "actuationG": 43,
+  "bottomOutG": 50,
+  "preTravel": 1.9,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "creamy",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "akko-cs-silver",
@@ -348,7 +1214,28 @@
   "model": "CS Silver",
   "family": "MX",
   "stemColor": "#b8bcc4",
-  "forceG": 43
+  "actuationG": 43,
+  "bottomOutG": 50,
+  "preTravel": 1.0,
+  "totalTravel": 3.5,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "akko-cs-lavender-purple",
@@ -357,7 +1244,32 @@
   "model": "CS Lavender Purple",
   "family": "MX",
   "stemColor": "#a68bd8",
-  "forceG": 36
+  "actuationG": 36,
+  "bottomOutG": 48,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 45,
+   "atMm": 0.7
+  },
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "akko-cs-jelly-purple",
@@ -366,7 +1278,32 @@
   "model": "CS Jelly Purple",
   "family": "MX",
   "stemColor": "#8e5fd0",
-  "forceG": 50
+  "actuationG": 45,
+  "bottomOutG": 60,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 55,
+   "atMm": 0.7
+  },
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "akko-cs-jelly-white",
@@ -375,7 +1312,32 @@
   "model": "CS Jelly White",
   "family": "MX",
   "stemColor": "#f2f2f2",
-  "forceG": 50
+  "actuationG": 45,
+  "bottomOutG": 55,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 55,
+   "atMm": 1.5
+  },
+  "sound": {
+   "profile": "clicky",
+   "pitch": "high",
+   "loudness": 5
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "durock-alpaca",
@@ -384,7 +1346,28 @@
   "model": "Alpaca",
   "family": "MX",
   "stemColor": "#f0d9e6",
-  "forceG": 62
+  "actuationG": 55,
+  "bottomOutG": 62,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "creamy",
+   "pitch": "deep",
+   "loudness": 3
+  },
+  "smoothness": 5,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": true
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#efe9dc",
+   "bottom": "#efe9dc"
+  }
  },
  {
   "id": "durock-pom-linear",
@@ -393,7 +1376,28 @@
   "model": "POM Linear",
   "family": "MX",
   "stemColor": "#f2f2f2",
-  "forceG": 63
+  "actuationG": 55,
+  "bottomOutG": 63,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "creamy",
+   "pitch": "deep",
+   "loudness": 3
+  },
+  "smoothness": 5,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "POM",
+   "bottomHousing": "POM",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": true
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#efe9dc",
+   "bottom": "#efe9dc"
+  }
  },
  {
   "id": "durock-t1",
@@ -402,7 +1406,32 @@
   "model": "T1",
   "family": "MX",
   "stemColor": "#7f5ac8",
-  "forceG": 67
+  "actuationG": 55,
+  "bottomOutG": 67,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 75,
+   "atMm": 0.6
+  },
+  "sound": {
+   "profile": "thocky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": true
+  },
+  "housing": {
+   "tint": "smoke",
+   "top": "#4a4a52",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "durock-dolphin",
@@ -411,7 +1440,32 @@
   "model": "Dolphin",
   "family": "MX",
   "stemColor": "#7fb8d8",
-  "forceG": 62
+  "actuationG": 50,
+  "bottomOutG": 62,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 65,
+   "atMm": 0.6
+  },
+  "sound": {
+   "profile": "thocky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": true
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "zeal-tealios-v2",
@@ -420,7 +1474,28 @@
   "model": "Tealios V2",
   "family": "MX",
   "stemColor": "#2fb8b0",
-  "forceG": 67
+  "actuationG": 55,
+  "bottomOutG": 67,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "high",
+   "loudness": 3
+  },
+  "smoothness": 5,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Polycarbonate",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": true
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "zeal-zealios-v2",
@@ -429,7 +1504,32 @@
   "model": "Zealios V2",
   "family": "MX",
   "stemColor": "#a33a3a",
-  "forceG": 67
+  "actuationG": 55,
+  "bottomOutG": 67,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 72,
+   "atMm": 0.6
+  },
+  "sound": {
+   "profile": "thocky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Polycarbonate",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": true
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "drop-holy-panda-x",
@@ -438,7 +1538,32 @@
   "model": "Holy Panda X",
   "family": "MX",
   "stemColor": "#f2c94c",
-  "forceG": 67
+  "actuationG": 55,
+  "bottomOutG": 67,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 80,
+   "atMm": 0.5
+  },
+  "sound": {
+   "profile": "thocky",
+   "pitch": "deep",
+   "loudness": 4
+  },
+  "smoothness": 4,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Polycarbonate",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": true
+  },
+  "housing": {
+   "tint": "clear",
+   "top": "#e6ecf0",
+   "bottom": "#e6ecf0"
+  }
  },
  {
   "id": "outemu-red",
@@ -447,7 +1572,28 @@
   "model": "Red",
   "family": "MX",
   "stemColor": "#d6323a",
-  "forceG": 50
+  "actuationG": 45,
+  "bottomOutG": 60,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 2,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "outemu-brown",
@@ -456,7 +1602,32 @@
   "model": "Brown",
   "family": "MX",
   "stemColor": "#7a4a2a",
-  "forceG": 55
+  "actuationG": 45,
+  "bottomOutG": 60,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 55,
+   "atMm": 0.9
+  },
+  "sound": {
+   "profile": "clacky",
+   "pitch": "mid",
+   "loudness": 3
+  },
+  "smoothness": 2,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  },
  {
   "id": "outemu-blue",
@@ -465,6 +1636,31 @@
   "model": "Blue",
   "family": "MX",
   "stemColor": "#2f6fd0",
-  "forceG": 60
+  "actuationG": 50,
+  "bottomOutG": 60,
+  "preTravel": 2.0,
+  "totalTravel": 4.0,
+  "bump": {
+   "peakG": 60,
+   "atMm": 1.5
+  },
+  "sound": {
+   "profile": "clicky",
+   "pitch": "high",
+   "loudness": 5
+  },
+  "smoothness": 2,
+  "materials": {
+   "stem": "POM",
+   "topHousing": "Nylon",
+   "bottomHousing": "Nylon",
+   "spring": "Stainless steel, single-stage",
+   "factoryLubed": false
+  },
+  "housing": {
+   "tint": "solid",
+   "top": "#2c2b31",
+   "bottom": "#2c2b31"
+  }
  }
 ]

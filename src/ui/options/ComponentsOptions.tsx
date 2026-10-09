@@ -1,4 +1,7 @@
+import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useDesign } from '../../store/design'
+import { SwitchLab } from '../SwitchLab'
 import { familyOf, switchById, switchGroups } from '../../lib/catalog'
 import { PROFILES } from '../../data/keycaps'
 import { KEYCAP_MATERIALS } from '../../data/materials'
@@ -15,7 +18,7 @@ function SwitchSelect({ value, onChange, family, allowDefault }: { value: string
       {switchGroups(family ? (s) => s.family === family : undefined).map(([label, list]) => (
         <optgroup key={label} label={label}>
           {list.map((s) => (
-            <option key={s.id} value={s.id}>{s.model} — {s.forceG} g</option>
+            <option key={s.id} value={s.id}>{s.model} — {s.actuationG} g</option>
           ))}
         </optgroup>
       ))}
@@ -29,13 +32,18 @@ export function ComponentsOptions() {
   const selectedKnob = useDesign((s) => s.design.components.find((c) => c.id === s.selectedId))
   const { setSwitch, setKeycaps, setOverride, addKnob, deleteKey, setKeySize } = useDesign.getState()
   const sw = switchById(board.switchId)
+  const [lab, setLab] = useState(false)
   return (
     <>
       <section>
         <h3>Switches</h3>
+        <button className="tile wide lab-open" onClick={() => setLab(true)}>
+          <span className="dot" style={{ background: sw.stemColor }} /> {sw.brand} {sw.model} · Open switch lab
+        </button>
+        {lab && createPortal(<SwitchLab onClose={() => setLab(false)} />, document.body)}
         <SwitchSelect value={board.switchId} onChange={setSwitch} />
         <p className="muted">
-          {sw.brand} {sw.model}: {sw.type}, {sw.forceG} g, {sw.family === 'Choc' ? 'low-profile (Choc spacing, slimmer case)' : 'MX'}. Specs are best-effort.
+          {sw.brand} {sw.model}: {sw.type}, {sw.actuationG} g, {sw.family === 'Choc' ? 'low-profile (Choc spacing, slimmer case)' : 'MX'}. Specs are best-effort.
         </p>
         <div className="swatches" aria-label="Switch housing colour">
           {HOUSINGS.map((c) => (

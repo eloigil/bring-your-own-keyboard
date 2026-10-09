@@ -110,7 +110,7 @@ Returns the IDs of overlapping items (via clipper intersection area > ε). Used 
 PRD ref: `prd.md > States and Boundaries` (Invalid design).
 
 ### Catalog (`src/data/switches.json`, `src/data/keycaps.ts`)
-Switches: `{ id, brand, type: linear|tactile|clicky, model, family: MX|Choc, stemColor, forceG }`, grouped brand → type → model in the UI. Best-effort data. Keycap profiles: Cherry, OEM, SA, DSA, XDA, MT3, KAT with their shape parameters.
+Switches: `{ id, brand, type, model, family, stemColor, actuationG, bottomOutG, preTravel, totalTravel, bump?, sound: { profile, pitch, loudness }, smoothness, materials, housing }` in `switches.json`, typed in `src/lib/catalog.ts` with `forceCurve()`. Best-effort data. The Switch lab (`src/ui/SwitchLab.tsx`, `ForceChart.tsx`, `scene/SwitchModel.tsx`, `lib/switchSound.ts`) browses it. Keycap profiles: Cherry, OEM, SA, DSA, XDA, MT3, KAT with their shape parameters.
 PRD ref: `prd.md > Components Step`.
 
 ### STL Export (`src/lib/exportStl.ts`)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SWITCHES, familyOf, switchById } from './catalog'
+import { SWITCHES, familyOf, forceCurve, switchById } from './catalog'
 import { PROFILES, rowShape } from '../data/keycaps'
 import { area, caseOutline } from './case'
 import { keyRows, tkl } from './layout'
@@ -11,7 +11,13 @@ describe('switch catalog', () => {
       expect(['MX', 'Choc']).toContain(s.family)
       expect(['linear', 'tactile', 'clicky']).toContain(s.type)
       expect(s.stemColor).toMatch(/^#[0-9a-f]{6}$/)
-      expect(s.forceG).toBeGreaterThan(10)
+      expect(s.actuationG).toBeGreaterThan(10)
+      expect(s.bottomOutG).toBeGreaterThanOrEqual(s.actuationG)
+      expect(s.totalTravel).toBeGreaterThan(s.preTravel)
+      expect(['thocky', 'clacky', 'creamy', 'clicky', 'muted']).toContain(s.sound.profile)
+      expect(s.materials.stem).toBeTruthy()
+      // tactile and clicky switches have a bump, linear ones don't
+      expect(!!s.bump).toBe(s.type !== 'linear')
     }
   })
   it('knows the default switch and both families', () => {
@@ -22,6 +28,31 @@ describe('switch catalog', () => {
     const keys = tkl()
     const size = (f: 'MX' | 'Choc') => caseOutline(keys, f).reduce((n, r) => n + area(r), 0)
     expect(size('Choc')).toBeLessThan(size('MX') * 0.92)
+  })
+})
+
+describe('force curves', () => {
+  it('a linear curve only rises, from below actuation up past the bottom-out force', () => {
+    const c = forceCurve(switchById('gateron-oil-king'))
+    for (let i = 1; i < c.length; i++) expect(c[i][1]).toBeGreaterThanOrEqual(c[i - 1][1] - 1e-9)
+    expect(c[0][1]).toBeLessThan(55)
+    expect(c.at(-1)![1]).toBeGreaterThanOrEqual(65)
+  })
+  it('a tactile curve peaks at its bump, then drops before rising again', () => {
+    const s = switchById('drop-holy-panda-x')
+    const c = forceCurve(s)
+    const peak = c.reduce((m, p) => (p[0] < s.preTravel && p[1] > m[1] ? p : m), [0, 0])
+    expect(peak[1]).toBeCloseTo(s.bump!.peakG, -1)
+    expect(peak[0]).toBeCloseTo(s.bump!.atMm, 0)
+    const after = c.find((p) => p[0] > s.bump!.atMm + 0.5)!
+    expect(after[1]).toBeLessThan(peak[1])
+  })
+  it('a clicky curve dips below the spring line right after the click', () => {
+    const s = switchById('cherry-mx-blue')
+    const c = forceCurve(s)
+    const k = (s.bottomOutG - s.actuationG) / (s.totalTravel - s.preTravel)
+    const dip = c.find((p) => p[0] > s.bump!.atMm + 0.2 && p[0] < s.bump!.atMm + 0.35)!
+    expect(dip[1]).toBeLessThan(s.actuationG + k * (dip[0] - s.preTravel))
   })
 })
 

@@ -110,3 +110,45 @@ select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 1
 .summary dd { margin: 0; }
 .blocked { margin: 4px; padding: 10px 12px; border-radius: 8px; background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); font-size: 13px; }
 .download { margin-top: 4px; }
+
+/* switch lab */
+.lab-backdrop { position: fixed; inset: 0; background: rgba(20, 18, 28, 0.45); backdrop-filter: blur(3px); z-index: 10; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.lab { position: relative; inset: auto; width: min(1180px, 100%); height: min(760px, calc(100vh - 48px)); padding: 16px; display: grid; grid-template-columns: 250px 1fr 340px; grid-template-rows: auto 1fr; gap: 14px; }
+.lab header { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; }
+.lab header h2 { margin: 0 4px; }
+.lab .close { width: 34px; height: 34px; padding: 0; font-size: 16px; }
+.lab-list, .lab-specs { overflow: auto; min-height: 0; }
+.lab-list ul { list-style: none; margin: 4px 0 0; padding: 0; }
+.lab-list .search { width: calc(100% - 8px); margin: 0 4px 8px; font: inherit; font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+.lab-item { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; padding: 8px; }
+.lab-item.active { background: #eeeefc; color: var(--ink); }
+.lab-item .name { flex: 1; min-width: 0; }
+.lab-item strong { display: block; font-size: 13px; }
+.lab-item small { display: block; color: var(--muted); font-size: 11px; }
+.lab-item .force { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dot { width: 12px; height: 12px; border-radius: 3px; flex: none; display: inline-block; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15); }
+.lab-view { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.lab-canvas { flex: 1; min-height: 240px; border-radius: 10px; overflow: hidden; }
+.lab-specs .title { text-transform: none; letter-spacing: 0; color: var(--ink); font-size: 17px; margin-top: 0; }
+.lab-specs .tags { margin-top: -4px; }
+.lab-specs .small { font-size: 11px; }
+.lab-specs .use { margin-top: 8px; }
+.lab-open { display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 6px; }
+.meter { display: inline-flex; gap: 3px; vertical-align: middle; }
+.meter i { width: 14px; height: 6px; border-radius: 3px; background: var(--line); }
+.meter i.on { background: var(--accent); }
+.force-chart { width: 100%; height: auto; margin: 0 0 6px; font-size: 9px; }
+.force-chart text { fill: var(--muted); }
+.force-chart .grid { stroke: var(--line); stroke-width: 1; }
+.force-chart .curve { fill: none; stroke: var(--accent); stroke-width: 2.2; }
+.force-chart .actuation { stroke: #ff8a1f; stroke-dasharray: 3 3; }
+.force-chart .bump { fill: #ff8a1f; }
+.force-chart .press { fill: var(--accent); stroke: #fff; stroke-width: 2; }
+.force-chart .label { fill: #c26a17; font-size: 9px; }
+.force-chart .readout { fill: var(--ink); font-size: 10px; font-weight: 600; }
+:root[data-theme='dark'] .lab-item.active { background: #2a2940; }
+@media (max-width: 900px) {
+  .lab { grid-template-columns: 1fr; grid-template-rows: auto 220px 360px auto; height: 100%; overflow: auto; }
+  .lab-list { max-height: 220px; }
+}
+.lab-view .slider span:last-child { width: 64px; white-space: nowrap; }

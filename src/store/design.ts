@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Design, Step } from '../types'
-import { PRESETS, newId, snap, type PresetName } from '../lib/layout'
+import { PRESETS, newId, resizeFree, snap, snapSize, type PresetName } from '../lib/layout'
 import type { Family } from '../lib/units'
 import { TILT_DEG, TILT_MAX } from '../lib/case'
 
@@ -48,6 +48,9 @@ interface State {
   deleteKey: (id: string) => void
   setPocketFill: (x: number, y: number, t: number) => void
   setTilt: (deg: number) => void
+  setSnapMode: (mode: 'snap' | 'free') => void
+  /** Resize from the board's left edge to `width` units, by the current snap mode. */
+  resizeTo: (width: number) => void
 }
 
 /** Pocket fills closer than this (mm) to a new one are the same pocket. */
@@ -55,7 +58,7 @@ const SAME_POCKET = 19
 
 export const useDesign = create<State>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       design: defaultDesign(),
       preset: 'TKL',
       step: 'Layout',
@@ -79,6 +82,18 @@ export const useDesign = create<State>()(
         }),
       deleteKey: (id) =>
         set((s) => ({ preset: null, selectedId: null, design: { ...s.design, keys: s.design.keys.filter((k) => k.id !== id) } })),
+      setSnapMode: (mode) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, snap: mode } } })),
+      resizeTo: (width) => {
+        const s = get()
+        if (s.design.board.snap === 'snap') {
+          const name = snapSize(width)
+          if (name !== s.preset) s.setPreset(name)
+        } else {
+          const keys = resizeFree(s.design.keys, width)
+          if (keys.length !== s.design.keys.length || keys.some((k, i) => k !== s.design.keys[i]))
+            set({ preset: null, selectedId: null, design: { ...s.design, keys } })
+        }
+      },
       setTilt: (deg) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, tiltDeg: Math.max(0, Math.min(TILT_MAX, deg)) } } })),
       setPocketFill: (x, y, t) =>
         set((s) => ({

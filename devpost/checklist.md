@@ -39,8 +39,8 @@ Build mode: fast
   Learner check: Drag a corner key outward and watch the case stretch, delete one and drag its pocket orb in and out, drop a key on top of another and see the red pulse.
   Commit: `Add live key editing with reshaping case and overlap warnings`
 
-- [ ] **4. Resize the whole board with snap or freeform**
-  Becomes usable: A handle on the board's right edge resizes it. In *snap* mode it jumps between standard sizes (60 → 65 → 75 → TKL → full). In *freeform* it adds or removes keys anywhere in between. A toggle in the Layout options switches mode.
+- [x] **4. Resize the whole board with snap or freeform**
+  Becomes usable: A handle on the board's right edge resizes it. In *snap* mode it jumps between standard sizes (60 → 65 → 75 → TKL → full). In *freeform* it adds or removes keys anywhere in between. A toggle in the Build options switches mode.
   Why now: Completes the Layout step on top of slice 3's editing.
   PRD ref: `prd.md > Layout Step` (Board resize, Snap toggle)
   Spec ref: `spec.md > Layout Logic (src/lib/layout.ts)`, `spec.md > Scene (src/scene/)`
@@ -139,3 +139,4 @@ Activity mode:
 - 3D view renders on demand (frameloop="demand"), easing and the red pulse request frames only while running, dpr capped at 1.5, shadow map 1024 — learner's laptop was overheating from the constant 60 fps redraw. Also fixed keys snapping instead of easing (position prop overwrote the lerp each render).
 - Untouched pockets now start flush (t = 1) and the closing-based default is gone — learner found the initial partly-filled shapes weird.
 - Added a typing-angle slider (0–12°, default 6°) to the Layout step (learner moved it from Build); `board.tiltDeg` is saved, and older saves get 6° — learner's request after checkpoint 2.
+- Freeform growth fills only the new strip past the old edge (not short rows like a TKL's Caps row); snap swaps in the preset, resetting custom edits — found while writing slice 4's tests.

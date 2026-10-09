@@ -41,7 +41,7 @@ Source: `scope.md > The POC Boundary` items 1–2.
 Covers two UI steps: **Layout** (presets only) and **Build** (everything else below: resize, key editing, pocket orbs).
 - **Presets, in categories:** Standard (40%, 60%, 65%, 75%, TKL, 96%, Full), Ergonomic (Alice, Arisu, Row split), Split columnar (Corne, Lily58, Sofle, Kyria), Ortholinear (Planck, Preonic, Ortho pad), Small (Numpad, Macropad). Choosing one replaces the current layout. TKL is the default.
 - **Board resize:** drag the board's edge to grow or shrink it.
-- **Snap toggle:** in *autosnap* mode, resizing snaps to the standard sizes. In *freeform* mode, it stops anywhere, adding or removing keys.
+- **Snap toggle:** in *snap* mode, resizing jumps between 60%, 65%, 75%, TKL and Full, swapping in that layout (custom edits reset). In *freeform* mode, it stops anywhere in quarter-key steps: keys past the edge are removed, and growing adds 1u keys to each straight row in the new strip.
 - **Single-key editing:** select a key to move it, add a key, or delete a key.
 - **Living case:** the case follows the outline of the keys (not a bounding rectangle) and updates live as keys change.
 - **Typing angle slider:** in the Layout step, 0–12° (default 6°). The case wedge and the keys follow it live, and the angle is saved with the design.

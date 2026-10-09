@@ -11,7 +11,7 @@ export function defaultDesign(): Design {
     version: 1,
     keys: PRESETS.TKL(),
     components: [],
-    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', snap: 'snap', ledEffect: 'none', tiltDeg: TILT_DEG },
+    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', snap: 'snap', ledEffect: 'none', tiltDeg: TILT_DEG, ledColor: '#ff8a1f' },
     pocketFills: [],
   }
 }
@@ -28,10 +28,15 @@ export function loadDesign(raw: unknown): Design {
     Array.isArray(d.pocketFills)
   // designs saved before the tilt slider existed get the default angle
   if (!ok) return defaultDesign()
-  return Number.isFinite(d.board.tiltDeg) ? d : { ...d, board: { ...d.board, tiltDeg: TILT_DEG } }
+  // designs saved before newer board settings existed get their defaults
+  const missing = { ...defaultDesign().board, ...d.board }
+  return Object.keys(missing).length === Object.keys(d.board).length ? d : { ...d, board: missing }
 }
 
 export { familyOf } from '../lib/catalog'
+
+/** LEDs stay off until the user paints a key or picks an effect. */
+export const ledsConfigured = (d: Design) => d.board.ledEffect !== 'none' || d.keys.some((k) => k.led)
 
 interface State {
   design: Design
@@ -49,6 +54,13 @@ interface State {
   deleteKey: (id: string) => void
   setPocketFill: (x: number, y: number, t: number) => void
   setTilt: (deg: number) => void
+  /** LED brush colour; null = eraser. UI-only, not saved. */
+  ledBrush: string | null
+  setLedBrush: (c: string | null) => void
+  paintKey: (id: string) => void
+  setLedEffect: (e: Design['board']['ledEffect']) => void
+  setLedColor: (c: string) => void
+  clearLeds: () => void
   setSwitch: (id: string) => void
   setKeycaps: (patch: { profileId?: string; keycapColor?: string }) => void
   /** Give one key its own switch/keycap settings; null clears them. */
@@ -130,6 +142,14 @@ export const useDesign = create<State>()(
             keys: s.design.keys.map((k) => (k.id !== keyId ? k : { ...k, override: patch ? { ...k.override, ...patch } : undefined })),
           },
         })),
+      ledBrush: '#ff8a1f',
+      setLedBrush: (ledBrush) => set({ ledBrush }),
+      paintKey: (id) =>
+        set((s) => ({ design: { ...s.design, keys: s.design.keys.map((k) => (k.id === id ? { ...k, led: s.ledBrush ?? undefined } : k)) } })),
+      setLedEffect: (ledEffect) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, ledEffect } } })),
+      setLedColor: (ledColor) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, ledColor } } })),
+      clearLeds: () =>
+        set((s) => ({ design: { ...s.design, keys: s.design.keys.map((k) => ({ ...k, led: undefined })), board: { ...s.design.board, ledEffect: 'none' } } })),
       setTilt: (deg) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, tiltDeg: Math.max(0, Math.min(TILT_MAX, deg)) } } })),
       setPocketFill: (x, y, t) =>
         set((s) => ({

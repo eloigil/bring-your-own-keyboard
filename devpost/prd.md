@@ -71,7 +71,7 @@ Source: `scope.md > The POC Boundary` item 7.
 - LEDs are **off until configured**.
 - **Per-key painting:** set a color on individual keys.
 - **Animated effects:** pick an effect (e.g. wave, breathing, reactive).
-- Painting and effects can be combined.
+- Painting and effects can be combined. Breathing and Reactive run in a chosen colour; Wave is a rainbow sweep. "Turn all LEDs off" clears paint and effect.
 - Once configured, the lights stay visible in every step.
 - [ ] Before configuration, the board shows no lighting.
 - [ ] Painting a key red shows that key lit red in 3D.

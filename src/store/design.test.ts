@@ -114,3 +114,24 @@ describe('knob', () => {
     expect(useDesign.getState().design.components).toHaveLength(0)
   })
 })
+
+describe('LEDs', () => {
+  it('are off until a key is painted or an effect is picked; turning them off resets both', async () => {
+    const { ledsConfigured } = await import('./design')
+    useDesign.getState().setPreset('TKL')
+    useDesign.getState().clearLeds()
+    expect(ledsConfigured(useDesign.getState().design)).toBe(false)
+    const id = useDesign.getState().design.keys[0].id
+    useDesign.getState().setLedBrush('#e5484d')
+    useDesign.getState().paintKey(id)
+    expect(useDesign.getState().design.keys[0].led).toBe('#e5484d')
+    expect(ledsConfigured(useDesign.getState().design)).toBe(true)
+    useDesign.getState().setLedBrush(null) // eraser
+    useDesign.getState().paintKey(id)
+    expect(ledsConfigured(useDesign.getState().design)).toBe(false)
+    useDesign.getState().setLedEffect('wave')
+    expect(ledsConfigured(useDesign.getState().design)).toBe(true)
+    useDesign.getState().clearLeds()
+    expect(ledsConfigured(useDesign.getState().design)).toBe(false)
+  })
+})

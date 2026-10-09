@@ -13,6 +13,7 @@ import { ResizeHandle } from './ResizeHandle'
 import { hitLocal } from './pointer'
 import { componentFootprint, keyRows } from '../lib/layout'
 import { Knob } from './Knob'
+import { KeyLed } from './KeyLed'
 import { profileById } from '../data/keycaps'
 import { switchById } from '../lib/catalog'
 
@@ -34,6 +35,13 @@ export function Board() {
   const rows = useMemo(() => keyRows(keys), [keys])
   const modColor = useMemo(() => '#' + new THREE.Color(board.keycapColor).lerp(new THREE.Color('#6f7380'), 0.4).getHexString(), [board.keycapColor])
   const shaping = useDesign((s) => s.step === 'Build') // dragging keys and pocket orbs only in the Build step
+  const painting = useDesign((s) => s.step === 'LEDs') // clicking a key paints its LED
+  const hot = useRef(new Map<string, { current: number }>()) // when the pointer last passed over each key (reactive effect)
+  const glows = useRef(new Map<string, THREE.Color>()) // each key's live LED colour, shared by its underglow and cap
+  const glowOf = (id: string) => glows.current.get(id) ?? (glows.current.set(id, new THREE.Color(0, 0, 0)), glows.current.get(id)!)
+  const hotRef = (id: string) => hot.current.get(id) ?? (hot.current.set(id, { current: -99 }), hot.current.get(id)!)
+  const invalidateNow = useThree((s) => s.invalidate)
+  const clock = useThree((s) => s.clock)
   const p = PITCH[family]
 
   // components (the knob) sit on the plate like a 1u key: the case, well and cutouts include them
@@ -58,6 +66,11 @@ export function Board() {
   const dragHeight = CASE_HEIGHT[family] + SWITCH_TRAVEL_HEIGHT[family]
 
   const onDown = (k: { id: string; x: number; y: number }) => (e: ThreeEvent<PointerEvent>) => {
+    if (painting) {
+      e.stopPropagation()
+      if (keys.some((key) => key.id === k.id)) useDesign.getState().paintKey(k.id)
+      return
+    }
     if (!shaping) return
     e.stopPropagation()
     useDesign.getState().select(k.id)
@@ -89,7 +102,28 @@ export function Board() {
         const target: [number, number, number] = [(k.x + k.w / 2) * p.x, plateTopAt(z, maxZ, family, tiltDeg) + SWITCH_TRAVEL_HEIGHT[family], z]
         return (
           <Eased key={k.id} target={target} rotation={[tilt, (-k.rot * Math.PI) / 180, 0]}>
-            <group onPointerDown={onDown(k)} onPointerMove={onMove} onPointerUp={onUp}>
+            <group
+              onPointerDown={onDown(k)}
+              onPointerMove={onMove}
+              onPointerUp={onUp}
+              onPointerOver={(e) => {
+                if (board.ledEffect !== 'reactive') return
+                e.stopPropagation()
+                hotRef(k.id).current = clock.getElapsedTime()
+                invalidateNow()
+              }}
+            >
+              <KeyLed
+                w={k.w * p.x - 1}
+                d={k.h * p.y - 1}
+                y={-SWITCH_TRAVEL_HEIGHT[family] + 0.4}
+                painted={k.led}
+                effect={board.ledEffect}
+                effectColor={board.ledColor}
+                phase={k.x + k.y}
+                hot={hotRef(k.id)}
+                glow={glowOf(k.id)}
+              />
               <Keycap
                 k={k}
                 family={family}
@@ -99,6 +133,7 @@ export function Board() {
                 stemColor={switchById(k.override?.switchId ?? board.switchId).stemColor}
                 invalid={invalid.has(k.id)}
                 selected={shaping && k.id === selectedId}
+                glow={glowOf(k.id)}
               />
             </group>
           </Eased>

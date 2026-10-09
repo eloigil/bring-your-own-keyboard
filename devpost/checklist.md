@@ -69,7 +69,7 @@ Build mode: fast
   Learner check: Add a knob, drag it into the top row, and watch keys move aside and the case adapt.
   Commit: `Add draggable knob with snap-aside`
 
-- [ ] **7. Paint LEDs and pick effects**
+- [x] **7. Paint LEDs and pick effects**
   Becomes usable: The LEDs step: paint per-key colors and pick an effect (breathing, wave, reactive). The lights stay off until configured and remain visible in every step afterwards.
   Why now: The firmware export needs the LED data, so it comes before export.
   PRD ref: `prd.md > LEDs Step`
@@ -142,3 +142,4 @@ Activity mode:
 - Freeform growth fills only the new strip past the old edge (not short rows like a TKL's Caps row); snap swaps in the preset, resetting custom edits — found while writing slice 4's tests.
 - Per-key overrides open from the selected key (single click or double-click) in the Build panel instead of a double-click-only popup; per-key switches are limited to the board's family (MX and Choc need different plates); Choc boards get low-profile caps (0.55× height). Catalog lives in `src/lib/catalog.ts` + `src/data/switches.json` (52 switches).
 - Knob keys slide aside on drop (pointer up), not continuously while dragging — continuous shifting would push keys further on every move. The knob counts as a 1u footprint for the case, well, plate cutout and overlap checks.
+- LEDs render as an additive underglow halo plus the keycap's emissive (shared live colour per key) — a plain plane under the cap only showed as thin slivers. Effects run in a chosen colour (`board.ledColor`, wave is rainbow); reactive lights keys on hover. Only an active effect keeps the frame loop running.

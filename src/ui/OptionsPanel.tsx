@@ -2,6 +2,7 @@ import { useDesign } from '../store/design'
 import { LayoutOptions } from './options/LayoutOptions'
 import { ShapeOptions } from './options/ShapeOptions'
 import { ComponentsOptions } from './options/ComponentsOptions'
+import { LedOptions } from './options/LedOptions'
 
 export function OptionsPanel() {
   const step = useDesign((s) => s.step)
@@ -13,6 +14,8 @@ export function OptionsPanel() {
           <ShapeOptions />
           <ComponentsOptions />
         </>
+      ) : step === 'LEDs' ? (
+        <LedOptions />
       ) : <p className="muted">Coming soon.</p>}
     </aside>
   )

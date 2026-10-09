@@ -143,7 +143,7 @@ interface Design {
   version: 1;
   keys: Key[]; components: Component[];
   board: { switchId: string; profileId: string; keycapColor: string; snap: 'snap' | 'free';
-           ledEffect: 'none' | 'breathing' | 'wave' | 'reactive'; tiltDeg: number /* typing angle, 0–12°, default 6 */ };
+           ledEffect: 'none' | 'breathing' | 'wave' | 'reactive'; tiltDeg: number /* typing angle, 0–12°, default 6 */; ledColor: string /* effect colour */ };
   /** Pocket fills set by orbs (t: 0 = open, 1 = flush), anchored at the pocket's mouth (mm, layout coords). */
   pocketFills: { x: number; y: number; t: number }[];
 }

@@ -80,3 +80,4 @@ select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 1
 .selected { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 4px; }
 .selected .tile { width: calc(100% - 8px); margin: 0 4px; }
 .tile.wide { width: calc(100% - 8px); margin: 0 4px; }
+.swatch.eraser { background: #fff; color: var(--muted); font-size: 12px; line-height: 1; }

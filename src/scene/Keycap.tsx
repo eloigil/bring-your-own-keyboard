@@ -48,8 +48,10 @@ function switchGeometry(family: Family) {
 }
 
 /** A keycap on its switch, positioned by its parent at the keycap's bottom. Pulses red when invalid, tinted when selected. */
-export function Keycap({ k, family, color, profile, row, stemColor, invalid, selected }: {
+export function Keycap({ k, family, color, profile, row, stemColor, invalid, selected, glow }: {
   k: Key; family: Family; color: string; profile: Profile; row: number; stemColor: string; invalid?: boolean; selected?: boolean
+  /** The key's live LED colour (black when off), shared with its underglow. */
+  glow: THREE.Color
 }) {
   const p = PITCH[family]
   const shape = rowShape(profile, row)
@@ -66,6 +68,7 @@ export function Keycap({ k, family, color, profile, row, stemColor, invalid, sel
     if (invalid) c.lerp(RED, 0.45 + 0.35 * Math.sin(t * 5))
   }
   useEffect(() => (tint(0), invalidate()), [color, selected, invalid]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => void (mat.current && (mat.current.emissive = glow)), [glow])
   // only an invalid key keeps the frame loop running (for its pulse)
   useFrame(({ clock, invalidate }) => {
     if (!invalid) return
@@ -75,7 +78,8 @@ export function Keycap({ k, family, color, profile, row, stemColor, invalid, sel
   return (
     <>
       <mesh geometry={geometry} castShadow>
-        <meshStandardMaterial ref={mat} color={color} roughness={0.7} />
+        {/* the LED shines through the cap a little */}
+        <meshStandardMaterial ref={mat} color={color} roughness={0.7} emissiveIntensity={0.35} />
       </mesh>
       <mesh geometry={sw.housing}>
         <meshStandardMaterial color="#2c2b31" roughness={0.6} />

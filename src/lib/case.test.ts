@@ -8,15 +8,14 @@ describe('caseOutline', () => {
     expect(caseOutline(split(), 'MX').filter((p) => area(p) > 0)).toHaveLength(2)
   })
 
-  it('leaves a notch where a corner key was deleted', () => {
+  it('smooths over a single missing corner key but keeps a notch where a block was removed', () => {
     const keys = tkl()
-    const pause = keys.find((k) => k.legend === 'Pause')!
-    const before = caseOutline(keys, 'MX')
-    const after = caseOutline(keys.filter((k) => k !== pause), 'MX')
-    const center: [number, number] = [(pause.x + 0.5) * 19.05, (pause.y + 0.5) * 19.05]
-    expect(contains(before, center)).toBe(true)
-    expect(contains(after, center)).toBe(false)
-    expect(area(after[0])).toBeLessThan(area(before[0]))
+    const at = (l: string) => keys.find((k) => k.legend === l)!
+    const center = (l: string): [number, number] => [(at(l).x + 0.5) * 19.05, (at(l).y + 0.5) * 19.05]
+    expect(contains(caseOutline(keys.filter((k) => k.legend !== 'Pause'), 'MX'), center('Pause'))).toBe(true)
+    const block = ['PrtSc', 'ScrLk', 'Pause', 'Ins', 'Home', 'PgUp', 'Del', 'End', 'PgDn']
+    const notched = caseOutline(keys.filter((k) => !block.includes(k.legend ?? '')), 'MX')
+    expect(contains(notched, center('Home'))).toBe(false)
   })
 
   it('fills the gaps between key groups', () => {

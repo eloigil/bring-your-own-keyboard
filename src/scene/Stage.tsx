@@ -1,6 +1,6 @@
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, Grid, Lightformer, OrbitControls } from '@react-three/drei'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useDesign } from '../store/design'
 
 // Light studio by default; "dark" dims the room so the backlight and LEDs read like they would at night.
@@ -14,7 +14,14 @@ export function Stage({ children, onPointerMissed }: { children: ReactNode; onPo
   const r = ROOM[useDesign((s) => (s.dark ? 'dark' : 'light'))]
   return (
     // frameloop="demand": draw only when something changes (orbit, drag, animation) — idle costs nothing
-    <Canvas shadows frameloop="demand" onPointerMissed={onPointerMissed} camera={{ position: [0, 380, 440], fov: 35, near: 1, far: 5000 }} dpr={[1, 1.5]}>
+    <Canvas
+      shadows
+      frameloop="demand"
+      onCreated={({ gl }) => {
+        gl.transmissionResolutionScale = 0.5 // see-through keycaps: the blurred view behind them doesn't need full resolution
+        gl.shadowMap.autoUpdate = false // shadows are refreshed only when the board's shape changes (see Shadows)
+      }}
+      onPointerMissed={onPointerMissed} camera={{ position: [0, 380, 440], fov: 35, near: 1, far: 5000 }} dpr={[1, 1.5]}>
       <color attach="background" args={[r.bg]} />
       <hemisphereLight args={['#ffffff', '#c9c6cf', r.sky]} />
       <directionalLight position={[-150, 300, 200]} intensity={r.key} castShadow shadow-mapSize={[1024, 1024]}>
@@ -42,8 +49,40 @@ export function Stage({ children, onPointerMissed }: { children: ReactNode; onPo
         fadeStrength={1.3}
         fadeFrom={0}
       />
-      <ContactShadows position={[0, -0.2, 0]} scale={700} blur={2.6} opacity={r.shadow} far={60} resolution={1024} />
+      <Shadows opacity={r.shadow} />
       <OrbitControls enableDamping makeDefault maxPolarAngle={Math.PI / 2.1} minDistance={120} maxDistance={900} />
     </Canvas>
   )
+}
+
+/**
+ * Shadows only depend on the board's shape, not on LED colours or the camera. So instead of re-rendering the
+ * shadow map and the contact shadow on every frame (4 scene renders per frame during an LED effect), refresh
+ * them while the shape is changing (keys glide for ~0.6 s) and once more when it settles.
+ */
+function Shadows({ opacity }: { opacity: number }) {
+  const gl = useThree((s) => s.gl)
+  const invalidate = useThree((s) => s.invalidate)
+  const until = useRef(performance.now() + 600)
+  const [version, setVersion] = useState(0)
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>
+    const changed = () => {
+      until.current = performance.now() + 600
+      invalidate()
+      clearTimeout(timer)
+      timer = setTimeout(() => setVersion((v) => v + 1), 650) // re-render the contact shadow once it has settled
+    }
+    changed()
+    // shape-affecting parts of the design only
+    const unsub = useDesign.subscribe((s, prev) => {
+      const a = s.design, b = prev.design
+      if (a.keys !== b.keys || a.components !== b.components || a.pocketFills !== b.pocketFills || a.board.tiltDeg !== b.board.tiltDeg || a.board.switchId !== b.board.switchId || a.board.profileId !== b.board.profileId || a.board.keycapMaterial !== b.board.keycapMaterial) changed()
+    })
+    return () => (unsub(), clearTimeout(timer))
+  }, [invalidate])
+  useFrame(() => {
+    if (performance.now() < until.current) gl.shadowMap.needsUpdate = true
+  })
+  return <ContactShadows key={version} frames={1} position={[0, -0.2, 0]} scale={700} blur={2.6} opacity={opacity} far={60} resolution={1024} />
 }

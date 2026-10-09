@@ -12,7 +12,7 @@ import { PocketOrb } from './PocketOrb'
 import { hitLocal } from './pointer'
 import { componentFootprint, keyRows } from '../lib/layout'
 import { Knob } from './Knob'
-import { KeyLed } from './KeyLed'
+import { KeyLed, LedTicker } from './KeyLed'
 import { profileById } from '../data/keycaps'
 import { switchById } from '../lib/catalog'
 
@@ -94,6 +94,7 @@ export function Board() {
   const tilt = plateTilt(family, tiltDeg)
   return (
     <group position={center}>
+      <LedTicker effect={board.ledEffect} />
       <Case keys={footprints} family={family} fills={fills} tilt={tiltDeg} />
       {keys.map((k) => {
         const z = (k.y + k.h / 2) * p.y

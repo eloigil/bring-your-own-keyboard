@@ -43,7 +43,8 @@ export function KeyLed({ w, d, y, painted, effect, effectColor, phase, hot, glow
     if (!mat.current || painted || effect === 'none') return
     colorAt(clock.elapsedTime, glow)
     mat.current.color.copy(glow)
-    if (effect !== 'reactive' || clock.elapsedTime - (hot.current ?? -99) < 0.8) invalidate()
+    // breathing/wave frames come from the shared 30 fps LedTicker; reactive flashes request their own frames briefly
+    if (effect === 'reactive' && clock.elapsedTime - (hot.current ?? -99) < 0.8) invalidate()
   })
   if (!lit) return null
   return (
@@ -53,4 +54,15 @@ export function KeyLed({ w, d, y, painted, effect, effectColor, phase, hot, glow
       <meshBasicMaterial ref={mat} toneMapped={false} transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} />
     </mesh>
   )
+}
+
+/** Drives continuous LED effects at 30 fps — plenty for slow colour changes, half the work of 60. */
+export function LedTicker({ effect }: { effect: LedEffect }) {
+  const invalidate = useThree((s) => s.invalidate)
+  useEffect(() => {
+    if (effect !== 'breathing' && effect !== 'wave') return
+    const id = setInterval(() => invalidate(), 1000 / 30)
+    return () => clearInterval(id)
+  }, [effect, invalidate])
+  return null
 }

@@ -89,6 +89,16 @@ Build mode: fast
   Learner check: Export both files. Open the STL in a slicer or viewer (or https://www.viewstl.com) and compare it to the screen, then unzip the firmware and skim the README wiring table.
   Commit: `Add STL and QMK firmware export`
 
+- [ ] **8b. Switch lab: browse switches by feel and sound**
+  Becomes usable: In Build → Switches, "Open switch lab" opens a large panel: search and filter the catalog; a detailed 3D switch (housing, stem, spring, pins) you can rotate, see through, and press with a slider; a force curve chart with the actuation point and tactile bump or click; feel stats (actuation, bottom-out, pre-travel, travel, bump); a sound profile (thocky/clacky/creamy/clicky/muted, pitch, loudness) with a synthesized ▶ Hear it; and materials. "Use this switch" applies it to the board.
+  Why now: Learner's request before the landing page; switch choice is what keyboard builders care most about.
+  PRD ref: `prd.md > Components Step` (Switch lab)
+  Spec ref: `spec.md > Catalog (src/data/switches.json, src/data/keycaps.ts)`
+  Build: extended switch data (forces, travel, bump/click, materials, sound), `forceCurve()` model, `SwitchModel` 3D component, Web Audio press sound, `SwitchLab` overlay.
+  Verify (mechanical): Tests confirm every switch has complete feel and sound data, force curves rise to the bottom-out force, tactile and clicky curves have a bump before actuation, and linear curves don't. Build passes; the lab opens, filters, and applies a switch in the browser.
+  Learner check: Open the switch lab, compare a linear, a tactile and a clicky switch (curve, press slider, ▶ Hear it), and apply one.
+  Commit: `Add the switch lab`
+
 - [ ] **9. Landing page leads into the editor**
   Becomes usable: Opening the app shows a small 3D landing (a rotating sample board, the title, a two-line pitch) with "Start building" leading to the editor.
   Why now: Wrapping, not kernel. Last, so it can show off the finished board.

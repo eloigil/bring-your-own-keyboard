@@ -95,3 +95,22 @@ describe('switches and keycaps', () => {
     expect([board.switchId, board.profileId, board.keycapColor]).toEqual(['kailh-choc-choc-brown', 'sa', '#123456'])
   })
 })
+
+describe('knob', () => {
+  it('adds a knob clear of the keys; dropping it onto a row slides those keys aside', async () => {
+    const { validate } = await import('../lib/validate')
+    useDesign.getState().setPreset('TKL')
+    useDesign.getState().addKnob()
+    const knobId = useDesign.getState().selectedId!
+    let d = useDesign.getState().design
+    expect(validate(d.keys, d.components, 'MX').size).toBe(0)
+    useDesign.getState().moveKey(knobId, 5.5, 1.25) // onto the number row
+    d = useDesign.getState().design
+    expect(validate(d.keys, d.components, 'MX').has(knobId)).toBe(true)
+    useDesign.getState().dropComponent(knobId)
+    d = useDesign.getState().design
+    expect(validate(d.keys, d.components, 'MX').size).toBe(0)
+    useDesign.getState().deleteKey(knobId)
+    expect(useDesign.getState().design.components).toHaveLength(0)
+  })
+})

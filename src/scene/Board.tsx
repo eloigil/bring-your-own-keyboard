@@ -11,7 +11,8 @@ import { Keycap } from './Keycap'
 import { PocketOrb } from './PocketOrb'
 import { ResizeHandle } from './ResizeHandle'
 import { hitLocal } from './pointer'
-import { keyRows } from '../lib/layout'
+import { componentFootprint, keyRows } from '../lib/layout'
+import { Knob } from './Knob'
 import { profileById } from '../data/keycaps'
 import { switchById } from '../lib/catalog'
 
@@ -35,7 +36,9 @@ export function Board() {
   const shaping = useDesign((s) => s.step === 'Build') // dragging keys and pocket orbs only in the Build step
   const p = PITCH[family]
 
-  const shape = useMemo(() => caseShape(keys, family, fills), [keys, family, fills])
+  // components (the knob) sit on the plate like a 1u key: the case, well and cutouts include them
+  const footprints = useMemo(() => [...keys, ...components.map(componentFootprint)], [keys, components])
+  const shape = useMemo(() => caseShape(footprints, family, fills), [footprints, family, fills])
   const invalid = useMemo(() => validate(keys, components, family), [keys, components, family])
   const maxZ = useMemo(() => Math.max(...shape.outline.flat().map((q) => q[1])), [shape])
 
@@ -54,7 +57,7 @@ export function Board() {
   const controls = useThree((s) => s.controls) as { enabled: boolean } | null
   const dragHeight = CASE_HEIGHT[family] + SWITCH_TRAVEL_HEIGHT[family]
 
-  const onDown = (k: Key) => (e: ThreeEvent<PointerEvent>) => {
+  const onDown = (k: { id: string; x: number; y: number }) => (e: ThreeEvent<PointerEvent>) => {
     if (!shaping) return
     e.stopPropagation()
     useDesign.getState().select(k.id)
@@ -72,6 +75,7 @@ export function Board() {
   const onUp = (e: ThreeEvent<PointerEvent>) => {
     if (!dragging) return
     ;(e.target as Element).releasePointerCapture(e.pointerId)
+    if (components.some((c) => c.id === dragging.id)) useDesign.getState().dropComponent(dragging.id)
     if (controls) controls.enabled = true
     setDragging(null)
   }
@@ -79,7 +83,7 @@ export function Board() {
   const tilt = plateTilt(family, tiltDeg)
   return (
     <group position={center}>
-      <Case keys={keys} family={family} fills={fills} tilt={tiltDeg} />
+      <Case keys={footprints} family={family} fills={fills} tilt={tiltDeg} />
       {keys.map((k) => {
         const z = (k.y + k.h / 2) * p.y
         const target: [number, number, number] = [(k.x + k.w / 2) * p.x, plateTopAt(z, maxZ, family, tiltDeg) + SWITCH_TRAVEL_HEIGHT[family], z]
@@ -96,6 +100,16 @@ export function Board() {
                 invalid={invalid.has(k.id)}
                 selected={shaping && k.id === selectedId}
               />
+            </group>
+          </Eased>
+        )
+      })}
+      {components.map((c) => {
+        const z = (c.y + 0.5) * p.y
+        return (
+          <Eased key={c.id} target={[(c.x + 0.5) * p.x, plateTopAt(z, maxZ, family, tiltDeg), z]} rotation={[tilt, 0, 0]}>
+            <group onPointerDown={onDown(c)} onPointerMove={onMove} onPointerUp={onUp}>
+              <Knob invalid={invalid.has(c.id)} selected={shaping && c.id === selectedId} />
             </group>
           </Eased>
         )

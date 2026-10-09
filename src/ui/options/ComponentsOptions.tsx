@@ -22,7 +22,8 @@ function SwitchSelect({ value, onChange, family, allowDefault }: { value: string
 export function ComponentsOptions() {
   const board = useDesign((s) => s.design.board)
   const selected = useDesign((s) => s.design.keys.find((k) => k.id === s.selectedId))
-  const { setSwitch, setKeycaps, setOverride } = useDesign.getState()
+  const selectedKnob = useDesign((s) => s.design.components.find((c) => c.id === s.selectedId))
+  const { setSwitch, setKeycaps, setOverride, addKnob, deleteKey } = useDesign.getState()
   const sw = switchById(board.switchId)
   return (
     <>
@@ -45,6 +46,17 @@ export function ComponentsOptions() {
           <input type="color" value={board.keycapColor} onChange={(e) => setKeycaps({ keycapColor: e.target.value })} title="Custom colour" />
         </div>
       </section>
+      <section>
+        <h3>Components</h3>
+        <button className="tile wide" onClick={addKnob}>+ Add knob</button>
+        <p className="muted">Drag the knob onto your board; when you let go, keys in its row slide aside to make room.</p>
+      </section>
+      {selectedKnob && (
+        <section className="selected">
+          <h3>Selected knob</h3>
+          <button className="tile wide" onClick={() => deleteKey(selectedKnob.id)}>Remove knob</button>
+        </section>
+      )}
       {selected && (
         <section className="selected">
           <h3>Selected key{selected.legend ? `: ${selected.legend}` : ''}</h3>

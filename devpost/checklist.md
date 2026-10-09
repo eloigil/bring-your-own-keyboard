@@ -59,7 +59,7 @@ Build mode: fast
   Learner check: Switch Cherry MX Red → Kailh Choc Brown and watch the board tighten, try SA vs DSA, double-click one key and make it a different color.
   Commit: `Add switch and keycap selection with per-key overrides`
 
-- [ ] **6. Add a knob that pushes keys aside**
+- [x] **6. Add a knob that pushes keys aside**
   Becomes usable: Add a knob in Components and drag it anywhere. Keys in its rows shift right to make room, and the case grows around it.
   Why now: Depends on the Components step and slice 3's dragging.
   PRD ref: `prd.md > Components Step` (Knob)
@@ -141,3 +141,4 @@ Activity mode:
 - Added a typing-angle slider (0–12°, default 6°) to the Layout step (learner moved it from Build); `board.tiltDeg` is saved, and older saves get 6° — learner's request after checkpoint 2.
 - Freeform growth fills only the new strip past the old edge (not short rows like a TKL's Caps row); snap swaps in the preset, resetting custom edits — found while writing slice 4's tests.
 - Per-key overrides open from the selected key (single click or double-click) in the Build panel instead of a double-click-only popup; per-key switches are limited to the board's family (MX and Choc need different plates); Choc boards get low-profile caps (0.55× height). Catalog lives in `src/lib/catalog.ts` + `src/data/switches.json` (52 switches).
+- Knob keys slide aside on drop (pointer up), not continuously while dragging — continuous shifting would push keys further on every move. The knob counts as a 1u footprint for the case, well, plate cutout and overlap checks.

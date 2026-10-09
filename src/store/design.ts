@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Design, Key, Step } from '../types'
-import { PRESETS, newId, resizeFree, snap, snapSize, type PresetName } from '../lib/layout'
+import { PRESETS, newId, resizeFree, snap, snapAside, snapSize, type PresetName } from '../lib/layout'
 import { TILT_DEG, TILT_MAX } from '../lib/case'
 
 export const STORAGE_KEY = 'byokb-design'
@@ -43,6 +43,9 @@ interface State {
   select: (id: string | null) => void
   moveKey: (id: string, x: number, y: number) => void
   addKey: () => void
+  addKnob: () => void
+  /** After dragging a component: keys in its rows slide aside to make room. */
+  dropComponent: (id: string) => void
   deleteKey: (id: string) => void
   setPocketFill: (x: number, y: number, t: number) => void
   setTilt: (deg: number) => void
@@ -68,12 +71,30 @@ export const useDesign = create<State>()(
       selectedId: null,
       setPreset: (p) => set((s) => ({ preset: p, selectedId: null, design: { ...s.design, keys: PRESETS[p](), components: [], pocketFills: [] } })),
       select: (selectedId) => set({ selectedId }),
+      // moves a key or a component (knob), snapped to the 0.25u grid
       moveKey: (id, x, y) =>
         set((s) => {
           const [sx, sy] = [snap(x), snap(y)]
-          const k = s.design.keys.find((k) => k.id === id)
-          if (!k || (k.x === sx && k.y === sy)) return s
-          return { preset: null, design: { ...s.design, keys: s.design.keys.map((k) => (k.id === id ? { ...k, x: sx, y: sy } : k)) } }
+          const item = s.design.keys.find((k) => k.id === id) ?? s.design.components.find((c) => c.id === id)
+          if (!item || (item.x === sx && item.y === sy)) return s
+          const move = <T extends { id: string }>(list: T[]) => list.map((k) => (k.id === id ? { ...k, x: sx, y: sy } : k))
+          return { preset: null, design: { ...s.design, keys: move(s.design.keys), components: move(s.design.components) } }
+        }),
+      addKnob: () =>
+        set((s) => {
+          const keys = s.design.keys
+          // start just above the board's top-right corner, clear of every key
+          const x = keys.length ? snap(Math.max(...keys.map((k) => k.x + k.w)) - 1) : 0
+          const y = keys.length ? snap(Math.min(...keys.map((k) => k.y)) - 1.25) : 0
+          const knob = { id: newId(), type: 'knob' as const, x, y }
+          return { preset: null, selectedId: knob.id, design: { ...s.design, components: [...s.design.components, knob] } }
+        }),
+      dropComponent: (id) =>
+        set((s) => {
+          const c = s.design.components.find((c) => c.id === id)
+          if (!c) return s
+          const keys = snapAside(s.design.keys, c)
+          return keys === s.design.keys ? s : { design: { ...s.design, keys } }
         }),
       addKey: () =>
         set((s) => {
@@ -83,7 +104,11 @@ export const useDesign = create<State>()(
           return { preset: null, selectedId: key.id, design: { ...s.design, keys: [...keys, key] } }
         }),
       deleteKey: (id) =>
-        set((s) => ({ preset: null, selectedId: null, design: { ...s.design, keys: s.design.keys.filter((k) => k.id !== id) } })),
+        set((s) => ({
+          preset: null,
+          selectedId: null,
+          design: { ...s.design, keys: s.design.keys.filter((k) => k.id !== id), components: s.design.components.filter((c) => c.id !== id) },
+        })),
       setSnapMode: (mode) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, snap: mode } } })),
       resizeTo: (width) => {
         const s = get()

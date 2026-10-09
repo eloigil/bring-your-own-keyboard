@@ -79,3 +79,4 @@ select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 1
 .swatches input[type='color'] { width: 28px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer; }
 .selected { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 4px; }
 .selected .tile { width: calc(100% - 8px); margin: 0 4px; }
+.tile.wide { width: calc(100% - 8px); margin: 0 4px; }

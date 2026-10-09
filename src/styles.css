@@ -71,3 +71,4 @@ button:disabled { opacity: 0.4; cursor: default; }
 .slider { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
 .slider input { flex: 1; accent-color: var(--accent); }
 .slider span { width: 40px; text-align: right; font-variant-numeric: tabular-nums; font-size: 13px; }
+.cta { margin-top: 20px; }

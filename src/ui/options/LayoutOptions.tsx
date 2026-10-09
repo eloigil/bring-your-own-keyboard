@@ -28,7 +28,7 @@ export function LayoutOptions() {
           <span>{tilt}°</span>
         </label>
       </section>
-      <div className="row">
+      <div className="row cta">
         <button className="tile active" onClick={() => setStep('Build')}>Start building →</button>
       </div>
     </>

@@ -7,7 +7,7 @@ export function OptionsPanel() {
   return (
     <aside className="card options">
       <h2>{step}</h2>
-      {step === 'Layout' ? <LayoutOptions /> : step === 'Shape' ? <ShapeOptions /> : <p className="muted">Coming soon.</p>}
+      {step === 'Layout' ? <LayoutOptions /> : step === 'Build' ? <ShapeOptions /> : <p className="muted">Coming soon.</p>}
     </aside>
   )
 }

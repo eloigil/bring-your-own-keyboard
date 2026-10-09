@@ -16,7 +16,7 @@ export function LayoutOptions() {
       </div>
       <p className="muted">Picking a layout replaces your current board.</p>
       <div className="row">
-        <button className="tile active" onClick={() => setStep('Shape')}>Start shaping →</button>
+        <button className="tile active" onClick={() => setStep('Build')}>Start building →</button>
       </div>
     </section>
   )

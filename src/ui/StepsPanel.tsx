@@ -3,8 +3,7 @@ import type { Step } from '../types'
 
 const STEPS: { step: Step; hint: string }[] = [
   { step: 'Layout', hint: 'Pick a starting layout' },
-  { step: 'Shape', hint: 'Drag keys, fill pockets' },
-  { step: 'Components', hint: 'Switches, keycaps, knob' },
+  { step: 'Build', hint: 'Keys, case, switches, knob' },
   { step: 'LEDs', hint: 'Light it up' },
   { step: 'Export', hint: 'Files to build it' },
 ]

@@ -24,7 +24,7 @@ export function Board() {
   const components = useDesign((s) => s.design.components)
   const family = useDesign((s) => familyOf(s.design.board.switchId))
   const selectedId = useDesign((s) => s.selectedId)
-  const shaping = useDesign((s) => s.step === 'Shape') // dragging keys and pocket orbs only in the Shape step
+  const shaping = useDesign((s) => s.step === 'Build') // dragging keys and pocket orbs only in the Build step
   const p = PITCH[family]
 
   const shape = useMemo(() => caseShape(keys, family, fills), [keys, family, fills])

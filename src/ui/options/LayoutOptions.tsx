@@ -1,9 +1,11 @@
 import { useDesign } from '../../store/design'
 import { PRESET_CATEGORIES } from '../../lib/layout'
+import { TILT_MAX } from '../../lib/case'
 
 export function LayoutOptions() {
   const preset = useDesign((s) => s.preset)
-  const { setPreset, setStep } = useDesign.getState()
+  const tilt = useDesign((s) => s.design.board.tiltDeg)
+  const { setPreset, setStep, setTilt } = useDesign.getState()
   return (
     <>
       {PRESET_CATEGORIES.map(({ name, presets }) => (
@@ -19,6 +21,13 @@ export function LayoutOptions() {
         </section>
       ))}
       <p className="muted">Picking a layout replaces your current board.</p>
+      <section>
+        <h3>Typing angle</h3>
+        <label className="slider">
+          <input type="range" min={0} max={TILT_MAX} step={0.5} value={tilt} onChange={(e) => setTilt(Number(e.target.value))} />
+          <span>{tilt}°</span>
+        </label>
+      </section>
       <div className="row">
         <button className="tile active" onClick={() => setStep('Build')}>Start building →</button>
       </div>

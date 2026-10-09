@@ -1,17 +1,11 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, Grid, Lightformer, OrbitControls } from '@react-three/drei'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import * as THREE from 'three'
 import { useDesign } from '../store/design'
 
-// Light studio by default; "dark" dims the room so the backlight and LEDs read like they would at night.
-const ROOM = {
-  light: { bg: '#e9e8ec', sky: 1.4, key: 2.2, fill: 0.6, cell: '#bdb7c8', section: '#b8b2c5', shadow: 0.35, env: 0.12 },
-  dark: { bg: '#0f0e13', sky: 0.12, key: 0.3, fill: 0.08, cell: '#24222c', section: '#2e2b38', shadow: 0.6, env: 0.04 },
-}
-
-/** Studio: backdrop, key + fill light, contact shadow, scale grid. No remote HDR, works offline. */
+/** Studio: backdrop, sun / moon lighting, contact shadow, scale grid. No remote HDR, works offline. */
 export function Stage({ children, onPointerMissed }: { children: ReactNode; onPointerMissed?: () => void }) {
-  const r = ROOM[useDesign((s) => (s.dark ? 'dark' : 'light'))]
   return (
     // frameloop="demand": draw only when something changes (orbit, drag, animation) — idle costs nothing
     <Canvas
@@ -22,36 +16,116 @@ export function Stage({ children, onPointerMissed }: { children: ReactNode; onPo
         gl.shadowMap.autoUpdate = false // shadows are refreshed only when the board's shape changes (see Shadows)
       }}
       onPointerMissed={onPointerMissed} camera={{ position: [0, 380, 440], fov: 35, near: 1, far: 5000 }} dpr={[1, 1.5]}>
-      <color attach="background" args={[r.bg]} />
-      <hemisphereLight args={['#ffffff', '#c9c6cf', r.sky]} />
-      <directionalLight position={[-150, 300, 200]} intensity={r.key} castShadow shadow-mapSize={[1024, 1024]}>
-        <orthographicCamera attach="shadow-camera" args={[-300, 300, 300, -300, 1, 1000]} />
-      </directionalLight>
-      <directionalLight position={[200, 120, -150]} intensity={r.fill} />
-      {/* soft studio reflections, built from shapes (no HDR download): faint on everything, clear caps scale it up */}
-      <Environment resolution={128} environmentIntensity={r.env}>
-        <Lightformer form="rect" intensity={3} position={[0, 400, 0]} rotation-x={Math.PI / 2} scale={[600, 300, 1]} />
-        <Lightformer form="rect" intensity={1.5} position={[-500, 150, 200]} rotation-y={Math.PI / 2} scale={[400, 120, 1]} />
-        <Lightformer form="rect" intensity={1} position={[500, 100, -200]} rotation-y={-Math.PI / 2} scale={[300, 100, 1]} />
-      </Environment>
+      <Sky />
+      <StudioEnvironment />
       {children}
-      {/* scale reference: 1 cm cells, 10 cm sections, fading out in a circle around the board (fadeFrom 0 = from the origin) */}
+      {/* scale reference: 1 cm cells, 10 cm sections, fading out in a circle around the board (fadeFrom 0 = from the origin).
+          Its colours are driven by Sky. */}
       <Grid
+        name="floor-grid"
         position={[0, -0.1, 0]}
         args={[1200, 1200]}
         cellSize={10}
         cellThickness={0.8}
-        cellColor={r.cell}
         sectionSize={100}
         sectionThickness={1.4}
-        sectionColor={r.section}
         fadeDistance={330}
         fadeStrength={1.3}
         fadeFrom={0}
       />
-      <Shadows opacity={r.shadow} />
+      <Shadows />
       <OrbitControls enableDamping makeDefault maxPolarAngle={Math.PI / 2.1} minDistance={120} maxDistance={900} />
     </Canvas>
+  )
+}
+
+/** Soft studio reflections, built from shapes (no HDR download). Memoised so re-renders don't reset the intensity Sky animates. */
+const StudioEnvironment = memo(() => (
+  <Environment resolution={128} environmentIntensity={0.12}>
+    <Lightformer form="rect" intensity={3} position={[0, 400, 0]} rotation-x={Math.PI / 2} scale={[600, 300, 1]} />
+    <Lightformer form="rect" intensity={1.5} position={[-500, 150, 200]} rotation-y={Math.PI / 2} scale={[400, 120, 1]} />
+    <Lightformer form="rect" intensity={1} position={[500, 100, -200]} rotation-y={-Math.PI / 2} scale={[300, 100, 1]} />
+  </Environment>
+))
+
+const c = (hex: string) => new THREE.Color(hex)
+/** Colour at `t` (0–1) along evenly spaced stops. */
+function ramp(stops: THREE.Color[], t: number, out: THREE.Color) {
+  const x = Math.min(Math.max(t, 0), 1) * (stops.length - 1)
+  const i = Math.min(Math.floor(x), stops.length - 2)
+  return out.copy(stops[i]).lerp(stops[i + 1], x - i)
+}
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+const smooth = (t: number) => t * t * (3 - 2 * t)
+const band = (a: number, b: number, t: number) => smooth(Math.min(Math.max((t - a) / (b - a), 0), 1))
+
+// day → golden hour → dusk → night
+const BG = [c('#e9e8ec'), c('#efd2bd'), c('#c98a7a'), c('#3a2c45'), c('#0f0e13')]
+const SKY = [c('#ffffff'), c('#ffe2c4'), c('#ffb08a'), c('#7c7fb8'), c('#6d7fc0')]
+const SUN = [c('#ffffff'), c('#fff1dc'), c('#ffb066'), c('#ff7a3d'), c('#ff7a3d')]
+const CELL = [c('#bdb7c8'), c('#d0b6a6'), c('#a8786e'), c('#3b3048'), c('#24222c')]
+const SECTION = [c('#b8b2c5'), c('#c9ab99'), c('#9e6c62'), c('#43374f'), c('#2e2b38')]
+const SECONDS = 2.4
+
+/**
+ * Light ↔ dark as a sunset / sunrise: the sun sinks to the west (warming to orange, shadows stretching) while the
+ * room goes through golden hour and dusk, then a cool moonlight takes over. Turning the lights back on, the sun
+ * rises from the east. `night` runs 0 (noon) → 1 (night) and only animates while it moves — idle frames stay free.
+ */
+function Sky() {
+  const dark = useDesign((s) => s.dark)
+  const { scene, gl, invalidate } = useThree()
+  const sun = useRef<THREE.DirectionalLight>(null!)
+  const moon = useRef<THREE.DirectionalLight>(null!)
+  const fill = useRef<THREE.DirectionalLight>(null!)
+  const hemi = useRef<THREE.HemisphereLight>(null!)
+  const night = useRef(dark ? 1 : 0)
+  const side = useRef(-1) // -1: sun in the west (setting), 1: east (rising)
+  const bg = useMemo(() => new THREE.Color(), [])
+
+  useEffect(() => {
+    side.current = dark ? -1 : 1
+    invalidate()
+  }, [dark, invalidate])
+
+  useFrame((_, delta) => {
+    const target = dark ? 1 : 0
+    const moving = night.current !== target
+    if (moving) {
+      const step = Math.min(delta, 0.1) / SECONDS
+      night.current = target > night.current ? Math.min(target, night.current + step) : Math.max(target, night.current - step)
+      gl.shadowMap.needsUpdate = true // the sun moves, so its shadows do too
+      invalidate()
+    }
+    const t = smooth(night.current)
+
+    // the sun: from high (65°) down past the horizon (-8°) by t = 0.8
+    const el = THREE.MathUtils.degToRad(lerp(65, -8, Math.min(t / 0.8, 1)))
+    sun.current.position.set(side.current * 340 * Math.cos(el), 340 * Math.sin(el), 200)
+    sun.current.intensity = 2.2 * Math.max(0, Math.sin(el)) ** 0.6
+    ramp(SUN, t, sun.current.color)
+    moon.current.intensity = 0.3 * band(0.6, 1, t)
+    fill.current.intensity = lerp(0.6, 0.08, t)
+    hemi.current.intensity = lerp(1.4, 0.12, band(0, 0.85, t))
+    ramp(SKY, t, hemi.current.color)
+    scene.background = ramp(BG, t, bg)
+    scene.environmentIntensity = lerp(0.12, 0.04, t)
+    const grid = scene.getObjectByName('floor-grid') as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial> | undefined
+    if (grid) {
+      ramp(CELL, t, grid.material.uniforms.cellColor.value)
+      ramp(SECTION, t, grid.material.uniforms.sectionColor.value)
+    }
+  })
+
+  return (
+    <>
+      <hemisphereLight ref={hemi} args={['#ffffff', '#c9c6cf', 1.4]} />
+      <directionalLight ref={sun} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]}>
+        <orthographicCamera attach="shadow-camera" args={[-300, 300, 300, -300, 1, 1000]} />
+      </directionalLight>
+      <directionalLight ref={moon} position={[120, 300, 160]} color="#a9bcff" intensity={0} />
+      <directionalLight ref={fill} position={[200, 120, -150]} intensity={0.6} />
+    </>
   )
 }
 
@@ -60,7 +134,8 @@ export function Stage({ children, onPointerMissed }: { children: ReactNode; onPo
  * shadow map and the contact shadow on every frame (4 scene renders per frame during an LED effect), refresh
  * them while the shape is changing (keys glide for ~0.6 s) and once more when it settles.
  */
-function Shadows({ opacity }: { opacity: number }) {
+function Shadows() {
+  const opacity = useDesign((s) => (s.dark ? 0.6 : 0.35))
   const gl = useThree((s) => s.gl)
   const invalidate = useThree((s) => s.invalidate)
   const until = useRef(performance.now() + 600)

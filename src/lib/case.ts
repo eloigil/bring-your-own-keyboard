@@ -87,6 +87,25 @@ function segDist([px, py]: Pt, [ax, ay]: Pt, [bx, by]: Pt) {
   return Math.hypot(px - ax - t * dx, py - ay - t * dy)
 }
 
+/** Bodies whose convex hulls overlap become one group (one case piece); far-apart halves stay separate. */
+function groupBodies(bodies: Path[]): Path[][] {
+  let groups = bodies.map((b) => [b])
+  for (let merged = true; merged; ) {
+    merged = false
+    outer: for (let i = 0; i < groups.length; i++)
+      for (let j = i + 1; j < groups.length; j++) {
+        const hi = [toPath(hull(groups[i].flatMap(fromPath)))], hj = [toPath(hull(groups[j].flatMap(fromPath)))]
+        if (pathsArea(intersection(hi, hj)) > 1) {
+          groups[i] = [...groups[i], ...groups[j]]
+          groups = groups.filter((_, k) => k !== j)
+          merged = true
+          break outer
+        }
+      }
+  }
+  return groups
+}
+
 /** A dip in the case edge, between the keys' snug outline and the body's convex hull. */
 export interface Pocket {
   /** Center of the pocket's opening on the hull (mm). Saved fills are anchored here. */
@@ -102,7 +121,7 @@ export interface Pocket {
 /** A saved orb setting: `t` (0 = open, 1 = flush) for the pocket whose mouth is near (x, y). */
 export interface PocketFill { x: number; y: number; t: number }
 
-const MIN_POCKET_AREA = 40 // mm²; smaller dips are just rounding noise
+const MIN_POCKET_AREA = 40 // mm²; smaller dips are filled flush and get no orb
 const AUTO_FILL_DEPTH = 8 // mm; shallower cut-ins are filled flush and get no orb
 const ANCHOR_MATCH = 19 // mm; a saved fill belongs to the pocket whose mouth is this close
 
@@ -117,17 +136,20 @@ export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [],
   const bodies = offset(union(keys.map((k) => keyCorners(k, family))), margin).filter((p) => ClipperLib.Clipper.Area(p) > 0)
   const pockets: Pocket[] = []
   const parts: Path[] = []
-  for (const body of bodies) {
-    const h = hull(fromPath(body))
+  for (const body of groupBodies(bodies)) {
+    const h = hull(body.flatMap(fromPath))
     const hullPath = [toPath(h)]
-    const smooth = offset(offset([body], CLOSE), -CLOSE) // the default look
-    parts.push(body)
-    for (const pocketPath of difference(hullPath, [body])) {
+    const smooth = offset(offset(body, CLOSE), -CLOSE) // the default look
+    parts.push(...body)
+    for (const pocketPath of difference(hullPath, body)) {
       const poly = fromPath(pocketPath)
-      if (Math.abs(area(poly)) < MIN_POCKET_AREA) continue
       // mouth: the pocket's vertices lying on the hull edge; its two farthest-apart ends span the opening
       const onHull = poly.filter((q) => h.some((a, i) => segDist(q, a, h[(i + 1) % h.length]) < 0.5))
-      if (onHull.length < 2) continue
+      // too small (or too odd) to be worth an orb: fill it flush
+      if (Math.abs(area(poly)) < MIN_POCKET_AREA || onHull.length < 2) {
+        parts.push(pocketPath)
+        continue
+      }
       let [A, B] = [onHull[0], onHull[1]], best = -1
       for (const a of onHull) for (const b of onHull) {
         const dd = Math.hypot(a[0] - b[0], a[1] - b[1])
@@ -144,8 +166,8 @@ export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [],
         continue
       }
       // how far the keys' outline must grow to cover the whole pocket
-      const bodyPoly = fromPath(body)
-      const reach = Math.max(...poly.map((q) => Math.min(...bodyPoly.map((a, i) => segDist(q, a, bodyPoly[(i + 1) % bodyPoly.length])))))
+      const rings = body.map(fromPath)
+      const reach = Math.max(...poly.map((q) => Math.min(...rings.flatMap((r) => r.map((a, i) => segDist(q, a, r[(i + 1) % r.length]))))))
 
       const saved = fills
         .map((f) => ({ f, dist: Math.hypot(f.x - mouth[0], f.y - mouth[1]) }))
@@ -154,7 +176,7 @@ export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [],
       let fill: Path[], t: number
       if (saved) {
         t = Math.max(0, Math.min(1, saved.t))
-        fill = t <= 0 ? [] : t >= 1 ? [pocketPath] : intersection([pocketPath], offset([body], reach * t))
+        fill = t <= 0 ? [] : t >= 1 ? [pocketPath] : intersection([pocketPath], offset(body, reach * t))
       } else {
         fill = intersection([pocketPath], smooth)
         t = Math.min(1, pathsArea(fill) / Math.abs(area(poly)))

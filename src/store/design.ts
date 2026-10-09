@@ -97,4 +97,4 @@ export const useDesign = create<State>()(
 )
 
 // dev-only handle for poking at the design from the browser console
-if (import.meta.env.DEV) (window as unknown as { byokb: typeof useDesign }).byokb = useDesign
+if (import.meta.env.DEV && typeof window !== 'undefined') (window as unknown as { byokb: typeof useDesign }).byokb = useDesign

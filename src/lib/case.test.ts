@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { area, caseMesh, caseOutline, caseShape, contains, keyCorners, type PocketFill } from './case'
-import { alice, split, tkl } from './layout'
+import { alice, PRESETS, split, tkl } from './layout'
 
 describe('caseOutline', () => {
   it('gives one body for a TKL and two for a split', () => {
@@ -57,6 +57,21 @@ describe('caseMesh', () => {
   })
 })
 
+function hullOf(pts: [number, number][]): [number, number][] {
+  const p = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  const cross = (o: number[], a: number[], b: number[]) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+  const half = (l: [number, number][]) => {
+    const h: [number, number][] = []
+    for (const q of l) {
+      while (h.length >= 2 && cross(h[h.length - 2], h[h.length - 1], q) <= 0) h.pop()
+      h.push(q)
+    }
+    h.pop()
+    return h
+  }
+  return [...half(p), ...half([...p].reverse())]
+}
+
 function distToOutline(polys: [number, number][][], [px, py]: [number, number]) {
   let m = Infinity
   for (const r of polys)
@@ -107,6 +122,27 @@ describe('pockets', () => {
             expect(contains(outline, q) || distToOutline(outline, q) < 0.6).toBe(true)
           }
         }
+    }
+  })
+
+  it('is perfectly flat (equals its convex hull) when every orb is flush', () => {
+    for (const make of [tkl, split, alice]) {
+      const ks = make()
+      const flush = caseShape(ks, 'MX', caseShape(ks, 'MX').pockets.map((p) => ({ x: p.mouth[0], y: p.mouth[1], t: 1 })))
+      for (const ring of flush.outline) expect(area(hullOf(ring)) - area(ring)).toBeLessThan(2)
+    }
+  })
+
+  it('can be made perfectly flat after random edits (deleted and nudged keys)', () => {
+    let seed = 7
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+    const names = Object.keys(PRESETS) as (keyof typeof PRESETS)[]
+    for (let trial = 0; trial < 200; trial++) {
+      let ks = PRESETS[names[trial % names.length]]()
+      for (let i = 0; i < 4; i++) ks.splice(Math.floor(rnd() * ks.length), 1)
+      ks = ks.map((k) => (rnd() < 0.08 ? { ...k, x: k.x + Math.round((rnd() - 0.5) * 8) / 4, y: k.y + Math.round((rnd() - 0.5) * 8) / 4 } : k))
+      const flush = caseShape(ks, 'MX', caseShape(ks, 'MX').pockets.map((p) => ({ x: p.mouth[0], y: p.mouth[1], t: 1 })))
+      for (const ring of flush.outline) expect(area(hullOf(ring)) - area(ring), `trial ${trial}`).toBeLessThan(2)
     }
   })
 

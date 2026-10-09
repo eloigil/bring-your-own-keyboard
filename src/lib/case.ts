@@ -131,7 +131,7 @@ const ANCHOR_MATCH = 19 // mm; a saved fill belongs to the pocket whose mouth is
  * The case outline plus its pockets. Each body (a split half) is handled on its own:
  * snug = keys + bezel with internal gaps always filled; each pocket between snug and the
  * convex hull is filled behind a straight wall parallel to its opening, slid in by the orb's saved
- * fraction, or by a smooth default (closing). Shallow cut-ins are always filled; enclosed voids are dropped.
+ * fraction (or a default sized like a smooth closing fill). Shallow cut-ins are always filled; enclosed voids are dropped.
  */
 export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [], margin = BEZEL): { outline: Poly[]; pockets: Pocket[] } {
   if (!keys.length) return { outline: [], pockets: [] }
@@ -141,7 +141,7 @@ export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [],
   for (const body of groupBodies(bodies)) {
     const h = hull(body.flatMap(fromPath))
     const hullPath = [toPath(h)]
-    const smooth = offset(offset(body, CLOSE), -CLOSE) // the default look
+    const smooth = offset(offset(body, CLOSE), -CLOSE) // only used to size untouched pockets' default fill
     parts.push(...body)
     for (const pocketPath of difference(hullPath, body)) {
       const poly = fromPath(pocketPath)
@@ -172,24 +172,19 @@ export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [],
         .map((f) => ({ f, dist: Math.hypot(f.x - mouth[0], f.y - mouth[1]) }))
         .filter((m) => m.dist < ANCHOR_MATCH)
         .sort((a, b) => a.dist - b.dist)[0]?.f
-      let fill: Path[], t: number
-      if (saved) {
-        t = Math.max(0, Math.min(1, saved.t))
-        // a straight wall parallel to the mouth, slid in by (1 - t) of the depth: the keys' side of it is solid
-        const cut = depth * (1 - t)
-        const [ux, uy] = [-n[1], n[0]] // along the mouth
-        const far = 1e4
-        const behind: Poly = [
-          [mouth[0] + n[0] * cut - ux * far, mouth[1] + n[1] * cut - uy * far],
-          [mouth[0] + n[0] * cut + ux * far, mouth[1] + n[1] * cut + uy * far],
-          [mouth[0] + n[0] * far + ux * far, mouth[1] + n[1] * far + uy * far],
-          [mouth[0] + n[0] * far - ux * far, mouth[1] + n[1] * far - uy * far],
-        ]
-        fill = t <= 0 ? [] : t >= 1 ? [pocketPath] : intersection([pocketPath], [toPath(behind)])
-      } else {
-        fill = intersection([pocketPath], smooth)
-        t = Math.min(1, pathsArea(fill) / Math.abs(area(poly)))
-      }
+      // untouched pockets start about as full as a smooth (closing) fill would make them, but with the same straight wall
+      const t = saved ? Math.max(0, Math.min(1, saved.t)) : Math.min(1, pathsArea(intersection([pocketPath], smooth)) / Math.abs(area(poly)))
+      // a straight wall parallel to the mouth, slid in by (1 - t) of the depth: the keys' side of it is solid
+      const cut = depth * (1 - t)
+      const [ux, uy] = [-n[1], n[0]] // along the mouth
+      const far = 1e4
+      const behind: Poly = [
+        [mouth[0] + n[0] * cut - ux * far, mouth[1] + n[1] * cut - uy * far],
+        [mouth[0] + n[0] * cut + ux * far, mouth[1] + n[1] * cut + uy * far],
+        [mouth[0] + n[0] * far + ux * far, mouth[1] + n[1] * far + uy * far],
+        [mouth[0] + n[0] * far - ux * far, mouth[1] + n[1] * far - uy * far],
+      ]
+      const fill = t <= 0 ? [] : t >= 1 ? [pocketPath] : intersection([pocketPath], [toPath(behind)])
       parts.push(...fill)
       pockets.push({ mouth, dir: n, depth, t })
     }

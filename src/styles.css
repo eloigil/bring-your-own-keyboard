@@ -152,3 +152,6 @@ select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 1
   .lab-list { max-height: 220px; }
 }
 .lab-view .slider span:last-child { width: 64px; white-space: nowrap; }
+.lab-list .brand { position: sticky; top: 0; z-index: 1; background: var(--card); padding: 12px 8px 6px; border-bottom: 1px solid var(--line); margin-bottom: 2px; }
+.lab-list .brand img { height: 18px; max-width: 140px; object-fit: contain; display: block; }
+.lab-list .brand .wordmark { font-weight: 800; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; }

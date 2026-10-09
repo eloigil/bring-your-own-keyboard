@@ -8,6 +8,21 @@ import { SwitchModel } from '../scene/SwitchModel'
 import { ForceChart } from './ForceChart'
 
 const TYPES = ['linear', 'tactile', 'clicky'] as const
+
+// Brand logos dropped into src/assets/brands/<brand>.svg|png are picked up at build time (no 404s for missing ones).
+const LOGOS = Object.fromEntries(
+  Object.entries(import.meta.glob('../assets/brands/*.{svg,png}', { eager: true, query: '?url', import: 'default' })).map(([path, url]) => [
+    path.split('/').pop()!.replace(/\.(svg|png)$/, ''),
+    url as string,
+  ]),
+)
+/** Kailh Box and Kailh Choc share one Kailh section. */
+const brandOf = (w: { brand: string }) => w.brand.replace(/ Choc$/, '')
+
+function BrandTitle({ brand }: { brand: string }) {
+  const logo = LOGOS[brand.toLowerCase()]
+  return <li className="brand">{logo ? <img src={logo} alt={brand} /> : <span className="wordmark">{brand}</span>}</li>
+}
 const SOUNDS: SoundProfile[] = ['thocky', 'creamy', 'clacky', 'clicky', 'muted']
 const SOUND_NOTE: Record<SoundProfile, string> = {
   thocky: 'deep, rounded, bassy',
@@ -44,6 +59,9 @@ export function SwitchLab({ onClose }: { onClose: () => void }) {
           (!sound || w.sound.profile === sound) &&
           (!family || w.family === family) &&
           `${w.brand} ${w.model}`.toLowerCase().includes(query.toLowerCase()),
+      ).sort(
+        // brand A–Z, then linear → tactile → clicky, then lightest first
+        (a, b) => brandOf(a).localeCompare(brandOf(b)) || TYPES.indexOf(a.type) - TYPES.indexOf(b.type) || a.actuationG - b.actuationG,
       ),
     [query, type, sound, family],
   )
@@ -82,15 +100,16 @@ export function SwitchLab({ onClose }: { onClose: () => void }) {
           <div className="chips">{SOUNDS.map((p) => chip(p, sound, setSound, p))}</div>
           <div className="chips">{chip<'MX' | 'Choc'>('MX', family, setFamily, 'MX')}{chip<'MX' | 'Choc'>('Choc', family, setFamily, 'Choc (low)')}</div>
           <ul>
-            {list.map((w) => (
+            {list.map((w, i) => [
+              brandOf(w) !== (i ? brandOf(list[i - 1]) : '') && <BrandTitle key={`brand-${brandOf(w)}`} brand={brandOf(w)} />,
               <li key={w.id}>
                 <button className={`lab-item ${w.id === id ? 'active' : ''}`} onClick={() => setId(w.id)}>
                   <span className="dot" style={{ background: w.stemColor }} />
-                  <span className="name"><strong>{w.model}</strong><small>{w.brand} · {w.type} · {w.sound.profile}</small></span>
+                  <span className="name"><strong>{w.model}</strong><small>{w.family === 'Choc' ? 'Choc · ' : ''}{w.type} · {w.sound.profile}</small></span>
                   <span className="force">{w.actuationG} g</span>
                 </button>
-              </li>
-            ))}
+              </li>,
+            ])}
             {!list.length && <li className="muted">No switches match.</li>}
           </ul>
         </aside>

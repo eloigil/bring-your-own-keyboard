@@ -99,3 +99,9 @@ select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 1
 :root[data-theme='dark'] .step.active { background: #2a2940; }
 :root[data-theme='dark'] select { background: #26252d; }
 :root[data-theme='dark'] .swatch { border-color: var(--card); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 4px 8px; align-items: center; }
+.chip { padding: 5px 8px; font-size: 12px; background: #f4f3f7; font-variant-numeric: tabular-nums; }
+.chip.active { background: var(--accent); color: #fff; }
+.chips input[type='number'] { width: 58px; font: inherit; font-size: 12px; padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+:root[data-theme='dark'] .chip { background: #26252d; }
+:root[data-theme='dark'] .chip.active { background: var(--accent); }

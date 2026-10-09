@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Design, Key, KeycapMaterial, Step } from '../types'
-import { PRESETS, newId, snap, snapAside, type PresetName } from '../lib/layout'
+import { PRESETS, newId, resizeKey, snap, snapAside, type PresetName } from '../lib/layout'
 import { TILT_DEG, TILT_MAX } from '../lib/case'
 
 export const STORAGE_KEY = 'byokb-design'
@@ -49,6 +49,8 @@ interface State {
   moveKey: (id: string, x: number, y: number) => void
   addKey: () => void
   addKnob: () => void
+  /** Change a key's width/height in units; keys to its right in the row slide to keep it packed. */
+  setKeySize: (id: string, w: number, h: number) => void
   /** After dragging a component: keys in its rows slide aside to make room. */
   dropComponent: (id: string) => void
   deleteKey: (id: string) => void
@@ -92,6 +94,8 @@ export const useDesign = create<State>()(
           const move = <T extends { id: string }>(list: T[]) => list.map((k) => (k.id === id ? { ...k, x: sx, y: sy } : k))
           return { preset: null, design: { ...s.design, keys: move(s.design.keys), components: move(s.design.components) } }
         }),
+      setKeySize: (id, w, h) =>
+        set((s) => ({ preset: null, design: { ...s.design, keys: resizeKey(s.design.keys, id, Math.max(0.5, w), Math.max(0.5, h)) } })),
       addKnob: () =>
         set((s) => {
           const keys = s.design.keys

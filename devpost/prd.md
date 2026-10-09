@@ -42,6 +42,7 @@ Source: `scope.md > The POC Boundary` items 1–2.
 Covers two UI steps: **Layout** (presets only) and **Build** (everything else below: key editing, pocket orbs).
 - **Presets, in categories:** Standard (40%, 60%, 65%, 75%, TKL, 96%, Full), Ergonomic (Alice, Arisu, Row split), Split columnar (Corne, Lily58, Sofle, Kyria), Ortholinear (Planck, Preonic, Ortho pad), Small (Numpad, Macropad). Choosing one replaces the current layout. TKL is the default.
 - **Single-key editing:** select a key to move it, add a key, or delete a key.
+- **Key size:** the selected key's width (1u–7u presets or any quarter step) and height (1u or 2u). A width change slides the rest of its row so it stays packed; a height change moves nothing (overlaps pulse red).
 - **Living case:** the case follows the outline of the keys (not a bounding rectangle) and updates live as keys change.
 - **Typing angle slider:** in the Layout step, 0–12° (default 6°). The case wedge and the keys follow it live, and the angle is saved with the design.
 - **Pocket fill orbs:** wherever the case dips inward (a pocket, e.g. beside the arrows or the V of an Alice), a small orb sits in the pocket. Dragging it decides how deep the pocket goes: out to the edge fills it flush, inward opens it up. Untouched pockets start fully filled (flush), so every board starts as a clean solid shape.

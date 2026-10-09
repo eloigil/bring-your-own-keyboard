@@ -5,6 +5,7 @@ import { KEYCAP_MATERIALS } from '../../data/materials'
 import type { KeycapMaterial } from '../../types'
 
 const SWATCHES = ['#f4f2ec', '#2b2b30', '#e8d6b8', '#9fb7d6', '#f2b8c6', '#b9d8b0', '#ff8a1f', '#5b5bd6']
+const WIDTHS = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.75, 6.25, 7]
 const HOUSINGS = ['#2c2b31', '#f2f2f2', '#c9cdd4', '#f3a6c8', '#a68bd8', '#9fd3e6', '#ff8a1f']
 
 function SwitchSelect({ value, onChange, family, allowDefault }: { value: string; onChange: (id: string) => void; family?: 'MX' | 'Choc'; allowDefault?: boolean }) {
@@ -26,7 +27,7 @@ export function ComponentsOptions() {
   const board = useDesign((s) => s.design.board)
   const selected = useDesign((s) => s.design.keys.find((k) => k.id === s.selectedId))
   const selectedKnob = useDesign((s) => s.design.components.find((c) => c.id === s.selectedId))
-  const { setSwitch, setKeycaps, setOverride, addKnob, deleteKey } = useDesign.getState()
+  const { setSwitch, setKeycaps, setOverride, addKnob, deleteKey, setKeySize } = useDesign.getState()
   const sw = switchById(board.switchId)
   return (
     <>
@@ -77,6 +78,25 @@ export function ComponentsOptions() {
       {selected && (
         <section className="selected">
           <h3>Selected key{selected.legend ? `: ${selected.legend}` : ''}</h3>
+          <div className="chips" aria-label="Key width">
+            {WIDTHS.map((w) => (
+              <button key={w} className={`chip ${selected.w === w ? 'active' : ''}`} onClick={() => setKeySize(selected.id, w, selected.h)}>{w}u</button>
+            ))}
+            <input
+              type="number"
+              min={0.5}
+              max={10}
+              step={0.25}
+              value={selected.w}
+              onChange={(e) => Number(e.target.value) > 0 && setKeySize(selected.id, Number(e.target.value), selected.h)}
+              title="Custom width (units)"
+            />
+          </div>
+          <div className="chips" aria-label="Key height">
+            {[1, 2].map((h) => (
+              <button key={h} className={`chip ${selected.h === h ? 'active' : ''}`} onClick={() => setKeySize(selected.id, selected.w, h)}>{h}u tall</button>
+            ))}
+          </div>
           <div className="swatches">
             {SWATCHES.map((c) => (
               <button key={c} className={`swatch ${c === selected.override?.keycapColor ? 'active' : ''}`} style={{ background: c }} title={c} onClick={() => setOverride(selected.id, { keycapColor: c })} />

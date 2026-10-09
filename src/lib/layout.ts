@@ -281,3 +281,18 @@ export function snapAside(keys: Key[], c: Component): Key[] {
   }
   return shift.size ? keys.map((k) => (shift.has(k.id) ? { ...k, x: k.x + shift.get(k.id)! } : k)) : keys
 }
+
+/**
+ * Resize one key. A width change slides the keys to its right in the same row by the same amount,
+ * so the row stays packed (growing never overlaps, shrinking leaves no gap). Height changes move nothing.
+ */
+export function resizeKey(keys: Key[], id: string, w: number, h: number): Key[] {
+  const k = keys.find((k) => k.id === id)
+  if (!k) return keys
+  const dw = snap(w) - k.w
+  return keys.map((o) => {
+    if (o.id === id) return { ...o, w: snap(w), h: snap(h) }
+    const rightOfIt = dw !== 0 && k.rot === 0 && o.rot === 0 && o.y === k.y && o.x >= k.x + k.w - 1e-6
+    return rightOfIt ? { ...o, x: o.x + dw } : o
+  })
+}

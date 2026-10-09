@@ -176,7 +176,8 @@ select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 1
 .switch-card .brand-logo.brand-zeal img { height: 20px; }
 
 /* light ↔ dark: panels fade with the sunset / sunrise (ThemeToggle sets data-theming for the duration) */
-:root[data-theming] *, :root[data-theming] body { transition: background-color 2s ease, color 2s ease, border-color 2s ease, box-shadow 2s ease !important; }
+/* text flips quickly while the backgrounds cross mid-grey, so it never spends long at low contrast */
+:root[data-theming] *, :root[data-theming] body { transition: background-color 2.6s ease, border-color 2.6s ease, box-shadow 2.6s ease, color 0.3s ease 1.15s !important; }
 .theme-toggle { overflow: hidden; }
 .theme-toggle .glyph { display: inline-block; animation: glyph-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1.2); }
 @keyframes glyph-rise { from { transform: translateY(26px) rotate(-120deg); opacity: 0; } }

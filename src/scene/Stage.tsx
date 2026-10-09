@@ -3,6 +3,7 @@ import { ContactShadows, Environment, Grid, Lightformer, OrbitControls } from '@
 import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
 import { useDesign } from '../store/design'
+import { sky } from './sky'
 
 /** Studio: backdrop, sun / moon lighting, contact shadow, scale grid. No remote HDR, works offline. */
 export function Stage({ children, onPointerMissed }: { children: ReactNode; onPointerMissed?: () => void }) {
@@ -65,12 +66,14 @@ const SKY = [c('#ffffff'), c('#ffe2c4'), c('#ffb08a'), c('#7c7fb8'), c('#6d7fc0'
 const SUN = [c('#ffffff'), c('#fff1dc'), c('#ffb066'), c('#ff7a3d'), c('#ff7a3d')]
 const CELL = [c('#bdb7c8'), c('#d0b6a6'), c('#a8786e'), c('#3b3048'), c('#24222c')]
 const SECTION = [c('#b8b2c5'), c('#c9ab99'), c('#9e6c62'), c('#43374f'), c('#2e2b38')]
-const SECONDS = 2.4
+const SECONDS = 3
 
 /**
- * Light ↔ dark as a sunset / sunrise: the sun sinks to the west (warming to orange, shadows stretching) while the
- * room goes through golden hour and dusk, then a cool moonlight takes over. Turning the lights back on, the sun
- * rises from the east. `night` runs 0 (noon) → 1 (night) and only animates while it moves — idle frames stay free.
+ * Light ↔ dark as a sunset / sunrise: the sun travels one continuous arc — overhead at noon, down to the west as it
+ * sets (warming to orange, shadows stretching), and back up from the east when the lights come on again — so it
+ * never jumps between the two. The room goes through golden hour and dusk, the backlight flickers on as the sun
+ * drops below the horizon, then a cool moonlight takes over. `night` runs 0 (noon) → 1 (night) and only animates
+ * while it moves — idle frames stay free.
  */
 function Sky() {
   const dark = useDesign((s) => s.dark)
@@ -80,11 +83,11 @@ function Sky() {
   const fill = useRef<THREE.DirectionalLight>(null!)
   const hemi = useRef<THREE.HemisphereLight>(null!)
   const night = useRef(dark ? 1 : 0)
-  const side = useRef(-1) // -1: sun in the west (setting), 1: east (rising)
+  const side = useRef(1) // 1: towards the west (setting), -1: from the east (rising)
   const bg = useMemo(() => new THREE.Color(), [])
 
   useEffect(() => {
-    side.current = dark ? -1 : 1
+    side.current = dark ? 1 : -1
     invalidate()
   }, [dark, invalidate])
 
@@ -99,10 +102,13 @@ function Sky() {
     }
     const t = smooth(night.current)
 
-    // the sun: from high (65°) down past the horizon (-8°) by t = 0.8
-    const el = THREE.MathUtils.degToRad(lerp(65, -8, Math.min(t / 0.8, 1)))
-    sun.current.position.set(side.current * 340 * Math.cos(el), 340 * Math.sin(el), 200)
-    sun.current.intensity = 2.2 * Math.max(0, Math.sin(el)) ** 0.6
+    // the sun's arc: straight up at noon, 8° below the west horizon by t = 0.8 (or the mirror, rising from the east)
+    const a = Math.PI / 2 + side.current * (Math.PI / 2 + THREE.MathUtils.degToRad(8)) * Math.min(t / 0.8, 1)
+    sun.current.position.set(340 * Math.cos(a), 340 * Math.sin(a), 220)
+    sun.current.intensity = 2.2 * Math.max(0, Math.sin(a)) ** 0.6
+    // the backlight powers on just as the sun disappears: two quick blinks, then steady
+    const u = (t - 0.74) / 0.16
+    sky.led = dark && u > 0 && u < 1 ? (u < 0.22 ? 0.1 : u < 0.4 ? 1 : u < 0.52 ? 0.25 : 1) : 1
     ramp(SUN, t, sun.current.color)
     moon.current.intensity = 0.3 * band(0.6, 1, t)
     fill.current.intensity = lerp(0.6, 0.08, t)

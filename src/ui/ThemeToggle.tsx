@@ -11,7 +11,7 @@ export function ThemeToggle() {
     if (first.current) return void (first.current = false)
     // panels fade along with the sky instead of snapping
     root.dataset.theming = ''
-    const t = setTimeout(() => delete root.dataset.theming, 2200)
+    const t = setTimeout(() => delete root.dataset.theming, 2800)
     return () => clearTimeout(t)
   }, [dark])
   return (

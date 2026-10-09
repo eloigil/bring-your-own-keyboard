@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { LedEffect } from '../types'
+import { sky } from './sky'
 
 const OFF = new THREE.Color('#000000')
 const HALO = 5 // mm the glow reaches past the key on each axis
@@ -40,8 +41,8 @@ export function KeyLed({ w, d, y, painted, effect, effectColor, phase, hot, glow
     invalidate()
   }, [painted, effect, effectColor]) // eslint-disable-line react-hooks/exhaustive-deps
   useFrame(({ clock, invalidate }) => {
-    if (!mat.current || painted || effect === 'none') return
-    colorAt(clock.elapsedTime, glow)
+    if (!mat.current || !lit) return
+    colorAt(clock.elapsedTime, glow).multiplyScalar(sky.led)
     mat.current.color.copy(glow)
     // breathing/wave frames come from the shared 30 fps LedTicker; reactive flashes request their own frames briefly
     if (effect === 'reactive' && clock.elapsedTime - (hot.current ?? -99) < 0.8) invalidate()

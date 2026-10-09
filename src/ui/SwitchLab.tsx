@@ -6,23 +6,15 @@ import { SWITCHES, switchById, type SoundProfile } from '../lib/catalog'
 import { playKeystroke, playStroke } from '../lib/switchSound'
 import { SwitchModel } from '../scene/SwitchModel'
 import { ForceChart } from './ForceChart'
+import { BrandLogo, brandOf } from './BrandLogo'
 
 const TYPES = ['linear', 'tactile', 'clicky'] as const
 
-// Brand logos dropped into src/assets/brands/<brand>.svg|png are picked up at build time (no 404s for missing ones).
-const LOGOS = Object.fromEntries(
-  Object.entries(import.meta.glob('../assets/brands/*.{svg,png}', { eager: true, query: '?url', import: 'default' })).map(([path, url]) => [
-    path.split('/').pop()!.replace(/\.(svg|png)$/, ''),
-    url as string,
-  ]),
+const BrandTitle = ({ brand }: { brand: string }) => (
+  <li className="brand">
+    <BrandLogo brand={brand} />
+  </li>
 )
-/** Kailh Box and Kailh Choc share one Kailh section. */
-const brandOf = (w: { brand: string }) => w.brand.replace(/ Choc$/, '')
-
-function BrandTitle({ brand }: { brand: string }) {
-  const logo = LOGOS[brand.toLowerCase()]
-  return <li className={`brand brand-${brand.toLowerCase()}`}>{logo ? <img src={logo} alt={brand} /> : <span className="wordmark">{brand}</span>}</li>
-}
 const SOUNDS: SoundProfile[] = ['thocky', 'creamy', 'clacky', 'clicky', 'muted']
 const SOUND_NOTE: Record<SoundProfile, string> = {
   thocky: 'deep, rounded, bassy',

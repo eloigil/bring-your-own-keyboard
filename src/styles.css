@@ -153,10 +153,24 @@ select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 1
 }
 .lab-view .slider span:last-child { width: 64px; white-space: nowrap; }
 .lab-list .brand { position: sticky; top: 0; z-index: 1; background: var(--card); padding: 12px 8px 6px; border-bottom: 1px solid var(--line); margin-bottom: 2px; }
-.lab-list .brand img { height: 18px; max-width: 140px; object-fit: contain; display: block; }
-.lab-list .brand .wordmark { font-weight: 800; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; }
+.brand-logo { display: inline-flex; align-items: center; }
+.brand-logo img { height: 18px; max-width: 140px; object-fit: contain; display: block; }
+.brand-logo .wordmark { font-weight: 800; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; }
 /* per-brand logo tweaks: white logos go dark on the light panel; Kailh's file is a company banner, show its emblem only */
 .brand-akko img, .brand-drop img { filter: brightness(0); }
 :root[data-theme='dark'] .brand-akko img, :root[data-theme='dark'] .brand-drop img { filter: none; }
-.lab-list .brand-kailh img { height: 46px; width: 31px; object-fit: cover; object-position: left center; }
-.lab-list .brand-zeal img { height: 26px; }
+.brand-logo.brand-kailh img { height: 46px; width: 31px; object-fit: cover; object-position: left center; }
+.brand-logo.brand-zeal img { height: 26px; }
+
+/* the selected switch, in Build */
+.switch-card { display: flex; align-items: center; gap: 12px; width: calc(100% - 8px); margin: 0 4px 10px; padding: 10px; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.switch-card:hover { border-color: var(--accent); background: var(--card); }
+.switch-card .switch-side { width: 64px; height: 64px; flex: none; background: color-mix(in srgb, var(--line) 45%, transparent); border-radius: 10px; }
+.switch-card .info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.switch-card .info strong { font-size: 15px; }
+.switch-card .info small { color: var(--muted); font-size: 12px; }
+.switch-card .open { color: var(--accent); font-size: 12px; font-weight: 600; margin-top: 2px; }
+.switch-card .brand-logo img { height: 14px; max-width: 110px; }
+.switch-card .brand-logo .wordmark { font-size: 12px; }
+.switch-card .brand-logo.brand-kailh img { height: 30px; width: 20px; }
+.switch-card .brand-logo.brand-zeal img { height: 20px; }

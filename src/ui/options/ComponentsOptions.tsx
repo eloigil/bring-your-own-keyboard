@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useDesign } from '../../store/design'
 import { SwitchLab } from '../SwitchLab'
+import { SwitchSide } from '../SwitchSide'
+import { BrandLogo, brandOf } from '../BrandLogo'
 import { familyOf, switchById, switchGroups } from '../../lib/catalog'
 import { PROFILES } from '../../data/keycaps'
 import { KEYCAP_MATERIALS } from '../../data/materials'
@@ -30,21 +32,24 @@ export function ComponentsOptions() {
   const board = useDesign((s) => s.design.board)
   const selected = useDesign((s) => s.design.keys.find((k) => k.id === s.selectedId))
   const selectedKnob = useDesign((s) => s.design.components.find((c) => c.id === s.selectedId))
-  const { setSwitch, setKeycaps, setOverride, addKnob, deleteKey, setKeySize } = useDesign.getState()
+  const { setKeycaps, setOverride, addKnob, deleteKey, setKeySize } = useDesign.getState()
   const sw = switchById(board.switchId)
   const [lab, setLab] = useState(false)
   return (
     <>
       <section>
         <h3>Switches</h3>
-        <button className="tile wide lab-open" onClick={() => setLab(true)}>
-          <span className="dot" style={{ background: sw.stemColor }} /> {sw.brand} {sw.model} · Open switch lab
+        <button className="switch-card" onClick={() => setLab(true)} aria-label={`${sw.brand} ${sw.model}. Open the switch lab`}>
+          <SwitchSide s={sw} housing={board.switchColor} />
+          <span className="info">
+            <BrandLogo brand={brandOf(sw)} />
+            <strong>{sw.model}</strong>
+            <small>{sw.type} · {sw.actuationG} g · {sw.sound.profile}{sw.family === 'Choc' ? ' · low profile' : ''}</small>
+            <span className="open">Open switch lab ›</span>
+          </span>
         </button>
         {lab && createPortal(<SwitchLab onClose={() => setLab(false)} />, document.body)}
-        <SwitchSelect value={board.switchId} onChange={setSwitch} />
-        <p className="muted">
-          {sw.brand} {sw.model}: {sw.type}, {sw.actuationG} g, {sw.family === 'Choc' ? 'low-profile (Choc spacing, slimmer case)' : 'MX'}. Specs are best-effort.
-        </p>
+        <h3>Housing colour</h3>
         <div className="swatches" aria-label="Switch housing colour">
           {HOUSINGS.map((c) => (
             <button key={c} className={`swatch ${c === board.switchColor ? 'active' : ''}`} style={{ background: c }} title={`Housing ${c}`} onClick={() => setKeycaps({ switchColor: c })} />

@@ -105,3 +105,8 @@ select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 1
 .chips input[type='number'] { width: 58px; font: inherit; font-size: 12px; padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
 :root[data-theme='dark'] .chip { background: #26252d; }
 :root[data-theme='dark'] .chip.active { background: var(--accent); }
+.summary { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0 8px 8px; font-size: 13px; }
+.summary dt { color: var(--muted); }
+.summary dd { margin: 0; }
+.blocked { margin: 4px; padding: 10px 12px; border-radius: 8px; background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); font-size: 13px; }
+.download { margin-top: 4px; }

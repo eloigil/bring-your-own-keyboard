@@ -81,7 +81,7 @@ Source: `scope.md > The POC Boundary` item 7.
 
 ### Export Step
 Source: `scope.md > The POC Boundary` items 4–5.
-- The user sees their build and the download buttons.
+- The user sees a summary of their build (layout, switches, keycaps, angle, LEDs) and the download buttons.
 - **Case STL:** downloads a 3D-printable case matching the current outline and the switch family's plate cutouts.
 - **Firmware:** downloads firmware matching the layout, including the LED pattern. The firmware target is decided in `4-spec`.
 - Downloads only: no ordering, no account.

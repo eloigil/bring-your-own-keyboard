@@ -79,7 +79,7 @@ Build mode: fast
   Learner check: Before touching LEDs, confirm the board is dark. Paint a few keys, pick wave, then go back to Layout and confirm the lights are still on.
   Commit: `Add LED painting and effects`
 
-- [ ] **8. Export a printable case and QMK firmware**
+- [x] **8. Export a printable case and QMK firmware**
   Becomes usable: The Export step shows the build summary and two downloads: `byokb-case.stl` and `byokb-firmware.zip` (keyboard.json, keymap.c, README with a wiring table). Both are disabled with a message while anything is red.
   Why now: Completes the "physically buildable" half of the demo once every input to the files exists.
   PRD ref: `prd.md > Export Step`, `prd.md > States and Boundaries` (Invalid design)
@@ -151,3 +151,4 @@ Activity mode:
 - Second performance pass (laptop overheating with an LED effect + see-through caps): shadow map and contact shadow re-render only while the board shape changes instead of every frame; breathing/wave tick at 30 fps from one timer; transmission renders at half resolution. Each animated frame went from 4 scene renders to about 1.5.
 - Added per-key size (width presets + custom, 1u/2u height) in Selected key; width changes slide the rest of the row (`resizeKey`) — learner request.
 - Dragging now snaps magnetically: flush against a neighbour's edge / aligned to its row within 0.35u, else the 0.25u grid — learner found the plain grid landed keys slightly too close or too far.
+- Export: firmware structure, keycodes, pin limits (every preset fits one Pico with knob + LEDs), zip contents and STL size/orientation are tested; the firmware has NOT been compiled with QMK here (toolchain not installed) — the README asks the builder to run `qmk lint` first. Unconfigured LEDs leave RGB out of the firmware entirely; layers 1/2 are generated transparent when Fn/Lower/Raise keys exist. The STL is the preview mesh (overlapping slabs, not a single welded shell); slicers merge it, but it hasn't been sliced here.

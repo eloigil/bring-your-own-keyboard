@@ -1,0 +1,62 @@
+import { useMemo } from 'react'
+import { useDesign, ledsConfigured } from '../../store/design'
+import { familyOf, switchById } from '../../lib/catalog'
+import { profileById } from '../../data/keycaps'
+import { KEYCAP_MATERIALS } from '../../data/materials'
+import { validate } from '../../lib/validate'
+import { caseStl, download } from '../../lib/exportStl'
+import { firmwareZip, generateFirmware } from '../../lib/qmk'
+
+const EFFECT_NAMES = { none: 'painted only', breathing: 'breathing', wave: 'wave', reactive: 'reactive' }
+
+export function ExportOptions() {
+  const design = useDesign((s) => s.design)
+  const preset = useDesign((s) => s.preset)
+  const { board, keys, components } = design
+  const problems = useMemo(() => validate(keys, components, familyOf(board.switchId)).size, [keys, components, board.switchId])
+  const firmware = useMemo(() => generateFirmware(design), [design])
+  const sw = switchById(board.switchId)
+  const blocked = problems > 0 ? `${problems} keys or parts overlap (they pulse red). Fix them in Build to export.` : keys.length === 0 ? 'Add some keys first.' : null
+
+  return (
+    <>
+      <section>
+        <h3>Your build</h3>
+        <dl className="summary">
+          <dt>Layout</dt><dd>{preset ?? 'Custom'} · {keys.length} keys{components.length ? ` · ${components.length} knob` : ''}</dd>
+          <dt>Switches</dt><dd>{sw.brand} {sw.model}</dd>
+          <dt>Keycaps</dt><dd>{profileById(board.profileId).name}, {KEYCAP_MATERIALS[board.keycapMaterial].name.toLowerCase()}</dd>
+          <dt>Angle</dt><dd>{board.tiltDeg}°</dd>
+          <dt>LEDs</dt><dd>{ledsConfigured(design) ? EFFECT_NAMES[board.ledEffect] : 'off'}</dd>
+        </dl>
+      </section>
+      {blocked && <p className="blocked">{blocked}</p>}
+      <section>
+        <h3>Files</h3>
+        <button
+          className="tile wide download"
+          disabled={!!blocked}
+          onClick={() => {
+            const stl = caseStl(design)
+            if (stl) download('byokb-case.stl', stl, 'model/stl')
+          }}
+        >
+          ⬇ Case for 3D printing (.stl)
+        </button>
+        <p className="muted">Millimetres, lying flat. Includes the plate cutouts{components.length ? ' and knob hole' : ''}.</p>
+        <button
+          className="tile wide download"
+          disabled={!!blocked || !firmware.ok}
+          onClick={() => firmware.ok && download('byokb-firmware.zip', new Uint8Array(firmwareZip(firmware.firmware)), 'application/zip')}
+        >
+          ⬇ QMK firmware (.zip)
+        </button>
+        <p className="muted">
+          {firmware.ok
+            ? 'For a hand-wired Raspberry Pi Pico. The README inside has the wiring table and build steps.'
+            : firmware.reason}
+        </p>
+      </section>
+    </>
+  )
+}

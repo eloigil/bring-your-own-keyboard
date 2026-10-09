@@ -19,6 +19,9 @@ export const TILT_DEG = 6 // typing angle
 const PLATE_T = 1.5
 const PLATE_RECESS = 2.5 // plate top sits this far below the wall top
 const FLOOR_T = 2
+export const TOP_BEVEL = 1.2 // mm; rounded outer top edge
+const BEVEL_STEPS = 6 // slabs tracing the quarter-round
+const MIN_ISLAND = 90 // mm²; smaller enclosed deck pieces (about a quarter key) aren't worth a pillar
 const WELL_GAP = 0.75 // mm of clearance between keycaps and the well's edge
 const WELL_CLOSE = 2 // mm; only hairline cracks between keys merge into the well; any key-sized gap stays at top height
 
@@ -234,23 +237,24 @@ function nest(rings: Poly[]): { outer: Poly; holes: Poly[] }[] {
   return outers
 }
 
-function extrude(rings: Poly[], holes: Poly[], from: number, to: number, bevel: number) {
-  const geos = nest(rings).map(({ outer, holes: inner }) => {
+export function extrude(rings: Poly[], holes: Poly[], from: number, to: number): THREE.BufferGeometry[] {
+  return nest(rings).map(({ outer, holes: inner }) => {
     const extra = holes.filter((h) => contains([outer], h[0]))
-    const depth = Math.max(to - from - 2 * bevel, 0.1)
-    const g = new THREE.ExtrudeGeometry(shapeFrom(outer, [...inner, ...extra]), {
-      depth,
-      curveSegments: 6,
-      bevelEnabled: bevel > 0,
-      bevelThickness: bevel,
-      bevelSize: bevel,
-      bevelOffset: -bevel,
-      bevelSegments: 3,
-    })
-    g.translate(0, 0, from + bevel)
+    const g = new THREE.ExtrudeGeometry(shapeFrom(outer, [...inner, ...extra]), { depth: Math.max(to - from, 0.1), bevelEnabled: false, curveSegments: 1 })
+    g.translate(0, 0, from)
     return g
   })
-  return geos
+}
+
+/**
+ * The well: the recess the plate sits in. It covers only the keys (hairline gaps between keys merge),
+ * never closer than WALL to the outside. Everything else — bezel and filled pockets — is full top height.
+ */
+export function caseWell(keys: Key[], family: Family, outer: Poly[]): Poly[] {
+  const keyArea = union(keys.map((k) => keyCorners(k, family)))
+  return intersection(offset(offset(keyArea, WELL_CLOSE + WELL_GAP), -WELL_CLOSE), offset(outer.map(toPath), -WALL))
+    .map(fromPath)
+    .filter((r) => area(r) > 0 || -area(r) > MIN_ISLAND) // slivers enclosed between keys join the well
 }
 
 /**
@@ -260,21 +264,30 @@ function extrude(rings: Poly[], holes: Poly[], from: number, to: number, bevel: 
 export function caseMesh(keys: Key[], family: Family, fills: PocketFill[] = []): THREE.BufferGeometry | null {
   const outer = caseOutline(keys, family, fills)
   if (!outer.length) return null
-  // The well: the recess the plate sits in. It covers only the keys (small gaps between key groups merge),
-  // never closer than WALL to the outside. Everything else — bezel and filled pockets — is full top height.
-  const keyArea = union(keys.map((k) => keyCorners(k, family)))
-  const well = intersection(offset(offset(keyArea, WELL_CLOSE + WELL_GAP), -WELL_CLOSE), offset(outer.map(toPath), -WALL))
-  const inner = well.map(fromPath)
-  // well rings become the holes of the top body
-  const wallHoles = inner.filter((r) => area(r) > 0)
+  const inner = caseWell(keys, family, outer)
+  const wellHoles = inner.filter((r) => area(r) > 0)
+  const islands = inner.filter((r) => area(r) < 0).map((r) => [...r].reverse()) // deck left standing inside the well
   const cutouts = keys.map((k) => keyCorners(k, family, 0, CUTOUT[family]).slice().reverse())
 
+  // The body is a stack of straight slabs, each inset a little more, tracing a quarter-round top edge.
+  // ponytail: stairs instead of a true loft — three's ExtrudeGeometry bevel triangulates a shifted
+  // contour that folds over itself at the pockets' sharp corners. A loft would give one smooth shell.
   const H = CASE_HEIGHT[family]
-  const parts = [
-    ...extrude(outer, wallHoles, 0, H, 1.2), // case body up to the top face, rounded top edge
-    ...extrude(inner, [], 0, FLOOR_T, 0), // floor
-    ...extrude(inner, cutouts, H - PLATE_RECESS - PLATE_T, H - PLATE_RECESS, 0), // plate
-  ]
+  const parts: THREE.BufferGeometry[] = []
+  let z = 0
+  for (let k = 0; k <= BEVEL_STEPS; k++) {
+    const th = (k / BEVEL_STEPS) * (Math.PI / 2)
+    const top = k === 0 ? H - TOP_BEVEL : H - TOP_BEVEL + TOP_BEVEL * Math.sin(th)
+    const inset = TOP_BEVEL * (1 - Math.cos(th))
+    const rings = inset ? offset(outer.map(toPath), -inset).map(fromPath) : outer
+    parts.push(...extrude(rings, wellHoles, z, top))
+    z = top
+  }
+  parts.push(
+    ...extrude(islands, [], 0, H),
+    ...extrude(inner, [], 0, FLOOR_T), // floor
+    ...extrude(inner, cutouts, H - PLATE_RECESS - PLATE_T, H - PLATE_RECESS), // plate
+  )
   const merged = mergeGeometries(parts)!
   merged.rotateX(-Math.PI / 2)
 

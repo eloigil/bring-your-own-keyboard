@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
-import { area, caseMesh, caseOutline, caseShape, contains, keyCorners, wallTopAt, type PocketFill } from './case'
+import { area, caseMesh, caseOutline, caseShape, caseWell, contains, keyCorners, wallTopAt, TOP_BEVEL, type PocketFill } from './case'
+import { CASE_HEIGHT } from './units'
 import { alice, PRESETS, split, tkl } from './layout'
 
 describe('caseOutline', () => {
@@ -115,8 +116,11 @@ describe('pockets', () => {
         .map((h) => Math.round(h.point.y * 10) / 10)
         .filter((y, i, a) => a.indexOf(y) === i) // a ray on a shared triangle edge reports it twice
       const maxZ = Math.max(...caseOutline(ks, 'MX', fills).flat().map((q) => q[1]))
-      expect(hits[0], gone).toBeCloseTo(wallTopAt(c[1], maxZ, 'MX'), 0)
-      expect(hits, gone).toHaveLength(2) // top face, then the bottom — nothing in between
+      const top = wallTopAt(c[1], maxZ, 'MX')
+      expect(hits[0], gone).toBeCloseTo(top, 0)
+      // nothing between the rounded top edge band (stretched by the tilt) and the bottom: no recessed plate, no stacked floor
+      const bandBottom = top - TOP_BEVEL * (top / CASE_HEIGHT.MX) - 0.3
+      expect(hits.filter((h) => h > 0.5 && h < bandBottom), gone).toEqual([])
     }
   })
 
@@ -183,6 +187,32 @@ describe('pockets', () => {
       ks = ks.map((k) => (rnd() < 0.08 ? { ...k, x: k.x + Math.round((rnd() - 0.5) * 8) / 4, y: k.y + Math.round((rnd() - 0.5) * 8) / 4 } : k))
       const flush = caseShape(ks, 'MX', caseShape(ks, 'MX').pockets.map((p) => ({ x: p.mouth[0], y: p.mouth[1], t: 1 })))
       for (const ring of flush.outline) expect(area(hullOf(ring)) - area(ring), `trial ${trial}`).toBeLessThan(2)
+    }
+  })
+
+  it('the top face never folds into the well (no slanted shards around the keys)', () => {
+    for (const make of [tkl, split, alice]) {
+      const ks = make()
+      const outline = caseOutline(ks, 'MX')
+      const rings = caseWell(ks, 'MX', outline)
+      const well = rings.filter((r) => area(r) > 0)
+      const islands = rings.filter((r) => area(r) < 0) // deck pieces fully enclosed by keys are solid
+      const g = caseMesh(ks, 'MX')!
+      const pos = g.attributes.position, nrm = g.attributes.normal
+      const maxZ = Math.max(...outline.flat().map((q) => q[1]))
+      let checked = 0
+      for (let i = 0; i < pos.count; i += 3) {
+        const up = nrm.getY(i) > 0.7 && nrm.getY(i + 1) > 0.7 && nrm.getY(i + 2) > 0.7
+        const atTop = [i, i + 1, i + 2].every((j) => Math.abs(wallTopAt(pos.getZ(j), maxZ, 'MX') - pos.getY(j)) < 0.3)
+        if (!up || !atTop) continue
+        const c: [number, number] = [(pos.getX(i) + pos.getX(i + 1) + pos.getX(i + 2)) / 3, (pos.getZ(i) + pos.getZ(i + 1) + pos.getZ(i + 2)) / 3]
+        checked++
+        // a top-face triangle's centre must be on the case, outside every well ring
+        expect(contains(outline, c), `${make.name} top triangle off the case at ${c.map(Math.round)}`).toBe(true)
+        const inWell = well.some((r) => contains([r], c) && distToOutline([r], c) > 0.3) && !islands.some((r) => contains([r], c))
+        expect(inWell, `${make.name} top triangle inside the well at ${c.map(Math.round)}`).toBe(false)
+      }
+      expect(checked).toBeGreaterThan(50)
     }
   })
 

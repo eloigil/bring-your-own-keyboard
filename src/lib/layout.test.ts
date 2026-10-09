@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resizeKey, snapAside, tkl } from './layout'
+import { magnetSnap, resizeKey, snapAside, tkl } from './layout'
 import { validate } from './validate'
 
 describe('knob snap-aside', () => {
@@ -37,5 +37,19 @@ describe('key size', () => {
     const after = resizeKey(keys, id('Enter'), 2.25, 2)
     expect(at(after, 'Enter').h).toBe(2)
     expect(after.filter((k, i) => k.x !== keys[i].x || k.y !== keys[i].y)).toHaveLength(0)
+  })
+})
+
+describe('magnetic drag snapping', () => {
+  const a = { id: 'a', x: 0, y: 0, w: 1.25, h: 1, rot: 0 }
+  it('snaps flush against a neighbour when close, aligned to its row', () => {
+    expect(magnetSnap([a], 1.4, 0.15, 1, 1)).toEqual([1.25, 0]) // 0.15u past the edge, a bit low → flush, same row
+    expect(magnetSnap([a], 1.1, -0.1, 1, 1)).toEqual([1.25, 0]) // overlapping a little → pushed flush
+  })
+  it('falls back to the 0.25u grid away from other keys', () => {
+    expect(magnetSnap([a], 5.13, 3.9, 1, 1)).toEqual([5.25, 4])
+  })
+  it('stacks flush below a key', () => {
+    expect(magnetSnap([a], 0.1, 1.2, 1, 1)).toEqual([0, 1])
   })
 })

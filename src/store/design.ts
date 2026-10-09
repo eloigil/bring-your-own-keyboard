@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Design, Key, KeycapMaterial, Step } from '../types'
-import { PRESETS, newId, resizeKey, snap, snapAside, type PresetName } from '../lib/layout'
+import { PRESETS, magnetSnap, newId, resizeKey, snap, snapAside, type PresetName } from '../lib/layout'
 import { TILT_DEG, TILT_MAX } from '../lib/case'
 
 export const STORAGE_KEY = 'byokb-design'
@@ -85,12 +85,14 @@ export const useDesign = create<State>()(
       selectedId: null,
       setPreset: (p) => set((s) => ({ preset: p, selectedId: null, design: { ...s.design, keys: PRESETS[p](), components: [], pocketFills: [] } })),
       select: (selectedId) => set({ selectedId }),
-      // moves a key or a component (knob), snapped to the 0.25u grid
+      // moves a key or a component (knob): flush against a nearby key when close, else on the 0.25u grid
       moveKey: (id, x, y) =>
         set((s) => {
-          const [sx, sy] = [snap(x), snap(y)]
-          const item = s.design.keys.find((k) => k.id === id) ?? s.design.components.find((c) => c.id === id)
-          if (!item || (item.x === sx && item.y === sy)) return s
+          const key = s.design.keys.find((k) => k.id === id)
+          const item = key ?? s.design.components.find((c) => c.id === id)
+          if (!item) return s
+          const [sx, sy] = magnetSnap(s.design.keys.filter((k) => k.id !== id), x, y, key?.w ?? 1, key?.h ?? 1)
+          if (item.x === sx && item.y === sy) return s
           const move = <T extends { id: string }>(list: T[]) => list.map((k) => (k.id === id ? { ...k, x: sx, y: sy } : k))
           return { preset: null, design: { ...s.design, keys: move(s.design.keys), components: move(s.design.components) } }
         }),

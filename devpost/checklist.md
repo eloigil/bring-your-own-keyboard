@@ -150,3 +150,4 @@ Activity mode:
 - Frosted caps now use the same transmission material as clear, with a rough surface and half transmission so the cap's own colour reads milky — the old faked translucency looked smoky grey in daylight.
 - Second performance pass (laptop overheating with an LED effect + see-through caps): shadow map and contact shadow re-render only while the board shape changes instead of every frame; breathing/wave tick at 30 fps from one timer; transmission renders at half resolution. Each animated frame went from 4 scene renders to about 1.5.
 - Added per-key size (width presets + custom, 1u/2u height) in Selected key; width changes slide the rest of the row (`resizeKey`) — learner request.
+- Dragging now snaps magnetically: flush against a neighbour's edge / aligned to its row within 0.35u, else the 0.25u grid — learner found the plain grid landed keys slightly too close or too far.

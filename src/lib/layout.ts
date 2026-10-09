@@ -296,3 +296,30 @@ export function resizeKey(keys: Key[], id: string, w: number, h: number): Key[] 
     return rightOfIt ? { ...o, x: o.x + dw } : o
   })
 }
+
+const MAGNET = 0.35 // units: within this distance an edge snaps to a neighbour's edge
+
+/**
+ * Where a dragged item (w×h units) lands: flush against a nearby key's edge or aligned with its row/column
+ * when within MAGNET, otherwise on the 0.25u grid. x and y snap independently. Rotated keys aren't magnets.
+ */
+export function magnetSnap(others: Key[], x: number, y: number, w: number, h: number): [number, number] {
+  let bx = snap(x), by = snap(y), dx = MAGNET, dy = MAGNET
+  for (const o of others) {
+    if (o.rot !== 0) continue
+    // only neighbours near enough to touch on the other axis count
+    const nearY = y < o.y + o.h + MAGNET && y + h > o.y - MAGNET
+    const nearX = x < o.x + o.w + MAGNET && x + w > o.x - MAGNET
+    if (nearY)
+      for (const c of [o.x + o.w, o.x - w, o.x, o.x + o.w - w]) {
+        const d = Math.abs(c - x)
+        if (d < dx) (dx = d), (bx = c)
+      }
+    if (nearX)
+      for (const c of [o.y, o.y + o.h, o.y - h, o.y + o.h - h]) {
+        const d = Math.abs(c - y)
+        if (d < dy) (dy = d), (by = c)
+      }
+  }
+  return [bx, by]
+}

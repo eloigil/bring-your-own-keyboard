@@ -38,3 +38,30 @@ button {
 }
 button:hover { background: var(--line); }
 button.active { background: var(--accent); color: #fff; }
+
+h2 { font-size: 18px; margin: 4px 8px 12px; }
+h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 12px 8px 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+.muted { color: var(--muted); font-size: 13px; margin: 8px; }
+
+.steps { top: 16px; left: 16px; width: 220px; display: flex; flex-direction: column; gap: 2px; }
+.brand { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; padding: 8px 10px 12px; }
+.step { display: flex; align-items: center; gap: 12px; text-align: left; padding: 10px; }
+.step .num {
+  width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--line); font-size: 13px; font-weight: 600; flex: none;
+}
+.step strong { display: block; font-weight: 600; }
+.step small { display: block; color: var(--muted); font-size: 12px; }
+.step.active { background: #eeeefc; color: var(--ink); }
+.step.active .num { background: var(--accent); color: #fff; }
+
+.options { top: 16px; right: 16px; width: 280px; max-height: calc(100% - 32px); overflow: auto; padding: 12px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 4px; }
+.tile { background: #f4f3f7; padding: 12px 6px; font-weight: 600; }
+.tile.active { background: var(--accent); color: #fff; }
+
+@media (max-width: 720px) {
+  .steps { width: auto; flex-direction: row; overflow-x: auto; left: 16px; right: 16px; }
+  .brand, .step small { display: none; }
+  .options { top: auto; bottom: 16px; left: 16px; right: 16px; width: auto; max-height: 40%; }
+}

@@ -53,6 +53,64 @@ export function tkl(): Key[] {
   ])
 }
 
+const NUM = ones('` 1 2 3 4 5 6 7 8 9 0 - =')
+const QWE = ones('Q W E R T Y U I O P [ ]')
+const ASD = ones("A S D F G H J K L ; '")
+const ZXC = ones('Z X C V B N M , . /')
+
+export function sixty(): Key[] {
+  return fromRows([
+    { y: 0, items: [...NUM, '2:Bksp'] },
+    { y: 1, items: ['1.5:Tab', ...QWE, '1.5:\\'] },
+    { y: 2, items: ['1.75:Caps', ...ASD, '2.25:Enter'] },
+    { y: 3, items: ['2.25:Shift', ...ZXC, '2.75:Shift'] },
+    { y: 4, items: ['1.25:Ctrl', '1.25:Win', '1.25:Alt', '6.25:Space', '1.25:Alt', '1.25:Fn', '1.25:Menu', '1.25:Ctrl'] },
+  ])
+}
+
+const sixtyFiveRows = (y0: number) => [
+  { y: y0, items: [...NUM, '2:Bksp', 'Del'] },
+  { y: y0 + 1, items: ['1.5:Tab', ...QWE, '1.5:\\', 'PgUp'] },
+  { y: y0 + 2, items: ['1.75:Caps', ...ASD, '2.25:Enter', 'PgDn'] },
+  { y: y0 + 3, items: ['2.25:Shift', ...ZXC, '1.75:Shift', 'Up', 'End'] },
+  { y: y0 + 4, items: ['1.25:Ctrl', '1.25:Win', '1.25:Alt', '6.25:Space', 'Alt', 'Fn', 'Ctrl', ...ones('Left Down Right')] },
+]
+
+export const sixtyFive = (): Key[] => fromRows(sixtyFiveRows(0))
+
+export function seventyFive(): Key[] {
+  return fromRows([{ y: 0, items: ['Esc', ...ones('F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 PrtSc Home')] }, ...sixtyFiveRows(1.25)])
+}
+
+export function full(): Key[] {
+  const pad = fromRows([
+    { y: 1.25, items: ones('NumLk / * -') },
+    { y: 2.25, items: ones('7 8 9 +') },
+    { y: 3.25, items: ones('4 5 6') },
+    { y: 4.25, items: [...ones('1 2 3'), 'Ent'] },
+    { y: 5.25, items: ['2:0', '.'] },
+  ], 18.5)
+  for (const k of pad) if (k.legend === '+' || k.legend === 'Ent') k.h = 2
+  return [...tkl(), ...pad]
+}
+
+/** Ortholinear 12x4 grid (Planck-style). */
+export function ortho(): Key[] {
+  const rows = ['Tab Q W E R T Y U I O P Bksp', "Esc A S D F G H J K L ; '", 'Shift Z X C V B N M , . / Ent', 'Fn Ctrl Alt Gui Lwr Spc Spc Rse Left Down Up Right']
+  return fromRows(rows.map((r, y) => ({ y, items: ones(r) })))
+}
+
+export const PRESETS = {
+  '60%': sixty,
+  '65%': sixtyFive,
+  '75%': seventyFive,
+  TKL: tkl,
+  Full: full,
+  Split: split,
+  Ortho: ortho,
+} satisfies Record<string, () => Key[]>
+export type PresetName = keyof typeof PRESETS
+
 /** Column-staggered split: 6x3 per half plus a 3-key thumb cluster, the outer thumb key angled. */
 export function split(): Key[] {
   const stagger = [0.5, 0.5, 0.25, 0, 0.25, 0.35]
@@ -66,8 +124,8 @@ export function split(): Key[] {
         keys.push({ id: newId(), x: dx + col, y: row + stagger[c], w: 1, h: 1, rot: 0, legend: (mirror ? rLegends : legends)[row].split(' ')[col] })
     }
     const thumbs = mirror
-      ? [{ x: dx, rot: -15, l: 'Ent' }, { x: dx + 1, rot: 0, l: 'Spc' }, { x: dx + 2, rot: 0, l: 'Alt' }]
-      : [{ x: dx + 3, rot: 0, l: 'Gui' }, { x: dx + 4, rot: 0, l: 'Lwr' }, { x: dx + 5, rot: 15, l: 'Spc' }]
+      ? [{ x: dx - 0.2, rot: -15, l: 'Ent' }, { x: dx + 1, rot: 0, l: 'Spc' }, { x: dx + 2, rot: 0, l: 'Alt' }]
+      : [{ x: dx + 3, rot: 0, l: 'Gui' }, { x: dx + 4, rot: 0, l: 'Lwr' }, { x: dx + 5.2, rot: 15, l: 'Spc' }]
     for (const t of thumbs) keys.push({ id: newId(), x: t.x, y: 3.6 + (t.rot ? 0.15 : 0), w: 1, h: 1, rot: t.rot, legend: t.l })
     return keys
   }

@@ -19,7 +19,7 @@ Build mode: fast
   Learner check: Run `npm run dev`, open http://localhost:5173, flip between the three boards, orbit around them, and decide: does this read as a real keyboard case?
   Commit: `Render computed cases for three test layouts`
 
-- [ ] **2. The editor opens on your saved TKL with steps and presets**
+- [x] **2. The editor opens on your saved TKL with steps and presets**
   Becomes usable: The editor layout: 3D board in the center, steps on the left (Layout → Components → LEDs → Export), options on the right. It opens on TKL, and picking 60/65/75/TKL/full/split/ortho replaces the board and case. The design survives a refresh.
   Why now: Gives every later feature its home (store, panels, step navigation) and makes the board data-driven instead of hardcoded.
   PRD ref: `prd.md > Screens and Layout`, `prd.md > Layout Step` (Presets), `prd.md > States and Boundaries` (First use, Persistence)

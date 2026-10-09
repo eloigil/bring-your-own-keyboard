@@ -8,6 +8,11 @@ describe('loadDesign', () => {
     const d = { ...defaultDesign(), keys: PRESETS['60%']() }
     expect(loadDesign(d)).toBe(d)
   })
+  it('gives designs saved before the tilt slider the default angle', () => {
+    const old = defaultDesign() as unknown as { board: Record<string, unknown> }
+    delete old.board.tiltDeg
+    expect(loadDesign(old).board.tiltDeg).toBe(6)
+  })
   it('resets corrupt or old-version data to TKL', () => {
     for (const bad of [undefined, null, 'x', { version: 0 }, { ...defaultDesign(), keys: [{ id: 'a', x: NaN }] }])
       expect(loadDesign(bad).keys).toHaveLength(PRESETS.TKL().length)

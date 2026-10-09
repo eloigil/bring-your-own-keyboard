@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import type { Design, Step } from '../types'
 import { PRESETS, newId, snap, type PresetName } from '../lib/layout'
 import type { Family } from '../lib/units'
+import { TILT_DEG, TILT_MAX } from '../lib/case'
 
 export const STORAGE_KEY = 'byokb-design'
 
@@ -11,7 +12,7 @@ export function defaultDesign(): Design {
     version: 1,
     keys: PRESETS.TKL(),
     components: [],
-    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', snap: 'snap', ledEffect: 'none' },
+    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', snap: 'snap', ledEffect: 'none', tiltDeg: TILT_DEG },
     pocketFills: [],
   }
 }
@@ -26,7 +27,9 @@ export function loadDesign(raw: unknown): Design {
     Array.isArray(d.components) &&
     typeof d.board?.switchId === 'string' &&
     Array.isArray(d.pocketFills)
-  return ok ? d : defaultDesign()
+  // designs saved before the tilt slider existed get the default angle
+  if (!ok) return defaultDesign()
+  return Number.isFinite(d.board.tiltDeg) ? d : { ...d, board: { ...d.board, tiltDeg: TILT_DEG } }
 }
 
 // ponytail: family from the switch id until the catalog lands in slice 5
@@ -44,6 +47,7 @@ interface State {
   addKey: () => void
   deleteKey: (id: string) => void
   setPocketFill: (x: number, y: number, t: number) => void
+  setTilt: (deg: number) => void
 }
 
 /** Pocket fills closer than this (mm) to a new one are the same pocket. */
@@ -75,6 +79,7 @@ export const useDesign = create<State>()(
         }),
       deleteKey: (id) =>
         set((s) => ({ preset: null, selectedId: null, design: { ...s.design, keys: s.design.keys.filter((k) => k.id !== id) } })),
+      setTilt: (deg) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, tiltDeg: Math.max(0, Math.min(TILT_MAX, deg)) } } })),
       setPocketFill: (x, y, t) =>
         set((s) => ({
           design: {
@@ -90,7 +95,7 @@ export const useDesign = create<State>()(
       merge: (saved, current) => {
         const p = saved as Partial<State> | undefined
         const design = loadDesign(p?.design)
-        return { ...current, design, preset: design === p?.design ? (p.preset ?? null) : 'TKL' }
+        return { ...current, design, preset: design.keys === p?.design?.keys ? (p.preset ?? null) : 'TKL' }
       },
     },
   ),

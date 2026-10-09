@@ -43,6 +43,7 @@ Covers two UI steps: **Layout** (presets only) and **Build** (everything else be
 - **Snap toggle:** in *autosnap* mode, resizing snaps to the standard sizes. In *freeform* mode, it stops anywhere, adding or removing keys.
 - **Single-key editing:** select a key to move it, add a key, or delete a key.
 - **Living case:** the case follows the outline of the keys (not a bounding rectangle) and updates live as keys change.
+- **Typing angle slider:** in the Build step, 0–12° (default 6°). The case wedge and the keys follow it live, and the angle is saved with the design.
 - **Pocket fill orbs:** wherever the case dips inward (a pocket, e.g. beside the arrows or the V of an Alice), a small orb sits in the pocket. Dragging it decides how deep the pocket goes: out to the edge fills it flush, inward opens it up. Untouched pockets start fully filled (flush), so every board starts as a clean solid shape.
 - [ ] The editor opens with a TKL keyboard visible in 3D.
 - [ ] Choosing the 60% preset visibly changes the board and its case to a 60% layout.

@@ -13,7 +13,8 @@ export type Poly = Pt[]
 
 export const BEZEL = 7 // mm of case around the keys
 export const WALL = 3 // mm wall thickness
-export const TILT_DEG = 6 // typing angle
+export const TILT_DEG = 6 // default typing angle; the user sets it in the Build step
+export const TILT_MAX = 12
 const PLATE_T = 1.5
 const PLATE_RECESS = 2.5 // plate top sits this far below the wall top
 const FLOOR_T = 2
@@ -215,8 +216,8 @@ export function contains(polys: Poly[], [x, y]: Pt): boolean {
 }
 
 /** Height (mm) of the wall top at layout depth `y` (mm): the back is raised to give the typing angle. */
-export function tiltLift(y: number, maxY: number) {
-  return (maxY - y) * Math.tan((TILT_DEG * Math.PI) / 180)
+export function tiltLift(y: number, maxY: number, tilt = TILT_DEG) {
+  return (maxY - y) * Math.tan((tilt * Math.PI) / 180)
 }
 
 // Shapes are built in the XY plane with shapeY = -layoutY, then rotated so extrusion goes up (+Y world)
@@ -258,7 +259,7 @@ export function caseWell(keys: Key[], family: Family, outer: Poly[]): Poly[] {
  * The 3D case: a hollow tray (floor + walls) with a plate holding the switch cutouts,
  * tilted so the back is higher. Returned in mm, world orientation (Y up, layout y → +Z).
  */
-export function caseMesh(keys: Key[], family: Family, fills: PocketFill[] = []): THREE.BufferGeometry | null {
+export function caseMesh(keys: Key[], family: Family, fills: PocketFill[] = [], tilt = TILT_DEG): THREE.BufferGeometry | null {
   const outer = caseOutline(keys, family, fills)
   if (!outer.length) return null
   const inner = caseWell(keys, family, outer)
@@ -294,19 +295,19 @@ export function caseMesh(keys: Key[], family: Family, fills: PocketFill[] = []):
   for (let i = 0; i < pos.count; i++) maxZ = Math.max(maxZ, pos.getZ(i))
   for (let i = 0; i < pos.count; i++) {
     const y = pos.getY(i)
-    pos.setY(i, y + (y / H) * tiltLift(pos.getZ(i), maxZ))
+    pos.setY(i, y + (y / H) * tiltLift(pos.getZ(i), maxZ, tilt))
   }
   // smooth shading across curved walls, sharp where faces meet at > 40° (top edge, cutouts)
   return toCreasedNormals(merged, (40 * Math.PI) / 180)
 }
 
 /** World height of the wall top at depth `zWorld`. */
-export const wallTopAt = (zWorld: number, maxZ: number, family: Family) => CASE_HEIGHT[family] + tiltLift(zWorld, maxZ)
+export const wallTopAt = (zWorld: number, maxZ: number, family: Family, tilt = TILT_DEG) => CASE_HEIGHT[family] + tiltLift(zWorld, maxZ, tilt)
 
 /** World height of the plate top under a point at layout depth `zWorld`. */
-export function plateTopAt(zWorld: number, maxZ: number, family: Family) {
+export function plateTopAt(zWorld: number, maxZ: number, family: Family, tilt = TILT_DEG) {
   const H = CASE_HEIGHT[family]
   const y = H - PLATE_RECESS
-  return y + (y / H) * tiltLift(zWorld, maxZ)
+  return y + (y / H) * tiltLift(zWorld, maxZ, tilt)
 }
 

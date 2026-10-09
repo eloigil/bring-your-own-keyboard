@@ -3,7 +3,7 @@ import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Key } from '../types'
 import { PITCH, SWITCH_TRAVEL_HEIGHT, CASE_HEIGHT, type Family } from '../lib/units'
-import { caseShape, plateTopAt, TILT_DEG } from '../lib/case'
+import { caseShape, plateTopAt } from '../lib/case'
 import { validate } from '../lib/validate'
 import { familyOf, useDesign } from '../store/design'
 import { Case } from './Case'
@@ -12,9 +12,9 @@ import { PocketOrb } from './PocketOrb'
 import { hitLocal } from './pointer'
 
 /** Plate slope: the plate tilts a little less than the wall top because it sits lower. */
-function plateTilt(family: Family) {
+function plateTilt(family: Family, tiltDeg: number) {
   const H = CASE_HEIGHT[family]
-  return Math.atan(((H - 2.5) / H) * Math.tan((TILT_DEG * Math.PI) / 180))
+  return Math.atan(((H - 2.5) / H) * Math.tan((tiltDeg * Math.PI) / 180))
 }
 
 /** The keyboard: case, keycaps and pocket orbs, centered on the origin. Keys are draggable. */
@@ -24,6 +24,7 @@ export function Board() {
   const components = useDesign((s) => s.design.components)
   const family = useDesign((s) => familyOf(s.design.board.switchId))
   const selectedId = useDesign((s) => s.selectedId)
+  const tiltDeg = useDesign((s) => s.design.board.tiltDeg)
   const shaping = useDesign((s) => s.step === 'Build') // dragging keys and pocket orbs only in the Build step
   const p = PITCH[family]
 
@@ -67,13 +68,13 @@ export function Board() {
     setDragging(null)
   }
 
-  const tilt = plateTilt(family)
+  const tilt = plateTilt(family, tiltDeg)
   return (
     <group position={center}>
-      <Case keys={keys} family={family} fills={fills} />
+      <Case keys={keys} family={family} fills={fills} tilt={tiltDeg} />
       {keys.map((k) => {
         const z = (k.y + k.h / 2) * p.y
-        const target: [number, number, number] = [(k.x + k.w / 2) * p.x, plateTopAt(z, maxZ, family) + SWITCH_TRAVEL_HEIGHT[family], z]
+        const target: [number, number, number] = [(k.x + k.w / 2) * p.x, plateTopAt(z, maxZ, family, tiltDeg) + SWITCH_TRAVEL_HEIGHT[family], z]
         return (
           <Eased key={k.id} target={target} rotation={[tilt, (-k.rot * Math.PI) / 180, 0]}>
             <group onPointerDown={onDown(k)} onPointerMove={onMove} onPointerUp={onUp}>
@@ -82,7 +83,7 @@ export function Board() {
           </Eased>
         )
       })}
-      {shaping && shape.pockets.map((pk) => <PocketOrb key={`${pk.mouth[0].toFixed(0)},${pk.mouth[1].toFixed(0)}`} pocket={pk} maxZ={maxZ} family={family} offset={center} />)}
+      {shaping && shape.pockets.map((pk) => <PocketOrb key={`${pk.mouth[0].toFixed(0)},${pk.mouth[1].toFixed(0)}`} pocket={pk} maxZ={maxZ} family={family} offset={center} tilt={tiltDeg} />)}
     </group>
   )
 }

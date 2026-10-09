@@ -68,3 +68,6 @@ h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 12px 8px 8p
 .row { display: flex; gap: 6px; padding: 0 4px; }
 .row > * { flex: 1; }
 button:disabled { opacity: 0.4; cursor: default; }
+.slider { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
+.slider input { flex: 1; accent-color: var(--accent); }
+.slider span { width: 40px; text-align: right; font-variant-numeric: tabular-nums; font-size: 13px; }

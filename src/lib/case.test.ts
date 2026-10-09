@@ -47,6 +47,23 @@ describe('caseOutline', () => {
 })
 
 describe('caseMesh', () => {
+  it('follows the typing angle: flat at 0°, steeper at 12° than at 6°', () => {
+    const backMinusFront = (tilt: number) => {
+      const g = caseMesh(tkl(), 'MX', [], tilt)!
+      g.computeBoundingBox()
+      const { min, max } = g.boundingBox!
+      const pos = g.attributes.position
+      let back = 0, front = 0
+      for (let i = 0; i < pos.count; i++) {
+        if (pos.getZ(i) < min.z + 5) back = Math.max(back, pos.getY(i))
+        if (pos.getZ(i) > max.z - 5) front = Math.max(front, pos.getY(i))
+      }
+      return back - front
+    }
+    expect(backMinusFront(0)).toBeLessThan(1)
+    expect(backMinusFront(12)).toBeGreaterThan(backMinusFront(6) + 5)
+  })
+
   it('is tilted: the back is taller than the front', () => {
     const g = caseMesh(tkl(), 'MX')!
     g.computeBoundingBox()

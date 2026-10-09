@@ -34,6 +34,8 @@ export interface Design {
     keycapColor: string
     snap: 'snap' | 'free'
     ledEffect: LedEffect
+    /** Typing angle in degrees (back raised). */
+    tiltDeg: number
   }
   /** Pocket fills set by orbs (t: 0 = open, 1 = flush), anchored at the pocket's mouth (mm, layout coords). */
   pocketFills: { x: number; y: number; t: number }[]

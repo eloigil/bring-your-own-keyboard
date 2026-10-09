@@ -9,14 +9,14 @@ import { hitLocal } from './pointer'
 const R = 3.5
 
 /** A handle sitting at a pocket's fill line. Drag toward the edge to fill, inward to open the pocket. */
-export function PocketOrb({ pocket, maxZ, family, offset }: { pocket: Pocket; maxZ: number; family: Family; offset: THREE.Vector3 }) {
+export function PocketOrb({ pocket, maxZ, family, offset, tilt }: { pocket: Pocket; maxZ: number; family: Family; offset: THREE.Vector3; tilt: number }) {
   const { mouth, dir, depth, t } = pocket
   const [hover, setHover] = useState(false)
   const [drag, setDrag] = useState(false)
   const controls = useThree((s) => s.controls) as { enabled: boolean } | null
   // the orb slides along the pocket's axis: at the mouth = flush (t=1), deepest point = open (t=0)
   const x = mouth[0] + dir[0] * depth * (1 - t), z = mouth[1] + dir[1] * depth * (1 - t)
-  const y = wallTopAt(z, maxZ, family) + R + 1
+  const y = wallTopAt(z, maxZ, family, tilt) + R + 1
 
   const update = (e: ThreeEvent<PointerEvent>) => {
     const hit = hitLocal(e, y, offset)

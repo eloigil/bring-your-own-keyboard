@@ -12,8 +12,6 @@ export type Pt = [number, number]
 export type Poly = Pt[]
 
 export const BEZEL = 7 // mm of case around the keys
-/** Gaps between key groups narrower than ~2× this (mm) get filled, like a real case. */
-export const CLOSE = 30
 export const WALL = 3 // mm wall thickness
 export const TILT_DEG = 6 // typing angle
 const PLATE_T = 1.5
@@ -134,7 +132,7 @@ const ANCHOR_MATCH = 19 // mm; a saved fill belongs to the pocket whose mouth is
  * The case outline plus its pockets. Each body (a split half) is handled on its own:
  * snug = keys + bezel with internal gaps always filled; each pocket between snug and the
  * convex hull is filled behind a straight wall parallel to its opening, slid in by the orb's saved
- * fraction (or a default sized like a smooth closing fill). Shallow cut-ins are always filled; enclosed voids are dropped.
+ * fraction (untouched pockets start flush). Shallow cut-ins are always filled; enclosed voids are dropped.
  */
 export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [], margin = BEZEL): { outline: Poly[]; pockets: Pocket[] } {
   if (!keys.length) return { outline: [], pockets: [] }
@@ -144,7 +142,6 @@ export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [],
   for (const body of groupBodies(bodies)) {
     const h = hull(body.flatMap(fromPath))
     const hullPath = [toPath(h)]
-    const smooth = offset(offset(body, CLOSE), -CLOSE) // only used to size untouched pockets' default fill
     parts.push(...body)
     for (const pocketPath of difference(hullPath, body)) {
       const poly = fromPath(pocketPath)
@@ -175,8 +172,8 @@ export function caseShape(keys: Key[], family: Family, fills: PocketFill[] = [],
         .map((f) => ({ f, dist: Math.hypot(f.x - mouth[0], f.y - mouth[1]) }))
         .filter((m) => m.dist < ANCHOR_MATCH)
         .sort((a, b) => a.dist - b.dist)[0]?.f
-      // untouched pockets start about as full as a smooth (closing) fill would make them, but with the same straight wall
-      const t = saved ? Math.max(0, Math.min(1, saved.t)) : Math.min(1, pathsArea(intersection([pocketPath], smooth)) / Math.abs(area(poly)))
+      // untouched pockets start flush (t = 1): a clean solid shape until the user opens one with its orb
+      const t = saved ? Math.max(0, Math.min(1, saved.t)) : 1
       // a straight wall parallel to the mouth, slid in by (1 - t) of the depth: the keys' side of it is solid
       const cut = depth * (1 - t)
       const [ux, uy] = [-n[1], n[0]] // along the mouth

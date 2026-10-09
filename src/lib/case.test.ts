@@ -10,14 +10,17 @@ describe('caseOutline', () => {
     expect(caseOutline(split(), 'MX').filter((p) => area(p) > 0)).toHaveLength(2)
   })
 
-  it('smooths over a single missing corner key but keeps a notch where a block was removed', () => {
+  it('starts with every pocket flush; an orb at 0 opens a notch where keys were removed', () => {
     const keys = tkl()
     const at = (l: string) => keys.find((k) => k.legend === l)!
     const center = (l: string): [number, number] => [(at(l).x + 0.5) * 19.05, (at(l).y + 0.5) * 19.05]
-    expect(contains(caseOutline(keys.filter((k) => k.legend !== 'Pause'), 'MX'), center('Pause'))).toBe(true)
     const block = ['PrtSc', 'ScrLk', 'Pause', 'Ins', 'Home', 'PgUp', 'Del', 'End', 'PgDn']
-    const notched = caseOutline(keys.filter((k) => !block.includes(k.legend ?? '')), 'MX')
-    expect(contains(notched, center('Home'))).toBe(false)
+    const ks = keys.filter((k) => !block.includes(k.legend ?? ''))
+    const shape = caseShape(ks, 'MX')
+    expect(shape.pockets.every((p) => p.t === 1)).toBe(true)
+    for (const ring of shape.outline) expect(area(hullOf(ring)) - area(ring)).toBeLessThan(2)
+    const opened = caseOutline(ks, 'MX', shape.pockets.map((p) => ({ x: p.mouth[0], y: p.mouth[1], t: 0 })))
+    expect(contains(opened, center('Home'))).toBe(false)
   })
 
   it('fills the gaps between key groups', () => {

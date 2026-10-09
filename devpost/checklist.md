@@ -137,3 +137,4 @@ Activity mode:
 - Merged Shape and Components into one Build step (Layout → Build → LEDs → Export); slices 5–6 put switch/keycap/knob options in the Build panel. Case top face stays orange — learner's choice.
 - Presets grew from 7 to 19 in five categories (Standard, Ergonomic, Split columnar, Ortholinear, Small) — learner's request after checkpoint 2.
 - 3D view renders on demand (frameloop="demand"), easing and the red pulse request frames only while running, dpr capped at 1.5, shadow map 1024 — learner's laptop was overheating from the constant 60 fps redraw. Also fixed keys snapping instead of easing (position prop overwrote the lerp each render).
+- Untouched pockets now start flush (t = 1) and the closing-based default is gone — learner found the initial partly-filled shapes weird.

@@ -57,7 +57,7 @@ Source: `scope.md > The POC Boundary` items 3 and 6.
 - **Whole-board config:** switches and keycaps apply to every key by default.
 - **Per-element override:** select (click or double-click) a key to give it its own colour, profile or switch in the Build panel; "Reset this key" clears it. A key's switch must match the board's family (MX or Choc). Everything else keeps the board config.
 - **Switches:** a catalog grouped by **brand → type → model**, as complete as possible (e.g. Cherry MX Red, Kailh Choc Brown). Switching between families with different spacing (MX vs. Choc) changes the layout spacing and the case.
-- **Keycaps:** color, profile (e.g. Cherry, OEM, SA, DSA, XDA) and material: Solid (PBT/ABS, blocks the light), Frosted (milky, the whole cap glows evenly) or Clear (polycarbonate, see-through to the switch and LED). The profile changes the keycap shape and row sculpt in 3D.
+- **Keycaps:** color, profile (e.g. Cherry, OEM, SA, DSA, XDA) and material: Solid (PBT/ABS, blocks the light), Frosted (bead-blasted translucent: milky in daylight, light gets through blurred and the whole cap glows evenly) or Clear (polycarbonate, see-through to the switch and LED). The profile changes the keycap shape and row sculpt in 3D.
 - **Switch colour:** the switch housings can be any colour; the stem keeps its model's colour.
 - **Knob (and other components):** "+ Add knob" places one just above the board; drag it anywhere, and when you let go the keys in its row slide right to make room. Remove it from the Build panel when selected.
 - [ ] Changing the board switch from Cherry MX Red to Kailh Choc Brown visibly changes the switches and tightens the layout/case.

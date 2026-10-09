@@ -57,7 +57,7 @@ h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 12px 8px 8p
 
 .options { top: 16px; right: 16px; width: 280px; max-height: calc(100% - 32px); overflow: auto; padding: 12px; }
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 4px; }
-.tile { background: #f4f3f7; padding: 12px 6px; font-weight: 600; }
+.tile { background: #f4f3f7; padding: 10px 6px; font-weight: 600; font-size: 13px; }
 .tile.active { background: var(--accent); color: #fff; }
 
 @media (max-width: 720px) {

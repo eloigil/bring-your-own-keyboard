@@ -135,3 +135,4 @@ Activity mode:
 - Case top edge is now six stacked inset slabs instead of ExtrudeGeometry's bevel — checkpoint 2 (orange paint): with a bevel, three.js triangulates the bevel-shifted contour, which crosses itself at the straight pocket walls' sharp corners and produced board-spanning slanted triangles on the top face; present since the straight walls arrived. Sliver islands under 90 mm² now join the well.
 - Split the Layout step into Layout (pick a starting preset) and Shape (drag/add/delete keys, pocket orbs, resize); orbs and key dragging only active in Shape — learner's request at checkpoint 2.
 - Merged Shape and Components into one Build step (Layout → Build → LEDs → Export); slices 5–6 put switch/keycap/knob options in the Build panel. Case top face stays orange — learner's choice.
+- Presets grew from 7 to 19 in five categories (Standard, Ergonomic, Split columnar, Ortholinear, Small) — learner's request after checkpoint 2.

@@ -1,23 +1,27 @@
 import { useDesign } from '../../store/design'
-import { PRESETS, type PresetName } from '../../lib/layout'
+import { PRESET_CATEGORIES } from '../../lib/layout'
 
 export function LayoutOptions() {
   const preset = useDesign((s) => s.preset)
   const { setPreset, setStep } = useDesign.getState()
   return (
-    <section>
-      <h3>Pick a starting layout</h3>
-      <div className="grid">
-        {(Object.keys(PRESETS) as PresetName[]).map((p) => (
-          <button key={p} className={`tile ${p === preset ? 'active' : ''}`} onClick={() => setPreset(p)}>
-            {p}
-          </button>
-        ))}
-      </div>
+    <>
+      {PRESET_CATEGORIES.map(({ name, presets }) => (
+        <section key={name}>
+          <h3>{name}</h3>
+          <div className="grid">
+            {presets.map((p) => (
+              <button key={p} className={`tile ${p === preset ? 'active' : ''}`} onClick={() => setPreset(p)}>
+                {p}
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
       <p className="muted">Picking a layout replaces your current board.</p>
       <div className="row">
         <button className="tile active" onClick={() => setStep('Build')}>Start building →</button>
       </div>
-    </section>
+    </>
   )
 }

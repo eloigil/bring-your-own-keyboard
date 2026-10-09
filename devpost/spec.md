@@ -102,7 +102,7 @@ PRD ref: `prd.md > Layout Step`, `prd.md > Components Step`, `prd.md > LEDs Step
 PRD ref: `prd.md > Layout Step` (Living case), `prd.md > Export Step`.
 
 ### Layout Logic (`src/lib/layout.ts`)
-- **Presets:** 60, 65, 75, TKL, full, split (column-staggered), and ortholinear as key arrays in `u` (KLE-like).
+- **Presets:** 19 layouts grouped in `PRESET_CATEGORIES` (Standard, Ergonomic, Split columnar, Ortholinear, Small) as key arrays in `u` (KLE-like); split columnar boards share a `columnar()` builder (6 columns, per-column stagger, mirrored thumb clusters). Layouts are approximations of the named boards, not exact replicas.
 - `resizeBoard(keys, width, mode)`: *snap* picks the nearest preset width; *free* removes keys beyond the width or fills rows with 1u keys up to it.
 - `snapAside(keys, component)`: keys in the rows the component overlaps, at or right of it, shift right by its width.
 PRD ref: `prd.md > Layout Step`, `prd.md > Components Step`.

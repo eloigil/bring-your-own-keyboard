@@ -38,7 +38,7 @@ Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 ### Layout Step
 Source: `scope.md > The POC Boundary` items 1–2.
 Covers two UI steps: **Layout** (presets only) and **Build** (everything else below: resize, key editing, pocket orbs).
-- **Presets:** 60%, 65%, 75%, TKL, full (with numpad), split, ortholinear. Choosing one replaces the current layout.
+- **Presets, in categories:** Standard (40%, 60%, 65%, 75%, TKL, 96%, Full), Ergonomic (Alice, Arisu, Row split), Split columnar (Corne, Lily58, Sofle, Kyria), Ortholinear (Planck, Preonic, Ortho pad), Small (Numpad, Macropad). Choosing one replaces the current layout. TKL is the default.
 - **Board resize:** drag the board's edge to grow or shrink it.
 - **Snap toggle:** in *autosnap* mode, resizing snaps to the standard sizes. In *freeform* mode, it stops anywhere, adding or removing keys.
 - **Single-key editing:** select a key to move it, add a key, or delete a key.

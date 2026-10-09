@@ -21,7 +21,7 @@ const brandOf = (w: { brand: string }) => w.brand.replace(/ Choc$/, '')
 
 function BrandTitle({ brand }: { brand: string }) {
   const logo = LOGOS[brand.toLowerCase()]
-  return <li className="brand">{logo ? <img src={logo} alt={brand} /> : <span className="wordmark">{brand}</span>}</li>
+  return <li className={`brand brand-${brand.toLowerCase()}`}>{logo ? <img src={logo} alt={brand} /> : <span className="wordmark">{brand}</span>}</li>
 }
 const SOUNDS: SoundProfile[] = ['thocky', 'creamy', 'clacky', 'clicky', 'muted']
 const SOUND_NOTE: Record<SoundProfile, string> = {

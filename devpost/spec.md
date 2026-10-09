@@ -221,7 +221,7 @@ None at runtime. No APIs, no keys, no hosting. Everything is an npm package bund
 - Hand-built JSON catalog.
 - Run locally; no deployment for now.
 
-**Agent-derived (follow from the above):** Vite, zustand + persist, clipper2-js, fflate, Vitest, a near-square matrix on a Pico, a 0.25u drag grid.
+**Agent-derived (follow from the above):** Vite, zustand + persist, clipper-lib, fflate, Vitest, a near-square matrix on a Pico, a 0.25u drag grid.
 
 **Learner uncertainty and how it's checked:** will the computed case look "flat and blocky, not like a real case", and can it handle "curved or ergonomic layouts"? Clarified with the plan for rounded joins, bevels, and the vertex tilt. Rotated and staggered keys are just rotated polygons. **Check:** build step 1 renders a TKL, a column-staggered split, and an Alice-style rotated layout with the full case treatment. The learner judges them visually before anything is built on top. If it fails, change the case approach first.
 

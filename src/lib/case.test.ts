@@ -19,6 +19,17 @@ describe('caseOutline', () => {
     expect(area(after[0])).toBeLessThan(area(before[0]))
   })
 
+  it('fills the gaps between key groups', () => {
+    const keys = tkl()
+    const esc = keys.find((k) => k.legend === 'Esc')!
+    const gap: [number, number] = [(esc.x + 1.5) * 19.05, (esc.y + 0.5) * 19.05] // between Esc and F1
+    const leftOfUp: [number, number] = [(keys.find((k) => k.legend === 'Up')!.x - 0.5) * 19.05, 4.75 * 19.05]
+    const outline = caseOutline(keys, 'MX')
+    expect(outline.filter((p) => area(p) < 0)).toHaveLength(0)
+    expect(contains(outline, gap)).toBe(true)
+    expect(contains(outline, leftOfUp)).toBe(true)
+  })
+
   it('wraps rotated keys completely', () => {
     const keys = alice()
     const outline = caseOutline(keys, 'MX')

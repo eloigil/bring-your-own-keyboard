@@ -12,6 +12,8 @@ export type Pt = [number, number]
 export type Poly = Pt[]
 
 export const BEZEL = 7 // mm of case around the keys
+/** Gaps between key groups narrower than ~2× this (mm) get filled, like a real case. */
+export const CLOSE = 12
 export const WALL = 3 // mm wall thickness
 export const TILT_DEG = 6 // typing angle
 const PLATE_T = 1.5
@@ -54,7 +56,9 @@ function offset(paths: Path[], margin: number): Path[] {
 /** The case outline: one polygon per separate body (a split board gives two). Holes have negative area. */
 export function caseOutline(keys: Key[], family: Family, margin = BEZEL): Poly[] {
   if (!keys.length) return []
-  return offset(union(keys.map((k) => keyCorners(k, family))), margin).map(fromPath)
+  // grow past the bezel then shrink back: fills internal gaps (Esc→F1, around the arrows) but keeps outer notches
+  const grown = offset(union(keys.map((k) => keyCorners(k, family))), margin + CLOSE)
+  return offset(grown, -CLOSE).map(fromPath)
 }
 
 /** Signed area in mm² (positive = outer boundary in clipper's orientation). */

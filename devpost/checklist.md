@@ -102,7 +102,7 @@ Build mode: fast
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 1: does the computed case look real? (decides whether the case approach stands)
-- [ ] Kernel interaction explored — after slice 3: does dragging keys and watching the case feel like play?
+- [x] Kernel interaction explored — after slice 3: does dragging keys and watching the case feel like play?
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review

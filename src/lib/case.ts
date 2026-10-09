@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { mergeGeometries, toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import ClipperLib from 'clipper-lib'
 import type { Key } from '../types'
 import { CASE_HEIGHT, CUTOUT, PITCH, type Family } from './units'
@@ -146,8 +146,8 @@ export function caseMesh(keys: Key[], family: Family): THREE.BufferGeometry | nu
     const y = pos.getY(i)
     pos.setY(i, y + (y / H) * tiltLift(pos.getZ(i), maxZ))
   }
-  // normals from the extrusion are kept: the tilt is small and they keep the bevels smooth
-  return merged
+  // smooth shading across curved walls, sharp where faces meet at > 40° (top edge, cutouts)
+  return toCreasedNormals(merged, (40 * Math.PI) / 180)
 }
 
 /** World height of the plate top under a point at layout depth `zWorld`. */

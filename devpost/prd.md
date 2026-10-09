@@ -30,6 +30,7 @@ Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 
 ## Look and Feel
 - A simple, neutral environment like ShipShaper's for the MVP. Reference: ShipShaper.
+- A **dark mode** toggle in the top-right corner dims the room (background, lights, grid, panels) to see the LEDs; it's remembered between visits.
 - A floor grid under the board for scale (1 cm cells, 10 cm sections), fading out in a circle around the board.
 - The overall goal is the Tiny Glade feel (simple actions, satisfying responses), not an engineering tool. Source: `scope.md > Inspiration & Identity`.
 - No other visual preferences (fonts, palette) were established; the spec should take its cue from ShipShaper.
@@ -56,7 +57,8 @@ Source: `scope.md > The POC Boundary` items 3 and 6.
 - **Whole-board config:** switches and keycaps apply to every key by default.
 - **Per-element override:** select (click or double-click) a key to give it its own colour, profile or switch in the Build panel; "Reset this key" clears it. A key's switch must match the board's family (MX or Choc). Everything else keeps the board config.
 - **Switches:** a catalog grouped by **brand → type → model**, as complete as possible (e.g. Cherry MX Red, Kailh Choc Brown). Switching between families with different spacing (MX vs. Choc) changes the layout spacing and the case.
-- **Keycaps:** color and profile (e.g. Cherry, OEM, SA, DSA, XDA). The profile changes the keycap shape and row sculpt in 3D.
+- **Keycaps:** color, profile (e.g. Cherry, OEM, SA, DSA, XDA) and transparency (solid down to 20% opacity). The profile changes the keycap shape and row sculpt in 3D.
+- **Switch colour:** the switch housings can be any colour; the stem keeps its model's colour.
 - **Knob (and other components):** "+ Add knob" places one just above the board; drag it anywhere, and when you let go the keys in its row slide right to make room. Remove it from the Build panel when selected.
 - [ ] Changing the board switch from Cherry MX Red to Kailh Choc Brown visibly changes the switches and tightens the layout/case.
 - [ ] Changing the keycap profile visibly changes keycap shape.
@@ -65,6 +67,7 @@ Source: `scope.md > The POC Boundary` items 3 and 6.
 
 ### LEDs Step
 Source: `scope.md > The POC Boundary` item 7.
+- LEDs are **backlighting**: they light the plate under the switches and only shine through a keycap as much as the keycap is transparent; solid caps show the light only in the gaps.
 - LEDs are **off until configured**.
 - **Per-key painting:** set a color on individual keys.
 - **Animated effects:** pick an effect (e.g. wave, breathing, reactive).

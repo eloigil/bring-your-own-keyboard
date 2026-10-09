@@ -55,7 +55,7 @@ h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 12px 8px 8p
 .step.active { background: #eeeefc; color: var(--ink); }
 .step.active .num { background: var(--accent); color: #fff; }
 
-.options { top: 16px; right: 16px; width: 280px; max-height: calc(100% - 32px); overflow: auto; padding: 12px; }
+.options { top: 68px; right: 16px; width: 280px; max-height: calc(100% - 84px); overflow: auto; padding: 12px; }
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 4px; }
 .tile { background: #f4f3f7; padding: 10px 6px; font-weight: 600; font-size: 13px; }
 .tile.active { background: var(--accent); color: #fff; }
@@ -81,3 +81,21 @@ select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 1
 .selected .tile { width: calc(100% - 8px); margin: 0 4px; }
 .tile.wide { width: calc(100% - 8px); margin: 0 4px; }
 .swatch.eraser { background: #fff; color: var(--muted); font-size: 12px; line-height: 1; }
+.slider .label { width: auto; text-align: left; color: var(--muted); }
+
+.theme-toggle { top: 16px; right: 16px; width: 40px; height: 40px; padding: 0; font-size: 18px; display: grid; place-items: center; }
+
+/* dark room: panels follow the scene */
+:root[data-theme='dark'] {
+  --bg: #0f0e13;
+  --card: #1b1a21;
+  --ink: #ecebf0;
+  --muted: #9a96a6;
+  --line: #2e2c36;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+:root[data-theme='dark'] .tile { background: #26252d; }
+:root[data-theme='dark'] .tile.active { background: var(--accent); }
+:root[data-theme='dark'] .step.active { background: #2a2940; }
+:root[data-theme='dark'] select { background: #26252d; }
+:root[data-theme='dark'] .swatch { border-color: var(--card); }

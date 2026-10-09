@@ -13,6 +13,13 @@ describe('loadDesign', () => {
     delete old.board.tiltDeg
     expect(loadDesign(old).board.tiltDeg).toBe(6)
   })
+  it('gives designs saved before transparency and switch colours the defaults: solid caps, dark housings', () => {
+    const old = defaultDesign() as unknown as { board: Record<string, unknown> }
+    delete old.board.keycapOpacity
+    delete old.board.switchColor
+    const d = loadDesign(old)
+    expect([d.board.keycapOpacity, d.board.switchColor]).toEqual([1, '#2c2b31'])
+  })
   it('resets corrupt or old-version data to TKL', () => {
     for (const bad of [undefined, null, 'x', { version: 0 }, { ...defaultDesign(), keys: [{ id: 'a', x: NaN }] }])
       expect(loadDesign(bad).keys).toHaveLength(PRESETS.TKL().length)

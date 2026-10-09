@@ -11,7 +11,7 @@ export function defaultDesign(): Design {
     version: 1,
     keys: PRESETS.TKL(),
     components: [],
-    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', ledEffect: 'none', tiltDeg: TILT_DEG, ledColor: '#ff8a1f' },
+    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', ledEffect: 'none', tiltDeg: TILT_DEG, ledColor: '#ff8a1f', keycapOpacity: 1, switchColor: '#2c2b31' },
     pocketFills: [],
   }
 }
@@ -62,7 +62,10 @@ interface State {
   setLedColor: (c: string) => void
   clearLeds: () => void
   setSwitch: (id: string) => void
-  setKeycaps: (patch: { profileId?: string; keycapColor?: string }) => void
+  setKeycaps: (patch: { profileId?: string; keycapColor?: string; keycapOpacity?: number; switchColor?: string }) => void
+  /** Dark room to see the LEDs; a viewing preference, saved but not part of the design. */
+  dark: boolean
+  toggleDark: () => void
   /** Give one key its own switch/keycap settings; null clears them. */
   setOverride: (keyId: string, patch: Key['override'] | null) => void
 }
@@ -127,6 +130,8 @@ export const useDesign = create<State>()(
             keys: s.design.keys.map((k) => (k.id !== keyId ? k : { ...k, override: patch ? { ...k.override, ...patch } : undefined })),
           },
         })),
+      dark: false,
+      toggleDark: () => set((s) => ({ dark: !s.dark })),
       ledBrush: '#ff8a1f',
       setLedBrush: (ledBrush) => set({ ledBrush }),
       paintKey: (id) =>
@@ -147,11 +152,11 @@ export const useDesign = create<State>()(
     {
       name: STORAGE_KEY,
       // only the design is saved; UI state (step) is not
-      partialize: (s) => ({ design: s.design, preset: s.preset }),
+      partialize: (s) => ({ design: s.design, preset: s.preset, dark: s.dark }),
       merge: (saved, current) => {
         const p = saved as Partial<State> | undefined
         const design = loadDesign(p?.design)
-        return { ...current, design, preset: design.keys === p?.design?.keys ? (p.preset ?? null) : 'TKL' }
+        return { ...current, design, preset: design.keys === p?.design?.keys ? (p.preset ?? null) : 'TKL', dark: p?.dark === true }
       },
     },
   ),

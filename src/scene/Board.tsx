@@ -129,6 +129,8 @@ export function Board() {
                 profile={profileById(k.override?.profileId ?? board.profileId)}
                 row={rows.get(k.id) ?? 2}
                 stemColor={switchById(k.override?.switchId ?? board.switchId).stemColor}
+                housingColor={board.switchColor}
+                opacity={board.keycapOpacity}
                 invalid={invalid.has(k.id)}
                 selected={shaping && k.id === selectedId}
                 glow={glowOf(k.id)}

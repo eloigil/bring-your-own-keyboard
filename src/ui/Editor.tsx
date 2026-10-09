@@ -4,6 +4,7 @@ import { Board } from '../scene/Board'
 import { useDesign } from '../store/design'
 import { StepsPanel } from './StepsPanel'
 import { OptionsPanel } from './OptionsPanel'
+import { ThemeToggle } from './ThemeToggle'
 
 export function Editor() {
   useEffect(() => {
@@ -21,6 +22,7 @@ export function Editor() {
       </Stage>
       <StepsPanel />
       <OptionsPanel />
+      <ThemeToggle />
     </>
   )
 }

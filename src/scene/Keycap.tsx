@@ -48,8 +48,11 @@ function switchGeometry(family: Family) {
 }
 
 /** A keycap on its switch, positioned by its parent at the keycap's bottom. Pulses red when invalid, tinted when selected. */
-export function Keycap({ k, family, color, profile, row, stemColor, invalid, selected, glow }: {
-  k: Key; family: Family; color: string; profile: Profile; row: number; stemColor: string; invalid?: boolean; selected?: boolean
+export function Keycap({ k, family, color, profile, row, stemColor, housingColor, opacity, invalid, selected, glow }: {
+  k: Key; family: Family; color: string; profile: Profile; row: number; stemColor: string; housingColor: string
+  /** 1 = solid cap; lower lets the backlight through */
+  opacity: number
+  invalid?: boolean; selected?: boolean
   /** The key's live LED colour (black when off), shared with its underglow. */
   glow: THREE.Color
 }) {
@@ -78,11 +81,19 @@ export function Keycap({ k, family, color, profile, row, stemColor, invalid, sel
   return (
     <>
       <mesh geometry={geometry} castShadow>
-        {/* the LED shines through the cap a little */}
-        <meshStandardMaterial ref={mat} color={color} roughness={0.7} emissiveIntensity={0.35} />
+        {/* backlight only shows through a cap as much as the cap is see-through; a solid cap blocks it */}
+        <meshStandardMaterial
+          ref={mat}
+          color={color}
+          roughness={opacity < 1 ? 0.35 : 0.7}
+          transparent={opacity < 1}
+          opacity={opacity}
+          depthWrite={opacity >= 1}
+          emissiveIntensity={1.2 * (1 - opacity)}
+        />
       </mesh>
       <mesh geometry={sw.housing}>
-        <meshStandardMaterial color="#2c2b31" roughness={0.6} />
+        <meshStandardMaterial color={housingColor} roughness={0.6} />
       </mesh>
       <mesh geometry={sw.stem}>
         <meshStandardMaterial color={stemColor} roughness={0.5} />

@@ -297,94 +297,6 @@ function cap(section: Path[], z: number, up: boolean): THREE.BufferGeometry[] {
   })
 }
 
-/** `n` points along a ring by arc length. Keeps the ring's direction. */
-function resample(ring: Poly, n: number): Poly {
-  const len = ring.map((p, i) => Math.hypot(ring[(i + 1) % ring.length][0] - p[0], ring[(i + 1) % ring.length][1] - p[1]))
-  const total = len.reduce((a, b) => a + b, 0)
-  const out: Poly = []
-  let i = 0, walked = 0
-  for (let k = 0; k < n; k++) {
-    const target = (k / n) * total
-    while (walked + len[i] < target - 1e-9) (walked += len[i]), (i = (i + 1) % ring.length)
-    const t = len[i] ? (target - walked) / len[i] : 0
-    const [ax, ay] = ring[i], [bx, by] = ring[(i + 1) % ring.length]
-    out.push([ax + (bx - ax) * t, ay + (by - ay) * t])
-  }
-  return out
-}
-
-/**
- * The point on `ring` nearest to `pt`, searched around `hint` (an index) so a walk along a parallel ring stays
- * O(n); a hint of -1 searches the whole ring.
- */
-function nearestOn(ring: Poly, pt: Pt, hint: number): { p: Pt; i: number } {
-  const m = ring.length
-  let best = { p: ring[0], i: 0, d: Infinity }
-  const span = hint < 0 ? m : Math.min(m, 96)
-  for (let k = 0; k < span; k++) {
-    const i = hint < 0 ? k : (hint - 16 + k + m) % m
-    const [ax, ay] = ring[i], [bx, by] = ring[(i + 1) % m]
-    const dx = bx - ax, dy = by - ay
-    const t = Math.max(0, Math.min(1, ((pt[0] - ax) * dx + (pt[1] - ay) * dy) / (dx * dx + dy * dy || 1)))
-    const q: Pt = [ax + dx * t, ay + dy * t]
-    const d = Math.hypot(q[0] - pt[0], q[1] - pt[1])
-    if (d < best.d) best = { p: q, i, d }
-  }
-  return best
-}
-
-/**
- * Quads between two rings where `b` is an offset of `a` (both run the same way), as triangles. Each sample on
- * `a` pairs with its nearest point on `b` — parallel curves correspond by projection, not by arc length, which
- * drifts around corners and would twist the quads.
- * `facing`: 'wall' points away from the solid for clipper-oriented rings (left of the edge); 'up'/'down' are flat caps.
- * Built in shape space (x, -y, z) like everything else here.
- */
-function zip(a: Poly, za: number, b: Poly, zb: number, facing: 'wall' | 'up' | 'down'): THREE.BufferGeometry {
-  const n = Math.max(a.length, b.length, 8)
-  const A = resample(a, n)
-  const B: Poly = []
-  let hint = -1
-  for (const pt of A) {
-    const near = nearestOn(b, pt, hint)
-    B.push(near.p)
-    hint = near.i
-  }
-  const v: number[] = []
-  const tri = (p: number[], q: number[], r: number[], want: number[]) => {
-    const ux = q[0] - p[0], uy = q[1] - p[1], uz = q[2] - p[2], wx = r[0] - p[0], wy = r[1] - p[1], wz = r[2] - p[2]
-    const nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx
-    if (nx * nx + ny * ny + nz * nz < 1e-12) return // collapsed quad corner (several samples met the same point)
-    if (nx * want[0] + ny * want[1] + nz * want[2] >= 0) v.push(...p, ...q, ...r)
-    else v.push(...p, ...r, ...q)
-  }
-  for (let i = 0; i < n; i++) {
-    const j = (i + 1) % n
-    const P = [A[i][0], -A[i][1], za], Q = [A[j][0], -A[j][1], za], R = [B[j][0], -B[j][1], zb], S = [B[i][0], -B[i][1], zb]
-    const want = facing === 'up' ? [0, 0, 1] : facing === 'down' ? [0, 0, -1] : [-(Q[1] - P[1]), Q[0] - P[0], 0]
-    tri(P, Q, R, want)
-    tri(P, R, S, want)
-  }
-  const g = new THREE.BufferGeometry()
-  g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3))
-  return g
-}
-
-/** The ring shrunk by `by` mm, or null if that splits it or makes it vanish. */
-function shrunk(ring: Poly, by: number): Poly | null {
-  const out = offset([toPath(ring)], -by).map(fromPath).filter((r) => area(r) > 0)
-  return out.length === 1 ? out[0] : null
-}
-
-/**
- * A flat ring between `ring` and the same ring shrunk by `by`: zipped between its two edges when the shrink keeps
- * one ring (earcut mangles thin rings whose edges nearly coincide), otherwise triangulated as a plain region.
- */
-function ringCap(ring: Poly, by: number, z: number, up: boolean): THREE.BufferGeometry[] {
-  const inner = shrunk(ring, by)
-  return inner ? [zip(inner, z, ring, z, up ? 'up' : 'down')] : cap(difference([toPath(ring)], offset([toPath(ring)], -by)), z, up)
-}
-
 /**
  * Slabs with different cross-sections stacked into one shell: walls per slab, caps at the ends unless left open,
  * and at each interface only the parts of the section that end there — no faces buried inside the solid,
@@ -476,33 +388,22 @@ function buildParts(keys: Key[], family: Family, fills: PocketFill[]) {
   const inserts = P(screws.map(([x, y]) => circle(x, y, INSERT_D)))
 
   // Shell, bottom up: rim around the rebate; wall with the insert holes; wall up to the ledge; straight wall around
-  // the well; the rounded top edge. Thin rings (rim underside, ledge, bevel) are zipped between their two edges.
+  // the well; then the rounded top edge as thin slabs, each inset a little more along a quarter circle.
+  // stack() joins them with only the faces that are actually on the surface (ledge, rim, the bevel's treads).
+  // ponytail: stairs of 0.2 mm, not a true loft — lofting between offset rings needs a point correspondence that
+  // breaks at concave corners (the inset ring gains arcs the outer ring doesn't have). Creased normals hide the steps.
   const slabs: Slab[] = [
     { section: difference(outerP, rebate), z0: 0, z1: BOTTOM_T },
     { section: difference(outerP, [...cavity, ...inserts]), z0: BOTTOM_T, z1: holeTop },
     { section: difference(outerP, cavity), z0: holeTop, z1: plateBottom },
+    { section: difference(outerP, wellP), z0: plateBottom, z1: H - TOP_BEVEL },
   ]
-  const shell: THREE.BufferGeometry[] = [
-    ...bodies.flatMap((r) => ringCap(r, WALL_LOW, 0, false)), // underside of the rim
-    ...stack(slabs, { bottom: true, top: true }),
-    ...well.flatMap((r) => ringCap(r, LEDGE, plateBottom, true)), // the ledge the plate rests on
-    ...walls(difference(outerP, wellP), plateBottom, H - TOP_BEVEL), // straight wall around the well
-  ]
-  // the rounded top edge: a loft through rings inset along a quarter circle, then the flat top
-  for (const r of bodies) {
-    const rings = Array.from({ length: BEVEL_STEPS + 1 }, (_, k) => {
-      const th = (k / BEVEL_STEPS) * (Math.PI / 2)
-      return { ring: k ? shrunk(r, TOP_BEVEL * (1 - Math.cos(th))) : r, z: H - TOP_BEVEL + TOP_BEVEL * Math.sin(th) }
-    })
-    for (let k = 0; k < BEVEL_STEPS; k++) {
-      const a = rings[k], b = rings[k + 1]
-      if (a.ring && b.ring) shell.push(zip(a.ring, a.z, b.ring, b.z, 'wall'))
-    }
+  for (let k = 1; k <= BEVEL_STEPS; k++) {
+    const th = (k / BEVEL_STEPS) * (Math.PI / 2)
+    const inset = TOP_BEVEL * (1 - Math.cos((((k - 0.5) / BEVEL_STEPS) * Math.PI) / 2))
+    slabs.push({ section: difference(offset(outerP, -inset), wellP), z0: slabs[slabs.length - 1].z1, z1: H - TOP_BEVEL + TOP_BEVEL * Math.sin(th) })
   }
-  shell.push(...cap(difference(offset(outerP, -TOP_BEVEL), wellP), H, true))
-  // the well's walls continue up through the bevel band (holes: clipper's hole direction, so reversed)
-  for (const r of well) shell.push(zip([...r].reverse(), H - TOP_BEVEL, [...r].reverse(), H, 'wall'))
-  for (const r of outer.filter((o) => area(o) < 0)) shell.push(zip(r, H - TOP_BEVEL, r, H, 'wall'))
+  const shell = stack(slabs)
 
   // plate: drops onto the ledge; enclosed deck pieces stand on it up to deck height
   const plate = stack([

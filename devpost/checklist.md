@@ -99,7 +99,7 @@ Build mode: fast
   Learner check: Open the switch lab, compare a linear, a tactile and a clicky switch (curve, press slider, ▶ Hear it), and apply one.
   Commit: `Add the switch lab`
 
-- [ ] **9. Landing page leads into the editor**
+- [ ] **9. Landing page leads into the editor** — DEFERRED by the learner (2026-10-12): the app opens straight into the editor; revisit after shipping if there's time.
   Becomes usable: Opening the app shows a small 3D landing (a rotating sample board, the title, a two-line pitch) with "Start building" leading to the editor.
   Why now: Wrapping, not kernel. Last, so it can show off the finished board.
   PRD ref: `prd.md > Screens and Layout` (Landing page), `prd.md > The Core Journey` (step 1)
@@ -165,3 +165,6 @@ Activity mode:
 - Switch lab built: switch data extended (actuation/bottom-out force, pre/total travel, bump, sound profile/pitch/loudness, smoothness, materials, housing tint); `forceCurve()` models the curve from specs; sound is synthesized with Web Audio (noise burst + body tone per profile). All data and curves are approximate and labelled so; the sound couldn't be listened to during the build (no audio here).
 - Switch lab list grouped by brand with official logos (6 fetched from brand websites with the learner's OK; Durock and Outemu had no official site reachable, so they show text wordmarks). Sources and trademark note in `src/assets/brands/README.md`.
 - Build → Switches shows the selected switch as a card (SVG side view in its real colours, brand logo, model, type/force/sound) that opens the lab; the board-wide switch dropdown was removed as redundant (the per-key override picker stays).
+- Switch lab 3D model rebuilt from each switch's construction instead of one shape for all: MX-style (cross stem, click jacket on clickies), Kailh Box (cross inside a box wall, click bar, sealed contacts) and Kailh Choc (low profile, twin-rail stem, blade pins). Tactile stems get bumped legs, silent switches dampers, 5-pin brands side posts; the plate, LED window and contact leaf are drawn on all — learner found every switch looked identical.
+- Light/dark toggle plays a 3 s sunset/sunrise: the sun travels one continuous arc (overhead at noon, sets west, rises east), the room goes golden hour → dusk → moonlight, the backlight blinks on at nightfall, the panels cross-fade with the text flipping quickly past mid-grey. Only animates while moving — learner asked for a more satisfying transition.
+- Landing page (slice 9) deferred by the learner; the app opens in the editor.

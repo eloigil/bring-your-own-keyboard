@@ -280,11 +280,14 @@ describe('printable parts', () => {
 })
 
 describe('rounded top edge', () => {
-  it('every triangle of the bevel faces outward and never down (no twisted quads between the inset rings)', () => {
-    for (const make of [tkl, split]) {
-      const ks = make()
-      const outline = caseOutline(ks, 'MX')
-      const shell = caseParts(ks, 'MX', [], 0)!.shell // untilted: the band is a flat ring of heights
+  it('every face of the bevel faces outward or up, never down or into the case (no twisted or crossing faces)', () => {
+    // an open notch (the learner's screenshot): Pause removed, every pocket's orb pulled all the way out
+    const notched = () => tkl().filter((k) => k.legend !== 'Pause' && k.legend !== 'F6')
+    const openFills = (ks: ReturnType<typeof tkl>) => caseShape(ks, 'MX').pockets.map((p) => ({ x: p.mouth[0], y: p.mouth[1], t: 0 }))
+    for (const [name, ks, fills] of [['tkl', tkl(), []], ['split', split(), []], ['notched', notched(), openFills(notched())]] as const) {
+      const make = { name }
+      const outline = caseOutline(ks, 'MX', [...fills])
+      const shell = caseParts(ks, 'MX', [...fills], 0)!.shell // untilted: the band is a flat ring of heights
       const pos = shell.attributes.position
       const H = CASE_HEIGHT.MX
       let checked = 0
@@ -294,7 +297,7 @@ describe('rounded top edge', () => {
         const ax = pos.getX(i + 1) - pos.getX(i), ay = ys[1] - ys[0], az = pos.getZ(i + 1) - pos.getZ(i)
         const bx = pos.getX(i + 2) - pos.getX(i), by = ys[2] - ys[0], bz = pos.getZ(i + 2) - pos.getZ(i)
         const n = new THREE.Vector3(ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx)
-        if (n.lengthSq() < 1e-6) continue
+        if (n.lengthSq() < 1e-3) continue // clipper leaves 0.01 mm micro-edges on curves; their normals mean nothing
         n.normalize()
         checked++
         expect(n.y, `${make.name}: bevel triangle facing down`).toBeGreaterThan(-0.05)
@@ -306,6 +309,17 @@ describe('rounded top edge', () => {
         expect(contains(outline, [c[0] - dir[0] * 1.5, c[1] - dir[1] * 1.5]), `${make.name}: bevel triangle facing into the case at ${c.map(Math.round)}`).toBe(true)
       }
       expect(checked).toBeGreaterThan(200)
+      // and no face of the top band reaches outside the case: sample each triangle's centre and edge midpoints
+      for (let i = 0; i < pos.count; i += 3) {
+        const v = [0, 1, 2].map((j) => [pos.getX(i + j), pos.getY(i + j), pos.getZ(i + j)])
+        if (v.some((p) => p[1] < H - TOP_BEVEL - 0.01)) continue
+        const samples: [number, number][] = [
+          [(v[0][0] + v[1][0] + v[2][0]) / 3, (v[0][2] + v[1][2] + v[2][2]) / 3],
+          ...[[0, 1], [1, 2], [2, 0]].map(([a, b]) => [(v[a][0] + v[b][0]) / 2, (v[a][2] + v[b][2]) / 2] as [number, number]),
+        ]
+        for (const q of samples)
+          expect(contains(outline, q) || distToOutline(outline, q) < 0.05, `${make.name}: top-band face spans outside the case at ${q.map(Math.round)}`).toBe(true)
+      }
     }
   })
 })

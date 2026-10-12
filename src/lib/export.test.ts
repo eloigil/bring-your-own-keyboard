@@ -5,7 +5,7 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { defaultDesign } from '../store/design'
 import { PRESETS } from './layout'
 import { firmwareZip, generateFirmware } from './qmk'
-import { caseStl } from './exportStl'
+import { caseFiles, caseZip } from './exportStl'
 import type { Design } from '../types'
 
 const design = (patch: Partial<Design> = {}, preset: keyof typeof PRESETS = 'TKL'): Design => ({ ...defaultDesign(), keys: PRESETS[preset](), ...patch })
@@ -90,16 +90,33 @@ describe('QMK firmware', () => {
   })
 })
 
-describe('case STL', () => {
-  it('parses back into a solid about as big as the board, lying flat (Z up)', () => {
-    const buf = caseStl(design())!
-    expect(buf.byteLength).toBeGreaterThan(10_000)
-    const g = new STLLoader().parse(buf)
+describe('case files', () => {
+  const parse = (u8: Uint8Array) => {
+    const g = new STLLoader().parse(u8.slice().buffer as ArrayBuffer)
     g.computeBoundingBox()
-    const size = g.boundingBox!.getSize(new THREE.Vector3())
-    expect(size.x).toBeGreaterThan(350) // a TKL case is ~362 mm wide
-    expect(size.x).toBeLessThan(380)
-    expect(size.z).toBeLessThan(40) // height, not depth
-    expect(g.boundingBox!.min.z).toBeCloseTo(0, 0) // sits on the print bed
+    return { size: g.boundingBox!.getSize(new THREE.Vector3()), min: g.boundingBox!.min }
+  }
+
+  it('three parts that each lie flat on the bed (Z up), about as big as the board', () => {
+    const files = caseFiles(design())!
+    const shell = parse(files['shell.stl']), plate = parse(files['plate.stl']), bottom = parse(files['bottom.stl'])
+    for (const part of [shell, plate, bottom]) {
+      expect(part.size.x).toBeGreaterThan(340) // a TKL case is ~362 mm wide
+      expect(part.size.x).toBeLessThan(380)
+      expect(part.min.z).toBeCloseTo(0, 0)
+    }
+    expect(shell.size.z).toBeGreaterThan(15) // tilted: taller at the back
+    expect(shell.size.z).toBeLessThan(40)
+    expect(plate.size.z).toBeCloseTo(1.5, 1) // the plate prints flat (a TKL has no enclosed deck pieces standing on it)
+    expect(bottom.size.z).toBeCloseTo(2, 1)
+    expect(bottom.size.x).toBeLessThan(shell.size.x) // sits inside the shell's rebate
+    expect(plate.size.x).toBeLessThan(bottom.size.x) // sits inside the walls
+  })
+
+  it('zips the parts with printing notes that list the screws', () => {
+    const files = caseFiles(design())!
+    const zipped = unzipSync(caseZip(files))
+    expect(Object.keys(zipped).filter((f) => !f.endsWith('/')).sort()).toEqual(['byokb-case/PRINTING.md', 'byokb-case/bottom.stl', 'byokb-case/plate.stl', 'byokb-case/shell.stl'])
+    expect(files['PRINTING.md']).toMatch(/\d+ × \*\*M2 heat-set inserts/)
   })
 })

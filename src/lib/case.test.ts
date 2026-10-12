@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
-import { area, caseMesh, caseOutline, caseShape, caseWell, contains, keyCorners, wallTopAt, TOP_BEVEL, type PocketFill } from './case'
+import { area, caseMesh, caseOutline, caseParts, caseShape, caseWell, contains, keyCorners, screwPoints, wallTopAt, BOTTOM_T, TOP_BEVEL, type PocketFill } from './case'
 import { CASE_HEIGHT } from './units'
 import { alice, PRESETS, split, tkl } from './layout'
 
@@ -138,9 +138,10 @@ describe('pockets', () => {
       const maxZ = Math.max(...caseOutline(ks, 'MX', fills).flat().map((q) => q[1]))
       const top = wallTopAt(c[1], maxZ, 'MX')
       expect(hits[0], gone).toBeCloseTo(top, 0)
-      // nothing between the rounded top edge band (stretched by the tilt) and the bottom: no recessed plate, no stacked floor
+      // nothing between the rounded top edge band (stretched by the tilt) and the seam where the bottom plate meets
+      // the shell: no recessed plate, no stacked floor
       const bandBottom = top - TOP_BEVEL * (top / CASE_HEIGHT.MX) - 0.3
-      expect(hits.filter((h) => h > 0.5 && h < bandBottom), gone).toEqual([])
+      expect(hits.filter((h) => h > BOTTOM_T + 0.5 && h < bandBottom), gone).toEqual([])
     }
   })
 
@@ -238,5 +239,42 @@ describe('pockets', () => {
 
   it('fills shallow cut-ins automatically, without an orb', () => {
     expect(caseShape(split(), 'MX').pockets.every((p) => p.depth >= 8)).toBe(true)
+  })
+})
+
+describe('printable parts', () => {
+  const flat = (g: THREE.BufferGeometry) => {
+    g.computeBoundingBox()
+    return g.boundingBox!
+  }
+
+  it('leaves room under the plate for a PCB, its pins and the LEDs, and puts at least four screws in each body', () => {
+    const tklParts = caseParts(tkl(), 'MX')!
+    expect(tklParts.cavity).toBeGreaterThanOrEqual(5.3) // MX: 5 mm housing + 1.6 mm PCB + 1.7 mm pins + solder, below a 4 mm plate recess
+    expect(tklParts.screws).toBeGreaterThanOrEqual(4)
+    expect(caseParts(split(), 'MX')!.screws).toBeGreaterThanOrEqual(8) // two bodies
+    expect(caseParts(tkl(), 'Choc')!.cavity).toBeGreaterThan(0)
+  })
+
+  it('the screw holes sit in the wall: clear of the outline, the cavity under the plate and the well', () => {
+    const ks = tkl()
+    const outer = caseOutline(ks, 'MX')
+    const well = caseWell(ks, 'MX', outer).filter((r) => area(r) > 0)
+    for (const pt of screwPoints(outer)) {
+      expect(contains(outer, pt)).toBe(true)
+      expect(distToOutline(outer, pt)).toBeGreaterThan(1.6 + 0.4) // insert hole radius + wall
+      expect(distToOutline(well, pt)).toBeGreaterThan(1.6) // the hole never breaks into the cavity (well inset by the ledge) or the well
+      expect(well.some((r) => contains([r], pt))).toBe(false)
+    }
+  })
+
+  it('plate and bottom are flat sheets that fit inside the shell with clearance', () => {
+    const parts = caseParts(tkl(), 'MX')!
+    const plate = flat(parts.plate), bottom = flat(parts.bottom), shell = flat(parts.shell)
+    expect(plate.min.y).toBeCloseTo(0)
+    expect(bottom.max.y).toBeCloseTo(2)
+    expect(shell.min.y).toBeCloseTo(0)
+    expect(bottom.max.x - bottom.min.x).toBeLessThan(shell.max.x - shell.min.x - 2 * 2.5)
+    expect(plate.max.x - plate.min.x).toBeLessThan(bottom.max.x - bottom.min.x)
   })
 })

@@ -5,7 +5,7 @@ import { familyOf, switchById } from '../../lib/catalog'
 import { profileById } from '../../data/keycaps'
 import { KEYCAP_MATERIALS } from '../../data/materials'
 import { validate } from '../../lib/validate'
-import { caseStl, download } from '../../lib/exportStl'
+import { caseFiles, caseZip, download } from '../../lib/exportStl'
 import { firmwareZip, generateFirmware } from '../../lib/qmk'
 import { COMPONENTS } from '../../data/components'
 
@@ -39,13 +39,13 @@ export function ExportOptions() {
           className="tile wide download"
           disabled={!!blocked}
           onClick={() => {
-            const stl = caseStl(design)
-            if (stl) download('byokb-case.stl', stl, 'model/stl')
+            const files = caseFiles(design)
+            if (files) download('byokb-case.zip', new Uint8Array(caseZip(files)), 'application/zip')
           }}
         >
-          ⬇ Case for 3D printing (.stl)
+          ⬇ Case for 3D printing (.zip)
         </button>
-        <p className="muted">Millimetres, lying flat. Includes the switch cutouts{components.length ? ' and the holes for your parts' : ''}.</p>
+        <p className="muted">Three STLs that print flat without supports — shell, switch plate{components.length ? ' with the holes for your parts' : ''}, bottom plate — plus printing and assembly notes (M2 inserts and screws).</p>
         <button
           className="tile wide download"
           disabled={!!blocked || !firmware.ok}

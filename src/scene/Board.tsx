@@ -3,7 +3,7 @@ import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Key } from '../types'
 import { PITCH, SWITCH_TRAVEL_HEIGHT, CASE_HEIGHT, type Family } from '../lib/units'
-import { caseShape, plateTopAt, wallTopAt } from '../lib/case'
+import { caseShape, plateTilt, plateTopAt, wallTopAt } from '../lib/case'
 import { validate } from '../lib/validate'
 import { familyOf, useDesign } from '../store/design'
 import { Case } from './Case'
@@ -15,12 +15,6 @@ import { ComponentModel, componentCentre } from './ComponentModel'
 import { KeyLed, LedTicker, type Ripple } from './KeyLed'
 import { profileById } from '../data/keycaps'
 import { switchById } from '../lib/catalog'
-
-/** Plate slope: the plate tilts a little less than the wall top because it sits lower. */
-function plateTilt(family: Family, tiltDeg: number) {
-  const H = CASE_HEIGHT[family]
-  return Math.atan(((H - 2.5) / H) * Math.tan((tiltDeg * Math.PI) / 180))
-}
 
 /** The keyboard: case, keycaps and pocket orbs, centered on the origin. Keys are draggable. */
 export function Board() {

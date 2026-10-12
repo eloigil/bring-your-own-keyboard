@@ -297,14 +297,12 @@ function cap(section: Path[], z: number, up: boolean): THREE.BufferGeometry[] {
   })
 }
 
-/** `n` points along a ring by arc length, starting at the point nearest `from`. Keeps the ring's direction. */
-function resample(ring: Poly, n: number, from?: Pt): Poly {
+/** `n` points along a ring by arc length. Keeps the ring's direction. */
+function resample(ring: Poly, n: number): Poly {
   const len = ring.map((p, i) => Math.hypot(ring[(i + 1) % ring.length][0] - p[0], ring[(i + 1) % ring.length][1] - p[1]))
   const total = len.reduce((a, b) => a + b, 0)
-  const d = (i: number) => (from ? Math.hypot(ring[i][0] - from[0], ring[i][1] - from[1]) : i)
-  const start = ring.reduce((best, _, i) => (d(i) < d(best) ? i : best), 0)
   const out: Poly = []
-  let i = start, walked = 0
+  let i = 0, walked = 0
   for (let k = 0; k < n; k++) {
     const target = (k / n) * total
     while (walked + len[i] < target - 1e-9) (walked += len[i]), (i = (i + 1) % ring.length)
@@ -316,17 +314,47 @@ function resample(ring: Poly, n: number, from?: Pt): Poly {
 }
 
 /**
- * Quads between two rings that run the same way (one the offset of the other), as triangles.
+ * The point on `ring` nearest to `pt`, searched around `hint` (an index) so a walk along a parallel ring stays
+ * O(n); a hint of -1 searches the whole ring.
+ */
+function nearestOn(ring: Poly, pt: Pt, hint: number): { p: Pt; i: number } {
+  const m = ring.length
+  let best = { p: ring[0], i: 0, d: Infinity }
+  const span = hint < 0 ? m : Math.min(m, 96)
+  for (let k = 0; k < span; k++) {
+    const i = hint < 0 ? k : (hint - 16 + k + m) % m
+    const [ax, ay] = ring[i], [bx, by] = ring[(i + 1) % m]
+    const dx = bx - ax, dy = by - ay
+    const t = Math.max(0, Math.min(1, ((pt[0] - ax) * dx + (pt[1] - ay) * dy) / (dx * dx + dy * dy || 1)))
+    const q: Pt = [ax + dx * t, ay + dy * t]
+    const d = Math.hypot(q[0] - pt[0], q[1] - pt[1])
+    if (d < best.d) best = { p: q, i, d }
+  }
+  return best
+}
+
+/**
+ * Quads between two rings where `b` is an offset of `a` (both run the same way), as triangles. Each sample on
+ * `a` pairs with its nearest point on `b` — parallel curves correspond by projection, not by arc length, which
+ * drifts around corners and would twist the quads.
  * `facing`: 'wall' points away from the solid for clipper-oriented rings (left of the edge); 'up'/'down' are flat caps.
  * Built in shape space (x, -y, z) like everything else here.
  */
 function zip(a: Poly, za: number, b: Poly, zb: number, facing: 'wall' | 'up' | 'down'): THREE.BufferGeometry {
   const n = Math.max(a.length, b.length, 8)
-  const A = resample(a, n), B = resample(b, n, a[0])
+  const A = resample(a, n)
+  const B: Poly = []
+  let hint = -1
+  for (const pt of A) {
+    const near = nearestOn(b, pt, hint)
+    B.push(near.p)
+    hint = near.i
+  }
   const v: number[] = []
   const tri = (p: number[], q: number[], r: number[], want: number[]) => {
     const ux = q[0] - p[0], uy = q[1] - p[1], uz = q[2] - p[2], wx = r[0] - p[0], wy = r[1] - p[1], wz = r[2] - p[2]
     const nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx
+    if (nx * nx + ny * ny + nz * nz < 1e-12) return // collapsed quad corner (several samples met the same point)
     if (nx * want[0] + ny * want[1] + nz * want[2] >= 0) v.push(...p, ...q, ...r)
     else v.push(...p, ...r, ...q)
   }

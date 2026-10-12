@@ -278,3 +278,34 @@ describe('printable parts', () => {
     expect(plate.max.x - plate.min.x).toBeLessThan(bottom.max.x - bottom.min.x)
   })
 })
+
+describe('rounded top edge', () => {
+  it('every triangle of the bevel faces outward and never down (no twisted quads between the inset rings)', () => {
+    for (const make of [tkl, split]) {
+      const ks = make()
+      const outline = caseOutline(ks, 'MX')
+      const shell = caseParts(ks, 'MX', [], 0)!.shell // untilted: the band is a flat ring of heights
+      const pos = shell.attributes.position
+      const H = CASE_HEIGHT.MX
+      let checked = 0
+      for (let i = 0; i < pos.count; i += 3) {
+        const ys = [pos.getY(i), pos.getY(i + 1), pos.getY(i + 2)]
+        if (ys.some((y) => y < H - TOP_BEVEL + 0.01 || y > H - 0.01)) continue // only the sloped band between its two rings
+        const ax = pos.getX(i + 1) - pos.getX(i), ay = ys[1] - ys[0], az = pos.getZ(i + 1) - pos.getZ(i)
+        const bx = pos.getX(i + 2) - pos.getX(i), by = ys[2] - ys[0], bz = pos.getZ(i + 2) - pos.getZ(i)
+        const n = new THREE.Vector3(ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx)
+        if (n.lengthSq() < 1e-6) continue
+        n.normalize()
+        checked++
+        expect(n.y, `${make.name}: bevel triangle facing down`).toBeGreaterThan(-0.05)
+        // a step along the horizontal part of the normal leaves the case; a step against it stays inside
+        const c: [number, number] = [(pos.getX(i) + pos.getX(i + 1) + pos.getX(i + 2)) / 3, (pos.getZ(i) + pos.getZ(i + 1) + pos.getZ(i + 2)) / 3]
+        const h = Math.hypot(n.x, n.z)
+        if (h < 0.3) continue
+        const dir: [number, number] = [n.x / h, n.z / h]
+        expect(contains(outline, [c[0] - dir[0] * 1.5, c[1] - dir[1] * 1.5]), `${make.name}: bevel triangle facing into the case at ${c.map(Math.round)}`).toBe(true)
+      }
+      expect(checked).toBeGreaterThan(200)
+    }
+  })
+})

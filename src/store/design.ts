@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Component, ComponentType, Design, Key, KeycapMaterial, Step } from '../types'
-import { PRESETS, componentFootprint, magnetSnap, newId, resizeKey, snap, snapAside, type PresetName } from '../lib/layout'
+import { PRESETS, componentFootprint, magnetSnap, newId, pushApart, resizeKey, snap, snapAside, type PresetName } from '../lib/layout'
+import { familyOf } from '../lib/catalog'
 import { COMPONENTS } from '../data/components'
 import { TILT_DEG, TILT_MAX } from '../lib/case'
 
@@ -12,7 +13,7 @@ export function defaultDesign(): Design {
     version: 1,
     keys: PRESETS.TKL(),
     components: [],
-    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', ledEffect: 'none', tiltDeg: TILT_DEG, ledColor: '#ff8a1f', keycapMaterial: 'solid', switchColor: '#2c2b31' },
+    board: { switchId: 'cherry-mx-red', profileId: 'cherry', keycapColor: '#f4f2ec', ledEffect: 'none', tiltDeg: TILT_DEG, ledColor: '#ff8a1f', keycapMaterial: 'solid', switchColor: '#2c2b31', caseColor: '#ff8a1f' },
     pocketFills: [],
   }
 }
@@ -36,8 +37,8 @@ export function loadDesign(raw: unknown): Design {
 
 export { familyOf } from '../lib/catalog'
 
-/** LEDs stay off until the user paints a key or picks an effect. */
-export const ledsConfigured = (d: Design) => d.board.ledEffect !== 'none' || d.keys.some((k) => k.led)
+/** LEDs stay off until the user picks an effect. */
+export const ledsConfigured = (d: Design) => d.board.ledEffect !== 'none'
 
 interface State {
   design: Design
@@ -52,20 +53,15 @@ interface State {
   addComponent: (type: ComponentType) => void
   /** Change a key's width/height in units; keys to its right in the row slide to keep it packed. */
   setKeySize: (id: string, w: number, h: number) => void
-  /** After dragging a component: keys in its rows slide aside to make room. */
+  /** After dragging a component: keys in its rows slide aside to make room, and a split board's other half keeps its distance. */
   dropComponent: (id: string) => void
   deleteKey: (id: string) => void
   setPocketFill: (x: number, y: number, t: number) => void
   setTilt: (deg: number) => void
-  /** LED brush colour; null = eraser. UI-only, not saved. */
-  ledBrush: string | null
-  setLedBrush: (c: string | null) => void
-  paintKey: (id: string) => void
   setLedEffect: (e: Design['board']['ledEffect']) => void
   setLedColor: (c: string) => void
-  clearLeds: () => void
   setSwitch: (id: string) => void
-  setKeycaps: (patch: { profileId?: string; keycapColor?: string; keycapMaterial?: KeycapMaterial; switchColor?: string }) => void
+  setKeycaps: (patch: { profileId?: string; keycapColor?: string; keycapMaterial?: KeycapMaterial; switchColor?: string; caseColor?: string }) => void
   /** Dark room to see the LEDs; a viewing preference, saved but not part of the design. */
   dark: boolean
   toggleDark: () => void
@@ -114,7 +110,7 @@ export const useDesign = create<State>()(
         set((s) => {
           const c = s.design.components.find((c) => c.id === id)
           if (!c) return s
-          const keys = snapAside(s.design.keys, c)
+          const keys = pushApart(snapAside(s.design.keys, c), c, familyOf(s.design.board.switchId))
           return keys === s.design.keys ? s : { design: { ...s.design, keys } }
         }),
       addKey: () =>
@@ -141,14 +137,8 @@ export const useDesign = create<State>()(
         })),
       dark: false,
       toggleDark: () => set((s) => ({ dark: !s.dark })),
-      ledBrush: '#ff8a1f',
-      setLedBrush: (ledBrush) => set({ ledBrush }),
-      paintKey: (id) =>
-        set((s) => ({ design: { ...s.design, keys: s.design.keys.map((k) => (k.id === id ? { ...k, led: s.ledBrush ?? undefined } : k)) } })),
       setLedEffect: (ledEffect) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, ledEffect } } })),
       setLedColor: (ledColor) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, ledColor } } })),
-      clearLeds: () =>
-        set((s) => ({ design: { ...s.design, keys: s.design.keys.map((k) => ({ ...k, led: undefined })), board: { ...s.design.board, ledEffect: 'none' } } })),
       setTilt: (deg) => set((s) => ({ design: { ...s.design, board: { ...s.design.board, tiltDeg: Math.max(0, Math.min(TILT_MAX, deg)) } } })),
       setPocketFill: (x, y, t) =>
         set((s) => ({

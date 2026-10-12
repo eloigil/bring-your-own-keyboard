@@ -43,14 +43,12 @@ describe('QMK firmware', () => {
     expect(fw(design({}, 'Full')).keymapC).toContain('KC_P7') // numpad digits are keypad codes
   })
 
-  it('adds the knob as an encoder (volume) and painted keys as colours', () => {
-    const d = design({ components: [{ id: 'k', type: 'knob', x: -3, y: -3 }] })
-    d.keys[0] = { ...d.keys[0], led: '#ff0000' }
+  it('adds the knob as an encoder (volume) and the effect as the default animation in its colour', () => {
+    const d = design({ components: [{ id: 'k', type: 'knob', x: -3, y: -3 }], board: { ...defaultDesign().board, ledEffect: 'breathing', ledColor: '#ff0000' } })
     const f = fw(d) as { keyboardJson: Record<string, unknown>; keymapC: string }
     expect(f.keyboardJson.encoder).toBeDefined()
     expect(f.keymapC).toContain('KC_VOLU')
-    expect(f.keymapC).toContain('{ 0, 255, 0, 0 }')
-    expect((f.keyboardJson as { rgb_matrix: { default: { animation: string } } }).rgb_matrix.default.animation).toBe('solid_color')
+    expect((f.keyboardJson as { rgb_matrix: { default: { animation: string; hue: number } } }).rgb_matrix.default).toMatchObject({ animation: 'breathing', hue: 0 })
   })
 
   it('wires the other parts on a 60%: buses claim fixed pins, analog parts the ADC pins, the matrix avoids them (a TKL with all of them is 3 pins over)', () => {

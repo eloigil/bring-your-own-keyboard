@@ -34,7 +34,6 @@ export function Board() {
   const rows = useMemo(() => keyRows(keys), [keys])
   const modColor = useMemo(() => '#' + new THREE.Color(board.keycapColor).lerp(new THREE.Color('#6f7380'), 0.4).getHexString(), [board.keycapColor])
   const shaping = useDesign((s) => s.step === 'Build') // dragging keys and pocket orbs only in the Build step
-  const painting = useDesign((s) => s.step === 'LEDs') // clicking a key paints its LED
   const hot = useRef(new Map<string, { current: number }>()) // when the pointer last passed over each key (reactive effect)
   const ripple = useRef<Ripple | null>(null) // where the pointer last touched a key (ripple effect)
   // the board's extent in units, for effects that sweep across it
@@ -71,11 +70,6 @@ export function Board() {
   const dragHeight = CASE_HEIGHT[family] + SWITCH_TRAVEL_HEIGHT[family]
 
   const onDown = (k: { id: string; x: number; y: number }) => (e: ThreeEvent<PointerEvent>) => {
-    if (painting) {
-      e.stopPropagation()
-      if (keys.some((key) => key.id === k.id)) useDesign.getState().paintKey(k.id)
-      return
-    }
     if (!shaping) return
     e.stopPropagation()
     useDesign.getState().select(k.id)
@@ -102,7 +96,7 @@ export function Board() {
   return (
     <group position={center}>
       <LedTicker effect={board.ledEffect} />
-      <Case keys={footprints} family={family} fills={fills} tilt={tiltDeg} />
+      <Case keys={footprints} family={family} fills={fills} tilt={tiltDeg} color={board.caseColor} />
       {keys.map((k) => {
         const z = (k.y + k.h / 2) * p.y
         const target: [number, number, number] = [(k.x + k.w / 2) * p.x, plateTopAt(z, maxZ, family, tiltDeg) + SWITCH_TRAVEL_HEIGHT[family], z]
@@ -124,7 +118,6 @@ export function Board() {
                 w={k.w * p.x - 1}
                 d={k.h * p.y - 1}
                 y={-SWITCH_TRAVEL_HEIGHT[family] + 0.4}
-                painted={k.led}
                 effect={board.ledEffect}
                 effectColor={board.ledColor}
                 id={k.id}

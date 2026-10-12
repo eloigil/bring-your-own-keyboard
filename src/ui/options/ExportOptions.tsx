@@ -9,7 +9,7 @@ import { caseStl, download } from '../../lib/exportStl'
 import { firmwareZip, generateFirmware } from '../../lib/qmk'
 import { COMPONENTS } from '../../data/components'
 
-const EFFECT_NAMES: Record<LedEffect, string> = { none: 'painted only', breathing: 'breathing', wave: 'wave', rainbow: 'rainbow', pinwheel: 'pinwheel', raindrops: 'raindrops', reactive: 'reactive', ripple: 'ripple' }
+const EFFECT_NAMES: Record<LedEffect, string> = { none: 'off', breathing: 'breathing', wave: 'wave', rainbow: 'rainbow', pinwheel: 'pinwheel', raindrops: 'raindrops', reactive: 'reactive', ripple: 'ripple' }
 
 export function ExportOptions() {
   const design = useDesign((s) => s.design)

@@ -17,21 +17,20 @@ const seedOf = (id: string) => (id.split('').reduce((h, ch) => (h * 31 + ch.char
 
 /**
  * Per-key underglow, drawn as a bright plate under the keycap so it shows in the gaps.
- * Painted colour wins; otherwise the effect drives it. Only an active effect keeps the frame loop running.
+ * The effect drives its colour. Only an active effect keeps the frame loop running.
  * `u`/`v` are the key's centre as a 0–1 fraction of the board; `ux`/`uy` the centre in units.
  */
-export function KeyLed({ id, w, d, y, painted, effect, effectColor, u, v, ux, uy, hot, ripple, glow }: {
-  id: string; w: number; d: number; y: number; painted?: string; effect: LedEffect; effectColor: string
+export function KeyLed({ id, w, d, y, effect, effectColor, u, v, ux, uy, hot, ripple, glow }: {
+  id: string; w: number; d: number; y: number; effect: LedEffect; effectColor: string
   u: number; v: number; ux: number; uy: number; hot: React.RefObject<number>; ripple: React.RefObject<Ripple | null>
   /** Shared with the keycap, which uses it as its emissive colour so the light shines through the cap. */
   glow: THREE.Color
 }) {
   const mat = useRef<THREE.MeshBasicMaterial>(null)
   const invalidate = useThree((s) => s.invalidate)
-  const lit = !!painted || effect !== 'none'
+  const lit = effect !== 'none'
   const seed = seedOf(id)
   const colorAt = (t: number, out: THREE.Color) => {
-    if (painted) return out.set(painted)
     switch (effect) {
       case 'breathing':
         return out.set(effectColor).multiplyScalar(0.25 + 0.75 * (0.5 + 0.5 * Math.sin(t * 2)))
@@ -67,7 +66,7 @@ export function KeyLed({ id, w, d, y, painted, effect, effectColor, u, v, ux, uy
     if (!lit) glow.copy(OFF)
     mat.current?.color.copy(glow)
     invalidate()
-  }, [painted, effect, effectColor]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [effect, effectColor]) // eslint-disable-line react-hooks/exhaustive-deps
   useFrame(({ clock, invalidate }) => {
     if (!mat.current || !lit) return
     colorAt(clock.elapsedTime, glow).multiplyScalar(sky.led)

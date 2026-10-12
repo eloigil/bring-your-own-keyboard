@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { componentFootprint, magnetSnap, resizeKey, snapAside, tkl } from './layout'
+import { componentFootprint, magnetSnap, pushApart, resizeKey, snapAside, tkl, PRESETS } from './layout'
+import { keyGroups } from './case'
 import { validate } from './validate'
 
 describe('component footprints', () => {
@@ -8,6 +9,27 @@ describe('component footprints', () => {
     const ball = { id: 'ball', type: 'trackball' as const, x: 5.5, y: 1.25 }
     expect(componentFootprint(ball)).toMatchObject({ w: 2, h: 2, cut: [32, 32] })
     expect(validate(snapAside(keys, ball), [ball], 'MX').size).toBe(0)
+  })
+})
+
+describe('split boards stay split', () => {
+  it('a trackball dropped between two halves pushes the far half away instead of bridging the case', () => {
+    const block = (x0: number, prefix: string) =>
+      [0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => ({ id: `${prefix}${r}${c}`, x: x0 + c, y: r, w: 1, h: 1, rot: 0 })))
+    const keys = [...block(0, 'l'), ...block(5.5, 'r')] // 2.5u of air between the halves
+    expect(keyGroups(keys, 'MX')).toHaveLength(2)
+    // a 2u trackball hugging the left half leaves only 0.5u to the right half: the bezels would merge
+    const ball = { id: 'ball', type: 'trackball' as const, x: 3, y: 0.5 }
+    expect(keyGroups([...keys, componentFootprint(ball)], 'MX')).toHaveLength(1)
+    const after = pushApart(keys, ball, 'MX')
+    expect(keyGroups([...after, componentFootprint(ball)], 'MX')).toHaveLength(2)
+    for (const k of after) {
+      const was = keys.find((o) => o.id === k.id)!
+      if (k.id.startsWith('r')) expect(k.x).toBeGreaterThan(was.x) // the far half slid away
+      else expect(k.x).toBe(was.x) // the half the ball joined stayed
+      expect(k.y).toBe(was.y)
+    }
+    expect(validate(after, [ball], 'MX').size).toBe(0)
   })
 })
 

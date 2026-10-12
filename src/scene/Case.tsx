@@ -4,13 +4,15 @@ import type { Key } from '../types'
 import type { Family } from '../lib/units'
 import { caseMesh, wallTopAt, type PocketFill } from '../lib/case'
 
-const BASE = new THREE.Color('#d9d6de')
-const TOP = new THREE.Color('#ff8a1f')
+const LIGHT = new THREE.Color('#e4e2e8')
 
-export function Case({ keys, family, fills, tilt }: { keys: Key[]; family: Family; fills: PocketFill[]; tilt: number }) {
+export function Case({ keys, family, fills, tilt, color }: { keys: Key[]; family: Family; fills: PocketFill[]; tilt: number; color: string }) {
   const geometry = useMemo(() => {
     const g = caseMesh(keys, family, fills, tilt)
     if (!g) return null
+    // two-tone: the chosen colour on top, the walls a lighter tint of it
+    const TOP = new THREE.Color(color)
+    const BASE = TOP.clone().lerp(LIGHT, 0.6)
     // paint the upper face: up-facing triangles at top-face height (not the recessed plate)
     g.computeBoundingBox()
     const maxZ = g.boundingBox!.max.z
@@ -24,7 +26,7 @@ export function Case({ keys, family, fills, tilt }: { keys: Key[]; family: Famil
     }
     g.setAttribute('color', new THREE.BufferAttribute(colors, 3))
     return g
-  }, [keys, family, fills, tilt])
+  }, [keys, family, fills, tilt, color])
   useEffect(() => () => geometry?.dispose(), [geometry])
   if (!geometry) return null
   return (

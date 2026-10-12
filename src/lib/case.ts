@@ -111,6 +111,21 @@ function groupBodies(bodies: Path[]): Path[][] {
   return groups
 }
 
+/** The keys split into case pieces: keys whose bezels merge (or whose hulls overlap) share one piece. */
+export function keyGroups(keys: Key[], family: Family): Key[][] {
+  if (!keys.length) return []
+  const bodies = offset(union(keys.map((k) => keyCorners(k, family))), BEZEL).filter((p) => ClipperLib.Clipper.Area(p) > 0)
+  const p = PITCH[family]
+  return groupBodies(bodies)
+    .map((group) =>
+      keys.filter((k) => {
+        const c = toPath([[(k.x + k.w / 2) * p.x, (k.y + k.h / 2) * p.y]])[0]
+        return group.some((path) => ClipperLib.Clipper.PointInPolygon(c, path) !== 0)
+      }),
+    )
+    .filter((g) => g.length)
+}
+
 /** A dip in the case edge, between the keys' snug outline and the body's convex hull. */
 export interface Pocket {
   /** Center of the pocket's opening on the hull (mm). Saved fills are anchored here. */

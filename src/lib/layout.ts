@@ -1,5 +1,7 @@
 import type { Component, Key } from '../types'
 import { COMPONENTS } from '../data/components'
+import { keyGroups } from './case'
+import type { Family } from './units'
 
 /** A row item: a key width, or a negative number for a gap of that size. */
 type Row = { y: number; x?: number; items: (number | string)[] }
@@ -285,6 +287,30 @@ export function snapAside(keys: Key[], c: Component): Key[] {
     for (const k of row) if (k.x >= hit.x - eps) shift.set(k.id, by)
   }
   return shift.size ? keys.map((k) => (shift.has(k.id) ? { ...k, x: k.x + shift.get(k.id)! } : k)) : keys
+}
+
+/**
+ * Keep separate case pieces separate: if a dropped component bridges two pieces (a split board's halves),
+ * the piece it doesn't belong to slides away along x, a quarter unit at a time, until the pieces part again.
+ */
+export function pushApart(keys: Key[], c: Component, family: Family): Key[] {
+  const before = keyGroups(keys, family)
+  if (before.length < 2) return keys
+  const fp = componentFootprint(c)
+  const cx = c.x + fp.w / 2
+  const dist = (k: Key) => Math.hypot(k.x + k.w / 2 - cx, k.y + k.h / 2 - (c.y + fp.h / 2))
+  const nearest = keys.reduce((a, b) => (dist(a) <= dist(b) ? a : b))
+  const home = before.find((g) => g.includes(nearest))!
+  const ids = new Set(home.map((k) => k.id))
+  let out = keys
+  // ponytail: step-and-retest instead of solving the overlap exactly; a drop is rare and each test is cheap
+  for (let step = 0; step < 40 && keyGroups([...out, fp], family).length < before.length; step++)
+    out = out.map((k) => {
+      if (ids.has(k.id)) return k
+      const side = Math.sign(k.x + k.w / 2 - cx) || 1
+      return { ...k, x: k.x + side * 0.25 }
+    })
+  return out
 }
 
 /**

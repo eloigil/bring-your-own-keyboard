@@ -1,4 +1,4 @@
-import { useDesign, ledsConfigured } from '../../store/design'
+import { useDesign } from '../../store/design'
 import type { LedEffect } from '../../types'
 
 const COLORS = ['#ff8a1f', '#e5484d', '#f2c94c', '#3c9a4a', '#2fb8b0', '#2f6fd0', '#8e5fd0', '#f3a6c8', '#ffffff']
@@ -16,23 +16,10 @@ const EFFECTS: { id: LedEffect; label: string }[] = [
 const TINTED = new Set<LedEffect>(['breathing', 'raindrops', 'reactive', 'ripple'])
 
 export function LedOptions() {
-  const brush = useDesign((s) => s.ledBrush)
   const board = useDesign((s) => s.design.board)
-  const on = useDesign((s) => ledsConfigured(s.design))
-  const { setLedBrush, setLedEffect, setLedColor, clearLeds } = useDesign.getState()
+  const { setLedEffect, setLedColor } = useDesign.getState()
   return (
     <>
-      <section>
-        <h3>Paint keys</h3>
-        <div className="swatches">
-          {COLORS.map((c) => (
-            <button key={c} className={`swatch ${c === brush ? 'active' : ''}`} style={{ background: c }} title={c} onClick={() => setLedBrush(c)} />
-          ))}
-          <input type="color" value={brush ?? '#ff8a1f'} onChange={(e) => setLedBrush(e.target.value)} title="Custom colour" />
-          <button className={`swatch eraser ${brush === null ? 'active' : ''}`} title="Eraser" onClick={() => setLedBrush(null)}>⌫</button>
-        </div>
-        <p className="muted">Click keys to paint their LED. Painted keys keep their colour over any effect.</p>
-      </section>
       <section>
         <h3>Effect</h3>
         <div className="grid">
@@ -45,15 +32,12 @@ export function LedOptions() {
             {COLORS.map((c) => (
               <button key={c} className={`swatch ${c === board.ledColor ? 'active' : ''}`} style={{ background: c }} title={c} onClick={() => setLedColor(c)} />
             ))}
+            <input type="color" value={board.ledColor} onChange={(e) => setLedColor(e.target.value)} title="Custom colour" />
           </div>
         )}
         {(board.ledEffect === 'reactive' || board.ledEffect === 'ripple') && <p className="muted">Hover over keys to see them react.</p>}
+        {board.ledEffect === 'none' && <p className="muted">Pick an effect to light the board. The firmware runs the same animation.</p>}
       </section>
-      {on && (
-        <div className="row">
-          <button className="tile" onClick={clearLeds}>Turn all LEDs off</button>
-        </div>
-      )}
     </>
   )
 }

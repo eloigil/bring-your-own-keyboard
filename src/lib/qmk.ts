@@ -62,10 +62,6 @@ export function keycode(k: Key, centerX: number, numpadX: number | null): string
   return SIMPLE[l] ?? 'KC_NO'
 }
 
-const hexRgb = (hex: string) => {
-  const c = new THREE.Color(hex)
-  return [c.r, c.g, c.b].map((v) => Math.round(v * 255))
-}
 const hsv255 = (hex: string) => {
   const hsl = { h: 0, s: 0, l: 0 }
   new THREE.Color(hex).getHSL(hsl)
@@ -83,7 +79,7 @@ export function generateFirmware(design: Design, name = 'byokb'): FirmwareResult
   const parts = design.components
   const of = (type: ComponentType) => parts.filter((c) => c.type === type)
   const knobs = of('knob')
-  const ledsOn = design.board.ledEffect !== 'none' || keys.some((k) => k.led)
+  const ledsOn = design.board.ledEffect !== 'none'
   const i2c = parts.some((c) => COMPONENTS[c.type].bus === 'i2c')
   const spi = parts.some((c) => COMPONENTS[c.type].bus === 'spi')
   const pointing = of('trackball').length + of('touchpad').length
@@ -162,8 +158,7 @@ export function generateFirmware(design: Design, name = 'byokb'): FirmwareResult
       rgb_matrix: {
         driver: 'ws2812',
         animations: { [animation]: true },
-        // with no effect, the board stays dark except the painted keys (set in keymap.c)
-        default: { animation, hue, sat, val: effect === 'none' ? 0 : val },
+        default: { animation, hue, sat, val },
         layout: ledLayout,
       },
     }),
@@ -181,7 +176,6 @@ export function generateFirmware(design: Design, name = 'byokb'): FirmwareResult
     `    [${n}] = LAYOUT(${perLine(n === 0 ? codes : codes.map(() => '_______'))}\n    )`,
   ).join(',\n')
 
-  const painted = keys.map((k, i) => (k.led ? `        { ${i}, ${hexRgb(k.led).join(', ')} },` : null)).filter(Boolean)
   const partsC = [
     screen && `
 // The screen shows the active layer.
@@ -226,19 +220,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
     tap_code(clockwise ? KC_VOLU : KC_VOLD);
     return false;
 }
-` : ''}${partsC}${painted.length ? `
-// Keys painted in BYOKb keep their colour on top of the effect. { led index, r, g, b }
-static const uint8_t painted[][4] = {
-${painted.join('\n')}
-};
-
-bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    for (uint8_t i = 0; i < sizeof(painted) / sizeof(painted[0]); i++) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(painted[i][0], painted[i][1], painted[i][2], painted[i][3]);
-    }
-    return false;
-}
-` : ''}`
+` : ''}${partsC}`
 
   // buses need ChibiOS config that keyboard.json can't carry
   const extra: Record<string, string> = {}

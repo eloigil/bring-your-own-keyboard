@@ -11,8 +11,6 @@ export interface Key {
   rot: number
   legend?: string
   override?: { switchId?: string; keycapColor?: string; profileId?: string }
-  /** Painted LED hex color; undefined = not painted. */
-  led?: string
   /** Plate cutout [width, depth] in mm when it isn't the family's switch cutout (component footprints). */
   cut?: [number, number]
 }
@@ -47,6 +45,8 @@ export interface Design {
     keycapMaterial: KeycapMaterial
     /** Switch housing colour. */
     switchColor: string
+    /** Case colour (the top face; the walls are a lighter tint of it). */
+    caseColor: string
   }
   /** Pocket fills set by orbs (t: 0 = open, 1 = flush), anchored at the pocket's mouth (mm, layout coords). */
   pocketFills: { x: number; y: number; t: number }[]

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import type { LedEffect } from '../../types'
 import { useDesign, ledsConfigured } from '../../store/design'
 import { familyOf, switchById } from '../../lib/catalog'
 import { profileById } from '../../data/keycaps'
@@ -6,8 +7,9 @@ import { KEYCAP_MATERIALS } from '../../data/materials'
 import { validate } from '../../lib/validate'
 import { caseStl, download } from '../../lib/exportStl'
 import { firmwareZip, generateFirmware } from '../../lib/qmk'
+import { COMPONENTS } from '../../data/components'
 
-const EFFECT_NAMES = { none: 'painted only', breathing: 'breathing', wave: 'wave', reactive: 'reactive' }
+const EFFECT_NAMES: Record<LedEffect, string> = { none: 'painted only', breathing: 'breathing', wave: 'wave', rainbow: 'rainbow', pinwheel: 'pinwheel', raindrops: 'raindrops', reactive: 'reactive', ripple: 'ripple' }
 
 export function ExportOptions() {
   const design = useDesign((s) => s.design)
@@ -23,7 +25,7 @@ export function ExportOptions() {
       <section>
         <h3>Your build</h3>
         <dl className="summary">
-          <dt>Layout</dt><dd>{preset ?? 'Custom'} · {keys.length} keys{components.length ? ` · ${components.length} knob` : ''}</dd>
+          <dt>Layout</dt><dd>{preset ?? 'Custom'} · {keys.length} keys{components.map((c) => ` · ${COMPONENTS[c.type].name.toLowerCase()}`).join('')}</dd>
           <dt>Switches</dt><dd>{sw.brand} {sw.model}</dd>
           <dt>Keycaps</dt><dd>{profileById(board.profileId).name}, {KEYCAP_MATERIALS[board.keycapMaterial].name.toLowerCase()}</dd>
           <dt>Angle</dt><dd>{board.tiltDeg}°</dd>
@@ -43,7 +45,7 @@ export function ExportOptions() {
         >
           ⬇ Case for 3D printing (.stl)
         </button>
-        <p className="muted">Millimetres, lying flat. Includes the plate cutouts{components.length ? ' and knob hole' : ''}.</p>
+        <p className="muted">Millimetres, lying flat. Includes the switch cutouts{components.length ? ' and the holes for your parts' : ''}.</p>
         <button
           className="tile wide download"
           disabled={!!blocked || !firmware.ok}

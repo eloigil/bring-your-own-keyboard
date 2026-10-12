@@ -1,7 +1,9 @@
 import { strToU8, zipSync } from 'fflate'
 import * as THREE from 'three'
-import type { Design, Key } from '../types'
+import type { Design, Key, LedEffect } from '../types'
 import { switchById } from './catalog'
+import { COMPONENTS } from '../data/components'
+import type { ComponentType } from '../types'
 
 /**
  * QMK firmware for a hand-wired Raspberry Pi Pico (RP2040), generated from the design.
@@ -10,14 +12,19 @@ import { switchById } from './catalog'
  * Docs: https://docs.qmk.fm/reference_info_json, /features/rgb_matrix, /features/encoders
  */
 
-// Pico GPIOs usable for wiring (GP23–25 are on-board). Matrix takes pins from the front,
-// the LED data line and encoders from the back.
+// Pico GPIOs usable for wiring (GP23–25 are on-board). Parts on a bus claim their fixed pins first, analog
+// parts the ADC pins; the matrix takes free pins from the front, the LED data line and encoders from the back.
 const PICO_PINS = [...Array.from({ length: 23 }, (_, i) => `GP${i}`), 'GP26', 'GP27', 'GP28']
+const ADC_PINS = ['GP26', 'GP27', 'GP28']
+const I2C = { sda: 'GP4', scl: 'GP5' }
+const SPI = { sck: 'GP18', mosi: 'GP19', miso: 'GP16', cs: 'GP17' }
 
 export interface Firmware {
   keyboardJson: object
   keymapC: string
   readme: string
+  /** Extra files next to keyboard.json (config.h, halconf.h, mcuconf.h, rules.mk) when a part needs a bus. */
+  extra: Record<string, string>
   /** key id → [row, col] */
   matrix: Map<string, [number, number]>
 }
@@ -65,25 +72,48 @@ const hsv255 = (hex: string) => {
   return { hue: Math.round(hsl.h * 255), sat: Math.round(Math.min(1, hsl.s * 1.2) * 255), val: 200 }
 }
 
-const EFFECT_ANIMATION = { breathing: 'breathing', wave: 'cycle_left_right', reactive: 'solid_reactive_simple' } as const
+const EFFECT_ANIMATION: Record<Exclude<LedEffect, 'none'>, string> = {
+  breathing: 'breathing', wave: 'cycle_left_right', rainbow: 'cycle_all', pinwheel: 'pinwheel', raindrops: 'raindrops',
+  reactive: 'solid_reactive_simple', ripple: 'solid_reactive_wide',
+}
 
 export function generateFirmware(design: Design, name = 'byokb'): FirmwareResult {
   const keys = readingOrder(design.keys)
   if (!keys.length) return { ok: false, reason: 'Add some keys first.' }
-  const knobs = design.components.filter((c) => c.type === 'knob')
+  const parts = design.components
+  const of = (type: ComponentType) => parts.filter((c) => c.type === type)
+  const knobs = of('knob')
   const ledsOn = design.board.ledEffect !== 'none' || keys.some((k) => k.led)
+  const i2c = parts.some((c) => COMPONENTS[c.type].bus === 'i2c')
+  const spi = parts.some((c) => COMPONENTS[c.type].bus === 'spi')
+  const pointing = of('trackball').length + of('touchpad').length
+  if (pointing > 1) return { ok: false, reason: 'QMK drives one pointing device: keep either one trackball or one touchpad.' }
+  if (of('screen').length > 1) return { ok: false, reason: 'One screen: the OLED driver supports a single display.' }
+
+  // analog parts share the three ADC pins
+  const adc = [...ADC_PINS]
+  const analogPins = parts.filter((c) => COMPONENTS[c.type].bus === 'adc').map((c) => ({ c, pins: adc.splice(0, COMPONENTS[c.type].pins) }))
+  if (analogPins.some((a) => a.pins.length < COMPONENTS[a.c.type].pins))
+    return { ok: false, reason: `The Pico has 3 analog pins: one joystick (2) and one slider (1), or one of each kind at most.` }
 
   // near-square matrix: fewest pins for n keys
+  const taken = new Set([...(i2c ? Object.values(I2C) : []), ...(spi ? Object.values(SPI) : []), ...analogPins.flatMap((a) => a.pins)])
+  const free = PICO_PINS.filter((p) => !taken.has(p))
   const rows = Math.ceil(Math.sqrt(keys.length))
   const cols = Math.ceil(keys.length / rows)
   const reserved = (ledsOn ? 1 : 0) + knobs.length * 2
-  if (rows + cols + reserved > PICO_PINS.length)
-    return { ok: false, reason: `Too many keys for one Raspberry Pi Pico: needs ${rows + cols + reserved} pins, it has ${PICO_PINS.length}.` }
-  const rowPins = PICO_PINS.slice(0, rows)
-  const colPins = PICO_PINS.slice(rows, rows + cols)
-  const back = [...PICO_PINS].reverse()
+  if (rows + cols + reserved > free.length)
+    return { ok: false, reason: `Too many keys and parts for one Raspberry Pi Pico: needs ${rows + cols + reserved + taken.size} pins, it has ${PICO_PINS.length}.` }
+  const rowPins = free.slice(0, rows)
+  const colPins = free.slice(rows, rows + cols)
+  const back = [...free].reverse()
   const ledPin = ledsOn ? back.shift()! : null
   const encoderPins = knobs.map(() => [back.shift()!, back.shift()!].reverse())
+  const joystick = analogPins.find((a) => a.c.type === 'joystick')
+  const slider = analogPins.find((a) => a.c.type === 'slider')
+  const screen = of('screen').length > 0
+  const trackball = of('trackball').length > 0
+  const touchpad = of('touchpad').length > 0
 
   const matrix = new Map(keys.map((k, i) => [k.id, [Math.floor(i / cols), i % cols] as [number, number]]))
   const minX = Math.min(...keys.map((k) => k.x)), minY = Math.min(...keys.map((k) => k.y))
@@ -122,7 +152,11 @@ export function generateFirmware(design: Design, name = 'byokb'): FirmwareResult
     bootloader: 'rp2040',
     diode_direction: 'COL2ROW',
     matrix_pins: { rows: rowPins, cols: colPins },
-    features: { bootmagic: true, extrakey: true, nkro: true, ...(ledsOn && { rgb_matrix: true }), ...(knobs.length && { encoder: true }) },
+    features: {
+      bootmagic: true, extrakey: true, nkro: true,
+      ...(ledsOn && { rgb_matrix: true }), ...(knobs.length && { encoder: true }),
+      ...(screen && { oled: true }), ...(pointing && { pointing_device: true }), ...(joystick && { joystick: true }),
+    },
     ...(ledsOn && {
       ws2812: { pin: ledPin, driver: 'vendor' },
       rgb_matrix: {
@@ -148,6 +182,38 @@ export function generateFirmware(design: Design, name = 'byokb'): FirmwareResult
   ).join(',\n')
 
   const painted = keys.map((k, i) => (k.led ? `        { ${i}, ${hexRgb(k.led).join(', ')} },` : null)).filter(Boolean)
+  const partsC = [
+    screen && `
+// The screen shows the active layer.
+bool oled_task_user(void) {
+    oled_write_P(PSTR("BYOKb\n"), false);
+    oled_write_P(PSTR("Layer: "), false);
+    oled_write_ln(get_u8_str(get_highest_layer(layer_state), ' '), false);
+    return false;
+}
+`,
+    joystick && `
+// Thumbstick: two analog axes (${joystick.pins.join(', ')}) reported as a gamepad.
+joystick_config_t joystick_axes[JOYSTICK_AXIS_COUNT] = {
+    JOYSTICK_AXIS_IN(${joystick.pins[0]}, 0, 512, 1023),
+    JOYSTICK_AXIS_IN(${joystick.pins[1]}, 0, 512, 1023),
+};
+`,
+    slider && `
+// The slider is a volume fader: each step of its travel taps volume up or down.
+#include "analog.h"
+void housekeeping_task_user(void) {
+    static uint16_t last = 0xFFFF;
+    static uint32_t timer = 0;
+    if (timer_elapsed32(timer) < 50) return;
+    timer = timer_read32();
+    uint16_t v = analogReadPin(${slider.pins[0]}) / 64; // 0..15
+    if (last == 0xFFFF) last = v;
+    while (v > last) { tap_code(KC_VOLU); last++; }
+    while (v < last) { tap_code(KC_VOLD); last--; }
+}
+`,
+  ].filter(Boolean).join('')
   const keymapC = `// Generated by BYOKb. Layer 0 follows the key legends; extra layers are left transparent for you to fill.
 #include QMK_KEYBOARD_H
 
@@ -160,7 +226,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
     tap_code(clockwise ? KC_VOLU : KC_VOLD);
     return false;
 }
-` : ''}${painted.length ? `
+` : ''}${partsC}${painted.length ? `
 // Keys painted in BYOKb keep their colour on top of the effect. { led index, r, g, b }
 static const uint8_t painted[][4] = {
 ${painted.join('\n')}
@@ -174,6 +240,29 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 ` : ''}`
 
+  // buses need ChibiOS config that keyboard.json can't carry
+  const extra: Record<string, string> = {}
+  if (i2c || spi || analogPins.length) {
+    extra['halconf.h'] = `#pragma once
+${i2c ? '#define HAL_USE_I2C TRUE\n' : ''}${spi ? '#define HAL_USE_SPI TRUE\n' : ''}${analogPins.length ? '#define HAL_USE_ADC TRUE\n' : ''}#include_next <halconf.h>
+`
+    extra['mcuconf.h'] = `#pragma once
+#include_next <mcuconf.h>
+${i2c ? '#undef RP_I2C_USE_I2C0\n#define RP_I2C_USE_I2C0 TRUE\n' : ''}${spi ? '#undef RP_SPI_USE_SPI0\n#define RP_SPI_USE_SPI0 TRUE\n' : ''}${analogPins.length ? '#undef RP_ADC_USE_ADC1\n#define RP_ADC_USE_ADC1 TRUE\n' : ''}`
+    extra['config.h'] = `#pragma once
+${i2c ? `#define I2C_DRIVER I2CD0\n#define I2C1_SDA_PIN ${I2C.sda}\n#define I2C1_SCL_PIN ${I2C.scl}\n` : ''}${spi ? `#define SPI_DRIVER SPID0\n#define SPI_SCK_PIN ${SPI.sck}\n#define SPI_MOSI_PIN ${SPI.mosi}\n#define SPI_MISO_PIN ${SPI.miso}\n#define PMW33XX_CS_PIN ${SPI.cs}\n` : ''}${touchpad ? '#define CIRQUE_PINNACLE_DIAMETER_MM 40\n#define CIRQUE_PINNACLE_TAP_ENABLE\n' : ''}${joystick ? '#define JOYSTICK_AXIS_COUNT 2\n#define JOYSTICK_BUTTON_COUNT 0\n#define JOYSTICK_AXIS_RESOLUTION 10\n' : ''}`
+  }
+  if (pointing) extra['rules.mk'] = `POINTING_DEVICE_DRIVER = ${trackball ? 'pmw3360' : 'cirque_pinnacle_i2c'}\n`
+
+  const partLines = [
+    ...knobs.map((_, i) => `- **Knob ${i + 1} (EC11 encoder):** A → ${encoderPins[i][0]}, B → ${encoderPins[i][1]}, C → GND`),
+    screen && `- **Screen (${COMPONENTS.screen.part}):** SDA → ${I2C.sda}, SCL → ${I2C.scl}, VCC → 3V3, GND → GND`,
+    touchpad && `- **Touchpad (${COMPONENTS.touchpad.part}, I²C):** SDA → ${I2C.sda}, SCL → ${I2C.scl}, VCC → 3V3, GND → GND`,
+    trackball && `- **Trackball (${COMPONENTS.trackball.part}, SPI):** SCK → ${SPI.sck}, MOSI → ${SPI.mosi}, MISO → ${SPI.miso}, CS → ${SPI.cs}, VCC → 3V3, GND → GND`,
+    joystick && `- **Joystick (${COMPONENTS.joystick.part}):** X → ${joystick.pins[0]}, Y → ${joystick.pins[1]}, VCC → 3V3, GND → GND`,
+    slider && `- **Slider (${COMPONENTS.slider.part}):** wiper → ${slider.pins[0]}, ends → 3V3 and GND`,
+  ].filter(Boolean).join('\n')
+
   const sw = switchById(design.board.switchId)
   const wiring = keys
     .map((k) => {
@@ -183,7 +272,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     .join('\n')
   const readme = `# ${name} — QMK firmware from BYOKb
 
-Hand-wired keyboard on a **Raspberry Pi Pico (RP2040)** with ${sw.brand} ${sw.model} switches, ${keys.length} keys${knobs.length ? `, ${knobs.length} knob` : ''}${ledsOn ? ', per-key RGB' : ''}.
+Hand-wired keyboard on a **Raspberry Pi Pico (RP2040)** with ${sw.brand} ${sw.model} switches, ${keys.length} keys${parts.map((c) => `, ${COMPONENTS[c.type].name.toLowerCase()}`).join('')}${ledsOn ? ', per-key RGB' : ''}.
 
 > Generated, not hand-tuned: run \`qmk lint -kb ${name}\` before your first build. The wiring below is an
 > assumed hand-wire layout (there is no PCB yet) — follow it exactly, or change \`matrix_pins\` to match yours.
@@ -200,13 +289,13 @@ Hand-wired keyboard on a **Raspberry Pi Pico (RP2040)** with ${sw.brand} ${sw.mo
 - **Matrix:** ${rows} rows × ${cols} columns, diodes **COL2ROW** (the diode's black band points toward the row wire).
 - **Row pins:** ${rowPins.join(', ')}
 - **Column pins:** ${colPins.join(', ')}
-${ledPin ? `- **LED data:** ${ledPin}. Chain the LEDs (e.g. SK6812 MINI-E) in the order of the table below, 5 V and GND to every LED.\n` : ''}${knobs.map((_, i) => `- **Knob ${i + 1} (EC11 encoder):** A → ${encoderPins[i][0]}, B → ${encoderPins[i][1]}, C → GND`).join('\n')}
+${ledPin ? `- **LED data:** ${ledPin}. Chain the LEDs (e.g. SK6812 MINI-E) in the order of the table below, 5 V and GND to every LED.\n` : ''}${partLines}
 
 | Key | Row | Col | Row pin | Col pin |
 |---|---|---|---|---|
 ${wiring}
 `
-  return { ok: true, firmware: { keyboardJson, keymapC, readme, matrix } }
+  return { ok: true, firmware: { keyboardJson, keymapC, readme, matrix, extra } }
 }
 
 /** The firmware folder as a zip: <name>/keyboard.json, <name>/keymaps/default/keymap.c, <name>/README.md */
@@ -215,6 +304,7 @@ export function firmwareZip(fw: Firmware, name = 'byokb'): Uint8Array {
     [name]: {
       'keyboard.json': strToU8(JSON.stringify(fw.keyboardJson, null, 2)),
       'README.md': strToU8(fw.readme),
+      ...Object.fromEntries(Object.entries(fw.extra).map(([name, text]) => [name, strToU8(text)])),
       keymaps: { default: { 'keymap.c': strToU8(fw.keymapC) } },
     },
   })

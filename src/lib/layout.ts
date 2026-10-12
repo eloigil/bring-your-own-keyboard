@@ -1,4 +1,5 @@
 import type { Component, Key } from '../types'
+import { COMPONENTS } from '../data/components'
 
 /** A row item: a key width, or a negative number for a gap of that size. */
 type Row = { y: number; x?: number; items: (number | string)[] }
@@ -260,8 +261,11 @@ export function keyRows(keys: Key[]): Map<string, number> {
   return new Map(keys.map((k) => [k.id, Math.max(0, distinct.indexOf(rowOf(k)) - extra)]))
 }
 
-/** A component's footprint as a 1u key, so the case, well, plate cutout and overlap checks treat it like one. */
-export const componentFootprint = (c: Component): Key => ({ id: c.id, x: c.x, y: c.y, w: 1, h: 1, rot: 0 })
+/** A component's footprint as a key, so the case, well, plate cutout and overlap checks treat it like one. */
+export const componentFootprint = (c: Component): Key => {
+  const { w, h, cut } = COMPONENTS[c.type]
+  return { id: c.id, x: c.x, y: c.y, w, h, rot: 0, cut }
+}
 
 /**
  * Make room for a component: in each row it overlaps, the keys from the first overlapping one rightward
@@ -269,14 +273,15 @@ export const componentFootprint = (c: Component): Key => ({ id: c.id, x: c.x, y:
  */
 export function snapAside(keys: Key[], c: Component): Key[] {
   const eps = 1e-6
+  const { w, h } = COMPONENTS[c.type]
   const rows = new Map<number, Key[]>()
   for (const k of keys)
-    if (k.rot === 0 && k.y < c.y + 1 - eps && k.y + k.h > c.y + eps) rows.set(k.y, [...(rows.get(k.y) ?? []), k])
+    if (k.rot === 0 && k.y < c.y + h - eps && k.y + k.h > c.y + eps) rows.set(k.y, [...(rows.get(k.y) ?? []), k])
   const shift = new Map<string, number>()
   for (const row of rows.values()) {
-    const hit = row.filter((k) => k.x < c.x + 1 - eps && k.x + k.w > c.x + eps).sort((a, b) => a.x - b.x)[0]
+    const hit = row.filter((k) => k.x < c.x + w - eps && k.x + k.w > c.x + eps).sort((a, b) => a.x - b.x)[0]
     if (!hit) continue
-    const by = c.x + 1 - hit.x
+    const by = c.x + w - hit.x
     for (const k of row) if (k.x >= hit.x - eps) shift.set(k.id, by)
   }
   return shift.size ? keys.map((k) => (shift.has(k.id) ? { ...k, x: k.x + shift.get(k.id)! } : k)) : keys

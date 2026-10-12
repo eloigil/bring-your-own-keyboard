@@ -8,6 +8,7 @@ import { familyOf, switchById, switchGroups } from '../../lib/catalog'
 import { PROFILES } from '../../data/keycaps'
 import { KEYCAP_MATERIALS } from '../../data/materials'
 import type { KeycapMaterial } from '../../types'
+import { COMPONENTS, COMPONENT_TYPES } from '../../data/components'
 
 const SWATCHES = ['#f4f2ec', '#2b2b30', '#e8d6b8', '#9fb7d6', '#f2b8c6', '#b9d8b0', '#ff8a1f', '#5b5bd6']
 const WIDTHS = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.75, 6.25, 7]
@@ -32,7 +33,7 @@ export function ComponentsOptions() {
   const board = useDesign((s) => s.design.board)
   const selected = useDesign((s) => s.design.keys.find((k) => k.id === s.selectedId))
   const selectedKnob = useDesign((s) => s.design.components.find((c) => c.id === s.selectedId))
-  const { setKeycaps, setOverride, addKnob, deleteKey, setKeySize } = useDesign.getState()
+  const { setKeycaps, setOverride, addComponent, deleteKey, setKeySize } = useDesign.getState()
   const sw = switchById(board.switchId)
   const [lab, setLab] = useState(false)
   return (
@@ -79,13 +80,18 @@ export function ComponentsOptions() {
       </section>
       <section>
         <h3>Components</h3>
-        <button className="tile wide" onClick={addKnob}>+ Add knob</button>
-        <p className="muted">Drag the knob onto your board; when you let go, keys in its row slide aside to make room.</p>
+        <div className="grid">
+          {COMPONENT_TYPES.map((t) => (
+            <button key={t} className="tile" onClick={() => addComponent(t)} title={COMPONENTS[t].part}>+ {COMPONENTS[t].name}</button>
+          ))}
+        </div>
+        <p className="muted">Drag a part onto your board; when you let go, keys in its rows slide aside to make room.</p>
       </section>
       {selectedKnob && (
         <section className="selected">
-          <h3>Selected knob</h3>
-          <button className="tile wide" onClick={() => deleteKey(selectedKnob.id)}>Remove knob</button>
+          <h3>Selected {COMPONENTS[selectedKnob.type].name.toLowerCase()}</h3>
+          <p className="muted">{COMPONENTS[selectedKnob.type].part}. {COMPONENTS[selectedKnob.type].note}</p>
+          <button className="tile wide" onClick={() => deleteKey(selectedKnob.id)}>Remove</button>
         </section>
       )}
       {selected && (

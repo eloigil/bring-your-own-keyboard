@@ -53,6 +53,32 @@ describe('QMK firmware', () => {
     expect((f.keyboardJson as { rgb_matrix: { default: { animation: string } } }).rgb_matrix.default.animation).toBe('solid_color')
   })
 
+  it('wires the other parts on a 60%: buses claim fixed pins, analog parts the ADC pins, the matrix avoids them (a TKL with all of them is 3 pins over)', () => {
+    const parts = [
+      { id: 's', type: 'screen' as const, x: -3, y: -3 },
+      { id: 't', type: 'trackball' as const, x: -6, y: -3 },
+      { id: 'j', type: 'joystick' as const, x: -9, y: -3 },
+      { id: 'f', type: 'slider' as const, x: -14, y: -3 },
+    ]
+    const f = fw(design({ components: parts, board: { ...defaultDesign().board, ledEffect: 'ripple' } }, '60%')) as { keyboardJson: { features: Record<string, boolean>; matrix_pins: { rows: string[]; cols: string[] }; ws2812: { pin: string }; rgb_matrix: { default: { animation: string } } }; keymapC: string; extra: Record<string, string> }
+    expect(f.keyboardJson.features).toMatchObject({ oled: true, pointing_device: true, joystick: true })
+    const used = [...f.keyboardJson.matrix_pins.rows, ...f.keyboardJson.matrix_pins.cols, f.keyboardJson.ws2812.pin]
+    for (const fixed of ['GP4', 'GP5', 'GP16', 'GP17', 'GP18', 'GP19', 'GP26', 'GP27', 'GP28']) expect(used).not.toContain(fixed)
+    expect(f.keymapC).toContain('JOYSTICK_AXIS_IN(GP26')
+    expect(f.keymapC).toContain('analogReadPin(GP28)')
+    expect(f.extra['rules.mk']).toContain('pmw3360')
+    expect(f.extra['config.h']).toContain('I2C1_SDA_PIN GP4')
+    expect(f.keyboardJson.rgb_matrix.default.animation).toBe('solid_reactive_wide')
+    const names = Object.keys(unzipSync(firmwareZip(f as never))).filter((n) => !n.endsWith('/'))
+    expect(names).toContain('byokb/halconf.h')
+  })
+
+  it('refuses what one Pico cannot drive: two joysticks, or two pointing devices', () => {
+    const two = (type: 'joystick' | 'trackball') => generateFirmware(design({ components: [{ id: 'a', type, x: -3, y: -3 }, { id: 'b', type, x: -6, y: -3 }] }))
+    expect(two('joystick').ok).toBe(false)
+    expect(two('trackball').ok).toBe(false)
+  })
+
   it('leaves RGB out entirely when the LEDs were never configured', () => {
     const json = fw(design()).keyboardJson as Record<string, unknown>
     expect(json.rgb_matrix).toBeUndefined()

@@ -13,18 +13,22 @@ export interface Key {
   override?: { switchId?: string; keycapColor?: string; profileId?: string }
   /** Painted LED hex color; undefined = not painted. */
   led?: string
+  /** Plate cutout [width, depth] in mm when it isn't the family's switch cutout (component footprints). */
+  cut?: [number, number]
 }
+
+export type ComponentType = 'knob' | 'screen' | 'trackball' | 'joystick' | 'touchpad' | 'slider'
 
 export interface Component {
   id: string
-  type: 'knob'
+  type: ComponentType
   x: Unit
   y: Unit
 }
 
 export type KeycapMaterial = 'solid' | 'frosted' | 'clear'
 
-export type LedEffect = 'none' | 'breathing' | 'wave' | 'reactive'
+export type LedEffect = 'none' | 'breathing' | 'wave' | 'rainbow' | 'pinwheel' | 'raindrops' | 'reactive' | 'ripple'
 
 export interface Design {
   version: 1

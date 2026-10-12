@@ -25,12 +25,13 @@ const WELL_GAP = 0.75 // mm of clearance between keycaps and the well's edge
 const WELL_CLOSE = 2 // mm; only hairline cracks between keys merge into the well; any key-sized gap stays at top height
 
 /** A key's footprint corners in mm, rotated around its center. */
-export function keyCorners(k: Key, family: Family, inset = 0, size?: number): Poly {
+export function keyCorners(k: Key, family: Family, inset = 0, size?: number | [number, number]): Poly {
   const p = PITCH[family]
   const cx = (k.x + k.w / 2) * p.x
   const cy = (k.y + k.h / 2) * p.y
-  const hw = (size ?? k.w * p.x) / 2 - inset
-  const hh = (size ?? k.h * p.y) / 2 - inset
+  const [sw, sh] = typeof size === 'number' ? [size, size] : size ?? [k.w * p.x, k.h * p.y]
+  const hw = sw / 2 - inset
+  const hh = sh / 2 - inset
   const a = (k.rot * Math.PI) / 180
   const c = Math.cos(a), s = Math.sin(a)
   return [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]].map(([dx, dy]) => [cx + dx * c - dy * s, cy + dx * s + dy * c])
@@ -265,7 +266,7 @@ export function caseMesh(keys: Key[], family: Family, fills: PocketFill[] = [], 
   const inner = caseWell(keys, family, outer)
   const wellHoles = inner.filter((r) => area(r) > 0)
   const islands = inner.filter((r) => area(r) < 0).map((r) => [...r].reverse()) // deck left standing inside the well
-  const cutouts = keys.map((k) => keyCorners(k, family, 0, CUTOUT[family]).slice().reverse())
+  const cutouts = keys.map((k) => keyCorners(k, family, 0, k.cut ?? CUTOUT[family]).slice().reverse())
 
   // The body is a stack of straight slabs, each inset a little more, tracing a quarter-round top edge.
   // ponytail: stairs instead of a true loft — three's ExtrudeGeometry bevel triangulates a shifted

@@ -11,8 +11,8 @@ import { Keycap } from './Keycap'
 import { PocketOrb } from './PocketOrb'
 import { hitLocal } from './pointer'
 import { componentFootprint, keyRows } from '../lib/layout'
-import { Knob } from './Knob'
-import { KeyLed, LedTicker } from './KeyLed'
+import { ComponentModel, componentCentre } from './ComponentModel'
+import { KeyLed, LedTicker, type Ripple } from './KeyLed'
 import { profileById } from '../data/keycaps'
 import { switchById } from '../lib/catalog'
 
@@ -36,6 +36,13 @@ export function Board() {
   const shaping = useDesign((s) => s.step === 'Build') // dragging keys and pocket orbs only in the Build step
   const painting = useDesign((s) => s.step === 'LEDs') // clicking a key paints its LED
   const hot = useRef(new Map<string, { current: number }>()) // when the pointer last passed over each key (reactive effect)
+  const ripple = useRef<Ripple | null>(null) // where the pointer last touched a key (ripple effect)
+  // the board's extent in units, for effects that sweep across it
+  const extent = useMemo(() => {
+    const xs = keys.map((k) => k.x + k.w / 2), ys = keys.map((k) => k.y + k.h / 2)
+    const x0 = Math.min(...xs), y0 = Math.min(...ys)
+    return { x0, y0, w: Math.max(1, Math.max(...xs) - x0), h: Math.max(1, Math.max(...ys) - y0) }
+  }, [keys])
   const glows = useRef(new Map<string, THREE.Color>()) // each key's live LED colour, shared by its underglow and cap
   const glowOf = (id: string) => glows.current.get(id) ?? (glows.current.set(id, new THREE.Color(0, 0, 0)), glows.current.get(id)!)
   const hotRef = (id: string) => hot.current.get(id) ?? (hot.current.set(id, { current: -99 }), hot.current.get(id)!)
@@ -106,9 +113,10 @@ export function Board() {
               onPointerMove={onMove}
               onPointerUp={onUp}
               onPointerOver={(e) => {
-                if (board.ledEffect !== 'reactive') return
+                if (board.ledEffect !== 'reactive' && board.ledEffect !== 'ripple') return
                 e.stopPropagation()
                 hotRef(k.id).current = clock.getElapsedTime()
+                ripple.current = { x: k.x + k.w / 2, y: k.y + k.h / 2, t: clock.getElapsedTime() }
                 invalidateNow()
               }}
             >
@@ -119,8 +127,13 @@ export function Board() {
                 painted={k.led}
                 effect={board.ledEffect}
                 effectColor={board.ledColor}
-                phase={k.x + k.y}
+                id={k.id}
+                u={(k.x + k.w / 2 - extent.x0) / extent.w}
+                v={(k.y + k.h / 2 - extent.y0) / extent.h}
+                ux={k.x + k.w / 2}
+                uy={k.y + k.h / 2}
                 hot={hotRef(k.id)}
+                ripple={ripple}
                 glow={glowOf(k.id)}
               />
               <Keycap
@@ -141,11 +154,11 @@ export function Board() {
         )
       })}
       {components.map((c) => {
-        const z = (c.y + 0.5) * p.y
+        const [x, z] = componentCentre(c, family)
         return (
-          <Eased key={c.id} target={[(c.x + 0.5) * p.x, plateTopAt(z, maxZ, family, tiltDeg), z]} rotation={[tilt, 0, 0]}>
+          <Eased key={c.id} target={[x, plateTopAt(z, maxZ, family, tiltDeg), z]} rotation={[tilt, 0, 0]}>
             <group onPointerDown={onDown(c)} onPointerMove={onMove} onPointerUp={onUp}>
-              <Knob invalid={invalid.has(c.id)} selected={shaping && c.id === selectedId} />
+              <ComponentModel c={c} family={family} invalid={invalid.has(c.id)} selected={shaping && c.id === selectedId} />
             </group>
           </Eased>
         )

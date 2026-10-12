@@ -7,28 +7,56 @@ import { sky } from './sky'
 const OFF = new THREE.Color('#000000')
 const HALO = 5 // mm the glow reaches past the key on each axis
 
+/** Where the pointer last touched the board (key centre, units) and when — the ripple spreads from here. */
+export type Ripple = { x: number; y: number; t: number }
+const RIPPLE_SPEED = 14 // units per second
+const RIPPLE_LIFE = 0.6 // seconds a ring stays lit on one key
+export const rippleActive = (r: Ripple, t: number) => t - r.t < 10 / RIPPLE_SPEED + RIPPLE_LIFE
+/** 0–1 pseudo-random per key, stable between frames. */
+const seedOf = (id: string) => (id.split('').reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % 1000) / 1000
+
 /**
  * Per-key underglow, drawn as a bright plate under the keycap so it shows in the gaps.
  * Painted colour wins; otherwise the effect drives it. Only an active effect keeps the frame loop running.
+ * `u`/`v` are the key's centre as a 0–1 fraction of the board; `ux`/`uy` the centre in units.
  */
-export function KeyLed({ w, d, y, painted, effect, effectColor, phase, hot, glow }: {
-  w: number; d: number; y: number; painted?: string; effect: LedEffect; effectColor: string; phase: number; hot: React.RefObject<number>
+export function KeyLed({ id, w, d, y, painted, effect, effectColor, u, v, ux, uy, hot, ripple, glow }: {
+  id: string; w: number; d: number; y: number; painted?: string; effect: LedEffect; effectColor: string
+  u: number; v: number; ux: number; uy: number; hot: React.RefObject<number>; ripple: React.RefObject<Ripple | null>
   /** Shared with the keycap, which uses it as its emissive colour so the light shines through the cap. */
   glow: THREE.Color
 }) {
   const mat = useRef<THREE.MeshBasicMaterial>(null)
   const invalidate = useThree((s) => s.invalidate)
   const lit = !!painted || effect !== 'none'
+  const seed = seedOf(id)
   const colorAt = (t: number, out: THREE.Color) => {
     if (painted) return out.set(painted)
     switch (effect) {
       case 'breathing':
         return out.set(effectColor).multiplyScalar(0.25 + 0.75 * (0.5 + 0.5 * Math.sin(t * 2)))
       case 'wave':
-        return out.setHSL((phase * 0.04 - t * 0.25) % 1 + 1, 0.9, 0.55)
+        return out.setHSL(((u + v) * 0.6 - t * 0.25) % 1 + 1, 0.9, 0.55)
+      case 'rainbow':
+        return out.setHSL((t * 0.12) % 1, 0.9, 0.55)
+      case 'pinwheel':
+        return out.setHSL((Math.atan2(v - 0.5, (u - 0.5) * 3) / (2 * Math.PI) + t * 0.2) % 1 + 1, 0.9, 0.55)
+      case 'raindrops': {
+        // each key flashes on at its own moment every few seconds, then fades
+        const period = 2.5 + seed * 2
+        const age = (t + seed * 7) % period
+        return out.set(effectColor).multiplyScalar(Math.max(0, 1 - age / 0.9) ** 1.5)
+      }
       case 'reactive': {
         const age = t - (hot.current ?? -99) // seconds since the pointer passed over this key
         return age < 0.8 ? out.set(effectColor).multiplyScalar(1 - age / 0.8) : out.copy(OFF)
+      }
+      case 'ripple': {
+        // a ring expanding from the last touched key: this key lights when the ring reaches it
+        const r = ripple.current
+        if (!r) return out.copy(OFF)
+        const age = t - r.t - Math.hypot(ux - r.x, uy - r.y) / RIPPLE_SPEED
+        return age > 0 && age < RIPPLE_LIFE ? out.set(effectColor).multiplyScalar(1 - age / RIPPLE_LIFE) : out.copy(OFF)
       }
       default:
         return out.copy(OFF)
@@ -44,8 +72,9 @@ export function KeyLed({ w, d, y, painted, effect, effectColor, phase, hot, glow
     if (!mat.current || !lit) return
     colorAt(clock.elapsedTime, glow).multiplyScalar(sky.led)
     mat.current.color.copy(glow)
-    // breathing/wave frames come from the shared 30 fps LedTicker; reactive flashes request their own frames briefly
+    // continuous effects get frames from the shared 30 fps LedTicker; pointer-driven ones request their own briefly
     if (effect === 'reactive' && clock.elapsedTime - (hot.current ?? -99) < 0.8) invalidate()
+    if (effect === 'ripple' && ripple.current && rippleActive(ripple.current, clock.elapsedTime)) invalidate()
   })
   if (!lit) return null
   return (
@@ -57,11 +86,13 @@ export function KeyLed({ w, d, y, painted, effect, effectColor, phase, hot, glow
   )
 }
 
+const CONTINUOUS = new Set<LedEffect>(['breathing', 'wave', 'rainbow', 'pinwheel', 'raindrops'])
+
 /** Drives continuous LED effects at 30 fps — plenty for slow colour changes, half the work of 60. */
 export function LedTicker({ effect }: { effect: LedEffect }) {
   const invalidate = useThree((s) => s.invalidate)
   useEffect(() => {
-    if (effect !== 'breathing' && effect !== 'wave') return
+    if (!CONTINUOUS.has(effect)) return
     const id = setInterval(() => invalidate(), 1000 / 30)
     return () => clearInterval(id)
   }, [effect, invalidate])

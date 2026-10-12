@@ -86,7 +86,7 @@ describe('knob', () => {
   it('adds a knob clear of the keys; dropping it onto a row slides those keys aside', async () => {
     const { validate } = await import('../lib/validate')
     useDesign.getState().setPreset('TKL')
-    useDesign.getState().addKnob()
+    useDesign.getState().addComponent('knob')
     const knobId = useDesign.getState().selectedId!
     let d = useDesign.getState().design
     expect(validate(d.keys, d.components, 'MX').size).toBe(0)

@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { magnetSnap, resizeKey, snapAside, tkl } from './layout'
+import { componentFootprint, magnetSnap, resizeKey, snapAside, tkl } from './layout'
 import { validate } from './validate'
+
+describe('component footprints', () => {
+  it('a trackball reserves a 2u × 2u cell with its own round-ish cutout; the keys slide clear of all of it', () => {
+    const keys = tkl()
+    const ball = { id: 'ball', type: 'trackball' as const, x: 5.5, y: 1.25 }
+    expect(componentFootprint(ball)).toMatchObject({ w: 2, h: 2, cut: [32, 32] })
+    expect(validate(snapAside(keys, ball), [ball], 'MX').size).toBe(0)
+  })
+})
 
 describe('knob snap-aside', () => {
   it('pushes the overlapped row clear of the knob and leaves other rows alone', () => {

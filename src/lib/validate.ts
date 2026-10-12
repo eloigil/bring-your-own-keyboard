@@ -2,10 +2,10 @@ import type { Component, Key } from '../types'
 import type { Family } from './units'
 import { PITCH } from './units'
 import { keyCorners, overlapArea, type Poly } from './case'
+import { componentFootprint } from './layout'
 
-/** Footprint of a component (the knob takes one 1u cell). */
-export const componentCorners = (c: Component, family: Family, inset = 0) =>
-  keyCorners({ id: c.id, x: c.x, y: c.y, w: 1, h: 1, rot: 0 }, family, inset)
+/** Footprint of a component (from its table size). */
+export const componentCorners = (c: Component, family: Family, inset = 0) => keyCorners(componentFootprint(c), family, inset)
 
 /** IDs of keys and components that overlap something. Touching edges don't count. */
 export function validate(keys: Key[], components: Component[], family: Family): Set<string> {

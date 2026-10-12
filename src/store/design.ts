@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Design, Key, KeycapMaterial, Step } from '../types'
-import { PRESETS, magnetSnap, newId, resizeKey, snap, snapAside, type PresetName } from '../lib/layout'
+import type { Component, ComponentType, Design, Key, KeycapMaterial, Step } from '../types'
+import { PRESETS, componentFootprint, magnetSnap, newId, resizeKey, snap, snapAside, type PresetName } from '../lib/layout'
+import { COMPONENTS } from '../data/components'
 import { TILT_DEG, TILT_MAX } from '../lib/case'
 
 export const STORAGE_KEY = 'byokb-design'
@@ -48,7 +49,7 @@ interface State {
   select: (id: string | null) => void
   moveKey: (id: string, x: number, y: number) => void
   addKey: () => void
-  addKnob: () => void
+  addComponent: (type: ComponentType) => void
   /** Change a key's width/height in units; keys to its right in the row slide to keep it packed. */
   setKeySize: (id: string, w: number, h: number) => void
   /** After dragging a component: keys in its rows slide aside to make room. */
@@ -91,21 +92,23 @@ export const useDesign = create<State>()(
           const key = s.design.keys.find((k) => k.id === id)
           const item = key ?? s.design.components.find((c) => c.id === id)
           if (!item) return s
-          const [sx, sy] = magnetSnap(s.design.keys.filter((k) => k.id !== id), x, y, key?.w ?? 1, key?.h ?? 1)
+          const size = key ?? componentFootprint(item as Component)
+          const [sx, sy] = magnetSnap(s.design.keys.filter((k) => k.id !== id), x, y, size.w, size.h)
           if (item.x === sx && item.y === sy) return s
           const move = <T extends { id: string }>(list: T[]) => list.map((k) => (k.id === id ? { ...k, x: sx, y: sy } : k))
           return { preset: null, design: { ...s.design, keys: move(s.design.keys), components: move(s.design.components) } }
         }),
       setKeySize: (id, w, h) =>
         set((s) => ({ preset: null, design: { ...s.design, keys: resizeKey(s.design.keys, id, Math.max(0.5, w), Math.max(0.5, h)) } })),
-      addKnob: () =>
+      addComponent: (type) =>
         set((s) => {
           const keys = s.design.keys
+          const { w, h } = COMPONENTS[type]
           // start just above the board's top-right corner, clear of every key
-          const x = keys.length ? snap(Math.max(...keys.map((k) => k.x + k.w)) - 1) : 0
-          const y = keys.length ? snap(Math.min(...keys.map((k) => k.y)) - 1.25) : 0
-          const knob = { id: newId(), type: 'knob' as const, x, y }
-          return { preset: null, selectedId: knob.id, design: { ...s.design, components: [...s.design.components, knob] } }
+          const x = keys.length ? snap(Math.max(...keys.map((k) => k.x + k.w)) - w) : 0
+          const y = keys.length ? snap(Math.min(...keys.map((k) => k.y)) - h - 0.25) : 0
+          const c = { id: newId(), type, x, y }
+          return { preset: null, selectedId: c.id, design: { ...s.design, components: [...s.design.components, c] } }
         }),
       dropComponent: (id) =>
         set((s) => {

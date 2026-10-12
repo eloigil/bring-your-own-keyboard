@@ -2,6 +2,9 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, Grid, Lightformer, OrbitControls } from '@react-three/drei'
 import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
+import { EffectComposer, Bloom, ToneMapping } from '@react-three/postprocessing'
+import { ToneMappingMode } from 'postprocessing'
+import { N8AOPostPass } from 'n8ao'
 import { useDesign } from '../store/design'
 import { sky } from './sky'
 
@@ -35,8 +38,36 @@ export function Stage({ children, onPointerMissed }: { children: ReactNode; onPo
         fadeFrom={0}
       />
       <Shadows />
+      <Effects />
       <OrbitControls enableDamping makeDefault maxPolarAngle={Math.PI / 2.1} minDistance={120} maxDistance={900} />
     </Canvas>
+  )
+}
+
+/**
+ * Post-processing: ambient occlusion so keys sit in their sockets and the case has weight in its corners,
+ * bloom so the LEDs actually glow, and filmic tone mapping. The AO runs at half resolution and only on
+ * frames that render anyway (demand frameloop).
+ */
+function Effects() {
+  const { scene, camera, size } = useThree()
+  const ao = useMemo(() => {
+    const pass = new N8AOPostPass(scene, camera, size.width, size.height)
+    const c = pass.configuration
+    c.aoRadius = 9 // mm: about half a keycap, so the gaps between keys and the well's walls darken, not whole rows
+    c.distanceFalloff = 3
+    c.intensity = 2.2
+    c.halfRes = true
+    c.screenSpaceRadius = false
+    pass.setQualityMode('Low')
+    return pass
+  }, [scene, camera]) // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <EffectComposer multisampling={4}>
+      <primitive object={ao} />
+      <Bloom mipmapBlur luminanceThreshold={1.05} luminanceSmoothing={0.2} intensity={0.9} />
+      <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+    </EffectComposer>
   )
 }
 

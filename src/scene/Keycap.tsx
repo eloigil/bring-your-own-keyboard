@@ -7,6 +7,7 @@ import { CUTOUT, PITCH, SWITCH_TRAVEL_HEIGHT, type Family } from '../lib/units'
 import { rowShape, type Profile } from '../data/keycaps'
 import { KEYCAP_MATERIALS } from '../data/materials'
 import type { KeycapMaterial } from '../types'
+import { plasticGrain } from './textures'
 
 const GAP = 1.2 // mm between neighbouring caps
 const RED = new THREE.Color('#e5484d')
@@ -113,7 +114,7 @@ export function Keycap({ k, family, color, profile, row, stemColor, housingColor
             emissiveIntensity={m.glow}
           />
         ) : (
-          <meshStandardMaterial ref={mat} color={color} roughness={m.roughness} emissiveIntensity={m.glow} />
+          <meshStandardMaterial ref={mat} color={color} roughness={m.roughness} emissiveIntensity={m.glow} bumpMap={plasticGrain()} bumpScale={0.12} />
         )}
       </mesh>
       <mesh geometry={sw.housing}>

@@ -24,6 +24,8 @@ export interface Component {
   y: Unit
   /** Degrees, around the part's own centre. */
   rot?: number
+  /** The part's visible colour (knob body, trackball, joystick cap, screen bezel, touchpad frame, fader cap). */
+  color?: string
 }
 
 export type KeycapMaterial = 'solid' | 'frosted' | 'clear'

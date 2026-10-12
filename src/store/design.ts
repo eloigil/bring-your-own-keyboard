@@ -55,6 +55,8 @@ interface State {
   setKeySize: (id: string, w: number, h: number) => void
   /** Move a key or part by a fraction of a unit without snapping (arrow keys). */
   nudge: (id: string, dx: number, dy: number) => void
+  /** Change a part's own settings (colour). */
+  setComponent: (id: string, patch: Partial<Pick<Component, 'color'>>) => void
   /** Rotate a key or part (degrees, about its own centre). */
   rotate: (id: string, deg: number) => void
   /** After dragging a component: keys in its rows slide aside to make room, and a split board's other half keeps its distance. */
@@ -104,6 +106,8 @@ export const useDesign = create<State>()(
             list.map((k) => (k.id === id ? { ...k, x: Math.round((k.x + dx) * 100) / 100, y: Math.round((k.y + dy) * 100) / 100 } : k))
           return { preset: null, design: { ...s.design, keys: move(s.design.keys), components: move(s.design.components) } }
         }),
+      setComponent: (id, patch) =>
+        set((s) => ({ design: { ...s.design, components: s.design.components.map((c) => (c.id === id ? { ...c, ...patch } : c)) } })),
       rotate: (id, deg) =>
         set((s) => {
           const rot = ((Math.round(deg) % 360) + 540) % 360 - 180 // keep it in (-180, 180]

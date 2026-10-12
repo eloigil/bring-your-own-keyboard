@@ -29,11 +29,33 @@ function SwitchSelect({ value, onChange, family, allowDefault }: { value: string
   )
 }
 
+/** Rotation and fine position for the selected key or part. The keyboard does the same: arrows nudge, [ ] rotate. */
+function Place({ id, rot, rotate, nudge }: { id: string; rot: number; rotate: (id: string, deg: number) => void; nudge: (id: string, dx: number, dy: number) => void }) {
+  return (
+    <>
+      <div className="chips" aria-label="Rotation">
+        <button className="chip" onClick={() => rotate(id, rot - 15)} title="Rotate 15° counter-clockwise">↶ 15°</button>
+        <button className="chip" onClick={() => rotate(id, rot - 5)} title="Rotate 5° counter-clockwise">↶ 5°</button>
+        <input type="number" step={1} value={rot} onChange={(e) => rotate(id, Number(e.target.value))} title="Rotation (degrees)" aria-label="Rotation in degrees" />
+        <button className="chip" onClick={() => rotate(id, rot + 5)} title="Rotate 5° clockwise">5° ↷</button>
+        <button className="chip" onClick={() => rotate(id, rot + 15)} title="Rotate 15° clockwise">15° ↷</button>
+      </div>
+      <div className="chips" aria-label="Nudge">
+        <button className="chip" onClick={() => nudge(id, -0.05, 0)} title="Nudge left 1 mm">←</button>
+        <button className="chip" onClick={() => nudge(id, 0.05, 0)} title="Nudge right 1 mm">→</button>
+        <button className="chip" onClick={() => nudge(id, 0, -0.05)} title="Nudge up 1 mm">↑</button>
+        <button className="chip" onClick={() => nudge(id, 0, 0.05)} title="Nudge down 1 mm">↓</button>
+        <span className="muted">Arrow keys nudge (Shift: ¼ u), [ ] rotate.</span>
+      </div>
+    </>
+  )
+}
+
 export function ComponentsOptions() {
   const board = useDesign((s) => s.design.board)
   const selected = useDesign((s) => s.design.keys.find((k) => k.id === s.selectedId))
   const selectedKnob = useDesign((s) => s.design.components.find((c) => c.id === s.selectedId))
-  const { setKeycaps, setOverride, addComponent, deleteKey, setKeySize } = useDesign.getState()
+  const { setKeycaps, setOverride, addComponent, deleteKey, setKeySize, rotate, nudge } = useDesign.getState()
   const sw = switchById(board.switchId)
   const [lab, setLab] = useState(false)
   return (
@@ -91,6 +113,7 @@ export function ComponentsOptions() {
         <section className="selected">
           <h3>Selected {COMPONENTS[selectedKnob.type].name.toLowerCase()}</h3>
           <p className="muted">{COMPONENTS[selectedKnob.type].part}. {COMPONENTS[selectedKnob.type].note}</p>
+          <Place id={selectedKnob.id} rot={selectedKnob.rot ?? 0} rotate={rotate} nudge={nudge} />
           <button className="tile wide" onClick={() => deleteKey(selectedKnob.id)}>Remove</button>
         </section>
       )}
@@ -122,6 +145,7 @@ export function ComponentsOptions() {
             ))}
             <input type="color" value={selected.override?.keycapColor ?? board.keycapColor} onChange={(e) => setOverride(selected.id, { keycapColor: e.target.value })} title="Custom colour" />
           </div>
+          <Place id={selected.id} rot={selected.rot} rotate={rotate} nudge={nudge} />
           <select value={selected.override?.profileId ?? ''} onChange={(e) => setOverride(selected.id, { profileId: e.target.value || undefined })}>
             <option value="">Board profile</option>
             {PROFILES.map((p) => <option key={p.id} value={p.id}>{p.name} profile</option>)}

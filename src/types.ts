@@ -22,6 +22,8 @@ export interface Component {
   type: ComponentType
   x: Unit
   y: Unit
+  /** Degrees, around the part's own centre. */
+  rot?: number
 }
 
 export type KeycapMaterial = 'solid' | 'frosted' | 'clear'

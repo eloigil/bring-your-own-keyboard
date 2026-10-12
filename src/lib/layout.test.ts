@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { componentFootprint, magnetSnap, pushApart, resizeKey, snapAside, tkl, PRESETS } from './layout'
+import { bounds, componentFootprint, magnetSnap, pushApart, resizeKey, snapAside, tkl, PRESETS } from './layout'
 import { keyGroups } from './case'
 import { validate } from './validate'
 
@@ -30,6 +30,16 @@ describe('split boards stay split', () => {
       expect(k.y).toBe(was.y)
     }
     expect(validate(after, [ball], 'MX').size).toBe(0)
+  })
+})
+
+describe('rotated parts', () => {
+  it('a slider turned 90° stands 4u tall: the overlap check and the row shove use the turned footprint', () => {
+    const keys = tkl()
+    const upright = { id: 's', type: 'slider' as const, x: 5.5, y: 1.25, rot: 90 }
+    const after = snapAside(keys, upright)
+    expect(validate(after, [upright], 'MX').size).toBe(0)
+    expect(bounds(componentFootprint(upright))).toMatchObject({ x0: 7, x1: 8, y0: -0.25, y1: 3.75 })
   })
 })
 

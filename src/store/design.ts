@@ -53,6 +53,10 @@ interface State {
   addComponent: (type: ComponentType) => void
   /** Change a key's width/height in units; keys to its right in the row slide to keep it packed. */
   setKeySize: (id: string, w: number, h: number) => void
+  /** Move a key or part by a fraction of a unit without snapping (arrow keys). */
+  nudge: (id: string, dx: number, dy: number) => void
+  /** Rotate a key or part (degrees, about its own centre). */
+  rotate: (id: string, deg: number) => void
   /** After dragging a component: keys in its rows slide aside to make room, and a split board's other half keeps its distance. */
   dropComponent: (id: string) => void
   deleteKey: (id: string) => void
@@ -93,6 +97,18 @@ export const useDesign = create<State>()(
           if (item.x === sx && item.y === sy) return s
           const move = <T extends { id: string }>(list: T[]) => list.map((k) => (k.id === id ? { ...k, x: sx, y: sy } : k))
           return { preset: null, design: { ...s.design, keys: move(s.design.keys), components: move(s.design.components) } }
+        }),
+      nudge: (id, dx, dy) =>
+        set((s) => {
+          const move = <T extends { id: string; x: number; y: number }>(list: T[]) =>
+            list.map((k) => (k.id === id ? { ...k, x: Math.round((k.x + dx) * 100) / 100, y: Math.round((k.y + dy) * 100) / 100 } : k))
+          return { preset: null, design: { ...s.design, keys: move(s.design.keys), components: move(s.design.components) } }
+        }),
+      rotate: (id, deg) =>
+        set((s) => {
+          const rot = ((Math.round(deg) % 360) + 540) % 360 - 180 // keep it in (-180, 180]
+          const turn = <T extends { id: string }>(list: T[]) => list.map((k) => (k.id === id ? { ...k, rot } : k))
+          return { preset: null, design: { ...s.design, keys: turn(s.design.keys), components: turn(s.design.components) } }
         }),
       setKeySize: (id, w, h) =>
         set((s) => ({ preset: null, design: { ...s.design, keys: resizeKey(s.design.keys, id, Math.max(0.5, w), Math.max(0.5, h)) } })),

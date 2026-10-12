@@ -266,7 +266,15 @@ export function keyRows(keys: Key[]): Map<string, number> {
 /** A component's footprint as a key, so the case, well, plate cutout and overlap checks treat it like one. */
 export const componentFootprint = (c: Component): Key => {
   const { w, h, cut } = COMPONENTS[c.type]
-  return { id: c.id, x: c.x, y: c.y, w, h, rot: 0, cut }
+  return { id: c.id, x: c.x, y: c.y, w, h, rot: c.rot ?? 0, cut }
+}
+
+/** Axis-aligned box around a (possibly rotated) key, in units. */
+export function bounds(k: Key) {
+  const a = (k.rot * Math.PI) / 180, c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a))
+  const hw = (k.w * c + k.h * s) / 2, hh = (k.w * s + k.h * c) / 2
+  const cx = k.x + k.w / 2, cy = k.y + k.h / 2
+  return { x0: cx - hw, x1: cx + hw, y0: cy - hh, y1: cy + hh }
 }
 
 /**
@@ -275,15 +283,15 @@ export const componentFootprint = (c: Component): Key => {
  */
 export function snapAside(keys: Key[], c: Component): Key[] {
   const eps = 1e-6
-  const { w, h } = COMPONENTS[c.type]
+  const b = bounds(componentFootprint(c))
   const rows = new Map<number, Key[]>()
   for (const k of keys)
-    if (k.rot === 0 && k.y < c.y + h - eps && k.y + k.h > c.y + eps) rows.set(k.y, [...(rows.get(k.y) ?? []), k])
+    if (k.rot === 0 && k.y < b.y1 - eps && k.y + k.h > b.y0 + eps) rows.set(k.y, [...(rows.get(k.y) ?? []), k])
   const shift = new Map<string, number>()
   for (const row of rows.values()) {
-    const hit = row.filter((k) => k.x < c.x + w - eps && k.x + k.w > c.x + eps).sort((a, b) => a.x - b.x)[0]
+    const hit = row.filter((k) => k.x < b.x1 - eps && k.x + k.w > b.x0 + eps).sort((a, b) => a.x - b.x)[0]
     if (!hit) continue
-    const by = c.x + w - hit.x
+    const by = snap(b.x1 - hit.x + 0.249)
     for (const k of row) if (k.x >= hit.x - eps) shift.set(k.id, by)
   }
   return shift.size ? keys.map((k) => (shift.has(k.id) ? { ...k, x: k.x + shift.get(k.id)! } : k)) : keys

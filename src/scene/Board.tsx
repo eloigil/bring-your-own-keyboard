@@ -149,7 +149,7 @@ export function Board() {
       {components.map((c) => {
         const [x, z] = componentCentre(c, family)
         return (
-          <Eased key={c.id} target={[x, plateTopAt(z, maxZ, family, tiltDeg), z]} rotation={[tilt, 0, 0]}>
+          <Eased key={c.id} target={[x, plateTopAt(z, maxZ, family, tiltDeg), z]} rotation={[tilt, (-(c.rot ?? 0) * Math.PI) / 180, 0]}>
             <group onPointerDown={onDown(c)} onPointerMove={onMove} onPointerUp={onUp}>
               <ComponentModel c={c} family={family} invalid={invalid.has(c.id)} selected={shaping && c.id === selectedId} />
             </group>

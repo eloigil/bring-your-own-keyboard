@@ -111,3 +111,23 @@ describe('LEDs', () => {
     expect(ledsConfigured(useDesign.getState().design)).toBe(true)
   })
 })
+
+describe('fine placement', () => {
+  it('nudges a part without snapping and rotates it about its centre; the footprint turns with it', async () => {
+    const { componentFootprint } = await import('../lib/layout')
+    useDesign.getState().setPreset('TKL')
+    useDesign.getState().addComponent('slider')
+    const id = useDesign.getState().selectedId!
+    const before = useDesign.getState().design.components[0]
+    useDesign.getState().nudge(id, 0.05, -0.05)
+    const moved = useDesign.getState().design.components[0]
+    expect(moved.x - before.x).toBeCloseTo(0.05)
+    expect(moved.y - before.y).toBeCloseTo(-0.05)
+    useDesign.getState().rotate(id, 90)
+    const turned = useDesign.getState().design.components[0]
+    expect(turned.rot).toBe(90)
+    expect(componentFootprint(turned).rot).toBe(90)
+    useDesign.getState().rotate(id, 370)
+    expect(useDesign.getState().design.components[0].rot).toBe(10)
+  })
+})

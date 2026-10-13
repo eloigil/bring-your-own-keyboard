@@ -1,6 +1,6 @@
 import type { Component, Key } from '../types'
-import { COMPONENTS } from '../data/components'
-import { keyGroups } from './case'
+import { COMPONENTS, controllerOf } from '../data/components'
+import { keyGroups, type CaseController } from './case'
 import type { Family } from './units'
 
 /** A row item: a key width, or a negative number for a gap of that size. */
@@ -265,8 +265,15 @@ export function keyRows(keys: Key[]): Map<string, number> {
 
 /** A component's footprint as a key, so the case, well, plate cutout and overlap checks treat it like one. */
 export const componentFootprint = (c: Component): Key => {
-  const { w, h, cut } = COMPONENTS[c.type]
-  return { id: c.id, x: c.x, y: c.y, w, h, rot: c.rot ?? 0, cut }
+  const b = c.type === 'controller' ? controllerOf(c) : null
+  const [w, h] = b ? b.footprint : [COMPONENTS[c.type].w, COMPONENTS[c.type].h]
+  return { id: c.id, x: c.x, y: c.y, w, h, rot: c.rot ?? 0, cut: b ? b.cut : COMPONENTS[c.type].cut }
+}
+
+/** The design's controller as the case needs it (where, and which board), if one is placed. */
+export function caseController(components: Component[]): CaseController | undefined {
+  const c = components.find((c) => c.type === 'controller')
+  return c && { at: componentFootprint(c), board: controllerOf(c) }
 }
 
 /** Axis-aligned box around a (possibly rotated) key, in units. */

@@ -7,6 +7,7 @@ import { PRESETS } from './layout'
 import { firmwareZip, generateFirmware } from './qmk'
 import { caseFiles, caseZip } from './exportStl'
 import type { Design } from '../types'
+import { CONTROLLERS } from '../data/components'
 
 const design = (patch: Partial<Design> = {}, preset: keyof typeof PRESETS = 'TKL'): Design => ({ ...defaultDesign(), keys: PRESETS[preset](), ...patch })
 const fw = (d: Design) => {
@@ -75,6 +76,31 @@ describe('QMK firmware', () => {
     const two = (type: 'joystick' | 'trackball') => generateFirmware(design({ components: [{ id: 'a', type, x: -3, y: -3 }, { id: 'b', type, x: -6, y: -3 }] }))
     expect(two('joystick').ok).toBe(false)
     expect(two('trackball').ok).toBe(false)
+  })
+
+  it('follows the controller board: its pins, its buses, its name; a TKL needs more pins than a XIAO has', () => {
+    const with_ = (model: 'xiao' | 'zero' | 'pico', preset: keyof typeof PRESETS, extra: Design['components'] = []) =>
+      generateFirmware(design({ components: [{ id: 'c', type: 'controller', x: -3, y: -6, model }, ...extra] }, preset))
+    const tklOnXiao = with_('xiao', 'TKL')
+    expect(tklOnXiao.ok).toBe(false)
+    expect(!tklOnXiao.ok && tklOnXiao.reason).toContain('XIAO')
+    const macro = with_('xiao', 'Macropad', [{ id: 's', type: 'screen', x: -3, y: -3 }])
+    expect(macro.ok).toBe(true)
+    if (!macro.ok) return
+    const json = macro.firmware.keyboardJson as { matrix_pins: { rows: string[]; cols: string[] } }
+    const used = [...json.matrix_pins.rows, ...json.matrix_pins.cols]
+    for (const p of used) expect(CONTROLLERS.xiao.pins).toContain(p)
+    expect(used).not.toContain('GP6') // I²C on the XIAO
+    expect(macro.firmware.extra['config.h']).toContain('I2C_DRIVER I2CD1')
+    expect(macro.firmware.readme).toContain('Seeed XIAO RP2040')
+    const zero = with_('zero', '60%', [{ id: 't', type: 'trackball', x: -6, y: -3 }])
+    expect(zero.ok).toBe(true)
+    if (zero.ok) {
+      expect(zero.firmware.extra['config.h']).toContain('SPI_SCK_PIN GP10')
+      expect(zero.firmware.extra['mcuconf.h']).toContain('RP_SPI_USE_SPI1 TRUE')
+      const pins = zero.firmware.keyboardJson as { matrix_pins: { rows: string[]; cols: string[] } }
+      for (const p of [...pins.matrix_pins.rows, ...pins.matrix_pins.cols]) expect(CONTROLLERS.zero.pins).toContain(p)
+    }
   })
 
   it('leaves RGB out entirely when the LEDs were never configured', () => {

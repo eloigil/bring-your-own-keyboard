@@ -56,7 +56,7 @@ interface State {
   /** Move a key or part by a fraction of a unit without snapping (arrow keys). */
   nudge: (id: string, dx: number, dy: number) => void
   /** Change a part's own settings (colour). */
-  setComponent: (id: string, patch: Partial<Pick<Component, 'color'>>) => void
+  setComponent: (id: string, patch: Partial<Pick<Component, 'color' | 'model'>>) => void
   /** Rotate a key or part (degrees, about its own centre). */
   rotate: (id: string, deg: number) => void
   /** After dragging a component: keys in its rows slide aside to make room, and a split board's other half keeps its distance. */

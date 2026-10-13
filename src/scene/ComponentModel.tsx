@@ -5,8 +5,9 @@ import * as THREE from 'three'
 import type { Component } from '../types'
 import type { Family } from '../lib/units'
 import { CASE_HEIGHT, PITCH } from '../lib/units'
-import { BOTTOM_T, PICO, PLATE_RECESS, STANDOFF_H } from '../lib/case'
-import { COMPONENTS } from '../data/components'
+import { boardRaise, PLATE_RECESS } from '../lib/case'
+import { controllerOf, partColor } from '../data/components'
+import { componentFootprint } from '../lib/layout'
 
 const RED = new THREE.Color('#e5484d')
 const ACCENT = new THREE.Color('#5b5bd6')
@@ -40,7 +41,7 @@ export function ComponentModel(props: Props) {
   return <Model {...props} />
 }
 
-const colorOf = (c: Component) => c.color ?? COMPONENTS[c.type].color
+const colorOf = partColor
 
 const Knob = ({ c, invalid, selected }: Props) => {
   const mat = useTint(invalid, selected, colorOf(c))
@@ -162,40 +163,51 @@ const Slider = ({ c, invalid, selected }: Props) => {
 }
 
 /**
- * A Raspberry Pi Pico lying on its standoffs below the plate, seen through the plate's window. Origin is the plate
- * top, so the board is drawn that far down. USB end towards -z (the back, before rotation).
+ * The controller board lying below the plate (on standoffs or in its tray), seen through the plate's window.
+ * Origin is the plate top, so the board is drawn that far down. USB end towards -z (the back, before rotation).
  */
 const Controller = ({ c, family, invalid, selected }: Props) => {
+  const board = controllerOf(c)
   const mat = useTint(invalid, selected, colorOf(c))
-  const y = BOTTOM_T + STANDOFF_H - (CASE_HEIGHT[family] - PLATE_RECESS) // the board's underside, relative to the plate top
-  const { w, l, pcb, usbH } = PICO
+  const y = boardRaise(board) - (CASE_HEIGHT[family] - PLATE_RECESS) // the board's underside, relative to the plate top
+  const { w, l, pcb, usbH } = board
+  const usbC = board.usb === 'USB-C'
+  const pads = Math.floor((l - 3) / 2.54)
   return (
     <group position={[0, y, 0]}>
       <mesh position={[0, pcb / 2, 0]} castShadow>
         <boxGeometry args={[w, pcb, l]} />
         <meshStandardMaterial ref={mat} color={colorOf(c)} roughness={0.6} />
       </mesh>
-      {/* RP2040, flash chip, BOOTSEL button, the micro-USB socket at the back end, and the castellated pads */}
-      <mesh position={[0, pcb + 0.45, 2]}>
+      {/* the RP2040, a flash chip on the bigger board, the boot button, the USB socket at the back end, castellated pads */}
+      <mesh position={[0, pcb + 0.45, l > 30 ? 2 : 2.5]}>
         <boxGeometry args={[7, 0.9, 7]} />
-        <meshStandardMaterial color="#1a1a1e" roughness={0.4} />
+        <meshStandardMaterial color="#111114" roughness={0.4} />
       </mesh>
-      <mesh position={[0, pcb + 0.4, -9]}>
-        <boxGeometry args={[4, 0.8, 5]} />
-        <meshStandardMaterial color="#1a1a1e" roughness={0.4} />
-      </mesh>
-      <mesh position={[-5, pcb + 0.6, -14]}>
-        <boxGeometry args={[3, 1.2, 4]} />
+      {l > 30 && (
+        <mesh position={[0, pcb + 0.4, -9]}>
+          <boxGeometry args={[4, 0.8, 5]} />
+          <meshStandardMaterial color="#111114" roughness={0.4} />
+        </mesh>
+      )}
+      <mesh position={[l > 30 ? -5 : w / 2 - 3, pcb + 0.6, l > 30 ? -14 : -l / 2 + 8]}>
+        <boxGeometry args={[3, 1.2, 3]} />
         <meshStandardMaterial color="#f4f2ec" roughness={0.5} />
       </mesh>
-      <mesh position={[0, pcb + usbH / 2, -l / 2 + 2.2]} castShadow>
-        <boxGeometry args={[8, usbH, 5.5]} />
+      {c.model === 'zero' && (
+        <mesh position={[-w / 2 + 3.5, pcb + 0.4, l / 2 - 4]}>
+          <boxGeometry args={[2.5, 0.8, 2.5]} />
+          <meshStandardMaterial color="#f8f8f8" emissive="#ffffff" emissiveIntensity={0.2} />
+        </mesh>
+      )}
+      <mesh position={[0, pcb + usbH / 2, -l / 2 + (usbC ? 3.3 : 2.2)]} castShadow>
+        {usbC ? <boxGeometry args={[9, usbH, 7.4]} /> : <boxGeometry args={[8, usbH, 5.5]} />}
         <meshStandardMaterial color="#c9cdd4" metalness={0.9} roughness={0.25} />
       </mesh>
       {[-1, 1].map((side) =>
-        Array.from({ length: 20 }, (_, i) => (
-          <mesh key={`${side}${i}`} position={[side * (w / 2 - 0.9), pcb + 0.02, -l / 2 + 2.4 + i * 2.54]}>
-            <boxGeometry args={[1.5, 0.04, 1.6]} />
+        Array.from({ length: pads }, (_, i) => (
+          <mesh key={`${side}${i}`} position={[side * (w / 2 - 0.8), pcb + 0.02, -l / 2 + 2 + (i + 0.5) * 2.54]}>
+            <boxGeometry args={[1.4, 0.04, 1.6]} />
             <meshStandardMaterial color="#d4a64a" metalness={0.9} roughness={0.3} />
           </mesh>
         )),
@@ -208,7 +220,7 @@ const MODELS: Record<Component['type'], (p: Props) => React.ReactElement> = { co
 
 /** Where a component's model sits: the centre of its footprint, in mm. */
 export function componentCentre(c: Component, family: Family): [number, number] {
-  const { w, h } = COMPONENTS[c.type]
+  const { w, h } = componentFootprint(c) // controllers vary in size with their board
   const p = PITCH[family]
   return [(c.x + w / 2) * p.x, (c.y + h / 2) * p.y]
 }

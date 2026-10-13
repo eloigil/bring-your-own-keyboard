@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { Design, Key } from '../types'
 import type { Family } from '../lib/units'
-import { caseAssembly, wallTopAt, type PocketFill } from '../lib/case'
+import { caseAssembly, wallTopAt, type CaseController, type PocketFill } from '../lib/case'
 import { plasticGrain } from './textures'
 
 const LIGHT = new THREE.Color('#e4e2e8')
@@ -21,7 +21,7 @@ function grainUVs(g: THREE.BufferGeometry) {
   g.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
 }
 
-export function Case({ keys, family, fills, tilt, colors, controller }: { keys: Key[]; family: Family; fills: PocketFill[]; tilt: number; colors: ReturnType<typeof caseColors>; controller?: Key }) {
+export function Case({ keys, family, fills, tilt, colors, controller }: { keys: Key[]; family: Family; fills: PocketFill[]; tilt: number; colors: ReturnType<typeof caseColors>; controller?: CaseController }) {
   const parts = useMemo(() => {
     const a = caseAssembly(keys, family, fills, tilt, controller)
     if (!a) return null

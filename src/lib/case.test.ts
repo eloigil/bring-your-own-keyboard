@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { area, caseMesh, caseOutline, caseParts, caseShape, caseWell, contains, keyCorners, portSpan, screwPoints, usbPort, wallTopAt, BOTTOM_T, STANDOFF_H, TOP_BEVEL, type PocketFill } from './case'
 import { CASE_HEIGHT, PITCH } from './units'
-import { alice, componentFootprint, PRESETS, split, tkl } from './layout'
+import { alice, caseController, PRESETS, split, tkl } from './layout'
+import { CONTROLLERS } from '../data/components'
 
 describe('caseOutline', () => {
   it('gives one body for a TKL and two for a split', () => {
@@ -325,60 +326,87 @@ describe('rounded top edge', () => {
 })
 
 describe('controller', () => {
-  // a TKL with a Pico above the F-row, USB end facing the back wall
-  const withPico = (rot = 0) => {
-    const keys = tkl()
-    const ctrl = componentFootprint({ id: 'pico', type: 'controller', x: 9, y: -3.6, rot })
-    return { keys: [...keys, ctrl], ctrl }
+  // a TKL with a controller above the F-row, USB end facing the back wall
+  const withBoard = (model: 'pico' | 'zero' | 'xiao' = 'pico', rot = 0) => {
+    const part = { id: 'ctrl', type: 'controller' as const, x: 9, y: -3.6, rot, model }
+    const ctrl = caseController([part])!
+    return { keys: [...tkl(), ctrl.at], ctrl }
   }
   const rayHeights = (g: THREE.BufferGeometry, x: number, z: number) =>
     new THREE.Raycaster(new THREE.Vector3(x, 500, z), new THREE.Vector3(0, -1, 0))
       .intersectObject(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })))
       .map((h) => Math.round(h.point.y * 10) / 10)
+  const solid = (g: THREE.BufferGeometry) => new THREE.Mesh(g, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
 
-  it('cuts a USB opening through the wall its USB end faces, below the plate and above the bottom', () => {
-    const { keys, ctrl } = withPico()
-    const outer = caseOutline(keys, 'MX')
-    const port = usbPort(outer, ctrl, 'MX')!
-    expect(port).not.toBeNull()
-    const span = portSpan('MX')
-    expect(span.h).toBeGreaterThanOrEqual(7) // fits a micro-USB or USB-C plug's overmould
-    const shell = caseParts(keys, 'MX', [], 0, ctrl)!.shell
-    // a horizontal ray along the opening's axis, at the plug's height, goes from outside into the cavity unblocked
-    const [cx, back] = [(ctrl.x + ctrl.w / 2) * 19.05, Math.min(...outer.flat().map((q) => q[1]))]
-    const hits = new THREE.Raycaster(new THREE.Vector3(cx, (span.z0 + span.z1) / 2, back - 20), new THREE.Vector3(0, 0, 1), 0, 20 + port.wall + 25.5)
-      .intersectObject(new THREE.Mesh(shell, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })))
-    expect(hits).toEqual([])
-    // and without the controller the same ray hits the wall
-    const solid = caseParts(keys, 'MX', [], 0)!.shell
-    expect(new THREE.Raycaster(new THREE.Vector3(cx, (span.z0 + span.z1) / 2, back - 20), new THREE.Vector3(0, 0, 1), 0, 30)
-      .intersectObject(new THREE.Mesh(solid, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))).length).toBeGreaterThan(0)
+  it('cuts a USB opening through the wall its USB end faces, for every board, below the plate and above the bottom', () => {
+    for (const model of ['xiao', 'zero', 'pico'] as const) {
+      const { keys, ctrl } = withBoard(model)
+      const outer = caseOutline(keys, 'MX')
+      const port = usbPort(outer, ctrl, 'MX')!
+      expect(port, model).not.toBeNull()
+      const span = portSpan('MX', ctrl.board)
+      expect(span.h, model).toBeGreaterThanOrEqual(7) // fits a micro-USB or USB-C plug's overmould
+      const shell = caseParts(keys, 'MX', [], 0, ctrl)!.shell
+      // a horizontal ray along the opening's axis, at the plug's height, goes from outside to the board's end unblocked
+      const cx = (ctrl.at.x + ctrl.at.w / 2) * 19.05
+      const back = Math.min(...outer.flat().map((q) => q[1]))
+      const ray = (g: THREE.BufferGeometry, far: number) =>
+        new THREE.Raycaster(new THREE.Vector3(cx, (span.z0 + span.z1) / 2, back - 20), new THREE.Vector3(0, 0, 1), 0, far).intersectObject(solid(g))
+      expect(ray(shell, 20 + port.wall), model).toEqual([])
+      // and without the controller the same ray hits the wall
+      expect(ray(caseParts(keys, 'MX', [], 0)!.shell, 30).length, model).toBeGreaterThan(0)
+    }
   })
 
   it('a low-profile case still gets an opening, shorter, between the bottom plate and the plate', () => {
-    const span = portSpan('Choc')
-    expect(span.z0).toBeGreaterThan(BOTTOM_T)
-    expect(span.h).toBeGreaterThan(3)
-    expect(span.z1).toBeLessThan(CASE_HEIGHT.Choc - 2.5 - 1.3)
+    for (const board of Object.values(CONTROLLERS)) {
+      const span = portSpan('Choc', board)
+      expect(span.z0).toBeGreaterThan(BOTTOM_T)
+      expect(span.h).toBeGreaterThan(3)
+      expect(span.z1).toBeLessThan(CASE_HEIGHT.Choc - 2.5 - 1.3)
+    }
   })
 
   it('stands the Pico on four bored standoffs on the bottom plate', () => {
-    const { keys, ctrl } = withPico()
+    const { keys, ctrl } = withBoard('pico')
     const bottom = caseParts(keys, 'MX', [], 0, ctrl)!.bottom
     bottom.computeBoundingBox()
     expect(bottom.boundingBox!.max.y).toBeCloseTo(BOTTOM_T + STANDOFF_H)
-    // a standoff ring around each hole: solid 1.8 mm from a hole's centre, open at the centre
-    const p = PITCH.MX
-    const [cx, cy] = [(ctrl.x + ctrl.w / 2) * p.x, (ctrl.y + ctrl.h / 2) * p.y]
+    const [cx, cy] = [(ctrl.at.x + ctrl.at.w / 2) * PITCH.MX.x, (ctrl.at.y + ctrl.at.h / 2) * PITCH.MX.y]
     const top = (x: number, z: number) => Math.max(-1, ...rayHeights(bottom, x, z))
     expect(top(cx + 5.7, cy + 23.5)).toBe(-1) // the hole goes right through
     expect(top(cx + 5.7 + 1.8, cy + 23.5)).toBeCloseTo(BOTTOM_T + STANDOFF_H, 1)
   })
 
+  it('holds a board without holes in a tray on a pad: walls on three sides, open towards its USB end', () => {
+    const { keys, ctrl } = withBoard('zero')
+    const bottom = caseParts(keys, 'MX', [], 0, ctrl)!.bottom
+    const { w, l } = ctrl.board
+    const [cx, cy] = [(ctrl.at.x + ctrl.at.w / 2) * PITCH.MX.x, (ctrl.at.y + ctrl.at.h / 2) * PITCH.MX.y]
+    const top = (x: number, z: number) => Math.max(...rayHeights(bottom, x, z))
+    const pad = BOTTOM_T + STANDOFF_H
+    expect(top(cx, cy)).toBeCloseTo(pad, 1) // the board lies on the pad, as high as the Pico on its standoffs
+    expect(top(cx - w / 2 - 0.9, cy)).toBeGreaterThan(pad + 1) // side walls
+    expect(top(cx + w / 2 + 0.9, cy)).toBeGreaterThan(pad + 1)
+    expect(top(cx, cy + l / 2 + 0.9)).toBeGreaterThan(pad + 1) // the far end
+    expect(top(cx, cy - l / 2 - 0.9)).toBeCloseTo(BOTTOM_T, 1) // nothing past the USB end
+  })
+
+  it('the smaller boards take a smaller footprint and window than the Pico', () => {
+    const pico = caseController([{ id: 'a', type: 'controller', x: 0, y: 0 }])!.at
+    for (const model of ['xiao', 'zero'] as const) {
+      const small = caseController([{ id: 'a', type: 'controller', x: 0, y: 0, model }])!.at
+      expect(small.h).toBeLessThan(pico.h)
+      expect(small.cut![1]).toBeLessThan(pico.cut![1])
+      expect(small.cut![0]).toBeGreaterThan(CONTROLLERS[model].w) // the window shows the whole board
+      expect(small.cut![1]).toBeGreaterThan(CONTROLLERS[model].l)
+    }
+  })
+
   it('reports a controller buried mid-board as blocked (no wall within reach)', () => {
     const keys = tkl().filter((k) => !(k.y >= 2 && k.y < 5 && k.x >= 4 && k.x < 6))
-    const ctrl = componentFootprint({ id: 'pico', type: 'controller', x: 4.5, y: 2, rot: 90 })
-    expect(usbPort(caseOutline([...keys, ctrl], 'MX'), ctrl, 'MX')).toBeNull()
-    expect(caseParts([...keys, ctrl], 'MX', [], 0, ctrl)!.port).toBe('blocked')
+    const ctrl = caseController([{ id: 'ctrl', type: 'controller', x: 4.5, y: 2, rot: 90 }])!
+    expect(usbPort(caseOutline([...keys, ctrl.at], 'MX'), ctrl, 'MX')).toBeNull()
+    expect(caseParts([...keys, ctrl.at], 'MX', [], 0, ctrl)!.port).toBe('blocked')
   })
 })

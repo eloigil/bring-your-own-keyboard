@@ -7,7 +7,7 @@ import { KEYCAP_MATERIALS } from '../../data/materials'
 import { validate } from '../../lib/validate'
 import { caseFiles, caseZip, download } from '../../lib/exportStl'
 import { firmwareZip, generateFirmware } from '../../lib/qmk'
-import { COMPONENTS } from '../../data/components'
+import { COMPONENTS, controllerOf } from '../../data/components'
 
 const EFFECT_NAMES: Record<LedEffect, string> = { none: 'off', breathing: 'breathing', wave: 'wave', rainbow: 'rainbow', pinwheel: 'pinwheel', raindrops: 'raindrops', reactive: 'reactive', ripple: 'ripple' }
 
@@ -58,7 +58,7 @@ export function ExportOptions() {
         </button>
         <p className="muted">
           {firmware.ok
-            ? 'For a hand-wired Raspberry Pi Pico. The README inside has the wiring table and build steps.'
+            ? `For a hand-wired ${controllerOf(components.find((c) => c.type === 'controller')).name}. The README inside has the wiring table and build steps.`
             : firmware.reason}
         </p>
       </section>

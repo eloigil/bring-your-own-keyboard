@@ -185,3 +185,7 @@ select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 1
 /* undo / redo, left of the theme toggle */
 .undo-redo { top: 16px; right: 64px; height: 40px; padding: 0 2px; display: flex; align-items: center; gap: 0; }
 .undo-redo button { width: 36px; height: 36px; padding: 0; font-size: 18px; }
+/* labelled stops under a stepped slider */
+.stops { display: flex; justify-content: space-between; padding: 0 8px 0 56px; margin-top: -4px; }
+.stops button { padding: 2px 4px; font-size: 11px; color: var(--muted); background: none; }
+.stops button.on { color: var(--accent); font-weight: 600; }

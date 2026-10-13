@@ -2,22 +2,18 @@ import { strToU8, zipSync } from 'fflate'
 import * as THREE from 'three'
 import type { Design, Key, LedEffect } from '../types'
 import { switchById } from './catalog'
-import { COMPONENTS } from '../data/components'
+import { COMPONENTS, controllerOf } from '../data/components'
 import type { ComponentType } from '../types'
 
 /**
- * QMK firmware for a hand-wired Raspberry Pi Pico (RP2040), generated from the design.
+ * QMK firmware for a hand-wired RP2040 controller (Raspberry Pi Pico, RP2040-Zero or XIAO RP2040), generated from the design.
  * There's no PCB yet, so the wiring is assumed: keys are packed into a near-square matrix so even a
  * full-size board fits the Pico's pins, and the README carries the key → row/column wiring table.
  * Docs: https://docs.qmk.fm/reference_info_json, /features/rgb_matrix, /features/encoders
  */
 
-// Pico GPIOs usable for wiring (GP23–25 are on-board). Parts on a bus claim their fixed pins first, analog
+// Pins come from the controller board (src/data/components.ts). Parts on a bus claim their fixed pins first, analog
 // parts the ADC pins; the matrix takes free pins from the front, the LED data line and encoders from the back.
-const PICO_PINS = [...Array.from({ length: 23 }, (_, i) => `GP${i}`), 'GP26', 'GP27', 'GP28']
-const ADC_PINS = ['GP26', 'GP27', 'GP28']
-const I2C = { sda: 'GP4', scl: 'GP5' }
-const SPI = { sck: 'GP18', mosi: 'GP19', miso: 'GP16', cs: 'GP17' }
 
 export interface Firmware {
   keyboardJson: object
@@ -78,6 +74,8 @@ export function generateFirmware(design: Design, name = 'byokb'): FirmwareResult
   if (!keys.length) return { ok: false, reason: 'Add some keys first.' }
   const parts = design.components
   const of = (type: ComponentType) => parts.filter((c) => c.type === type)
+  const board = controllerOf(of('controller')[0])
+  const { i2c: I2C, spi: SPI } = board
   const knobs = of('knob')
   const ledsOn = design.board.ledEffect !== 'none'
   const i2c = parts.some((c) => COMPONENTS[c.type].bus === 'i2c')
@@ -85,22 +83,22 @@ export function generateFirmware(design: Design, name = 'byokb'): FirmwareResult
   const pointing = of('trackball').length + of('touchpad').length
   if (pointing > 1) return { ok: false, reason: 'QMK drives one pointing device: keep either one trackball or one touchpad.' }
   if (of('screen').length > 1) return { ok: false, reason: 'One screen: the OLED driver supports a single display.' }
-  if (of('controller').length > 1) return { ok: false, reason: 'One controller: this firmware runs on a single Raspberry Pi Pico.' }
+  if (of('controller').length > 1) return { ok: false, reason: 'One controller: this firmware runs on a single board.' }
 
   // analog parts share the three ADC pins
-  const adc = [...ADC_PINS]
+  const adc = [...board.adc]
   const analogPins = parts.filter((c) => COMPONENTS[c.type].bus === 'adc').map((c) => ({ c, pins: adc.splice(0, COMPONENTS[c.type].pins) }))
   if (analogPins.some((a) => a.pins.length < COMPONENTS[a.c.type].pins))
-    return { ok: false, reason: `The Pico has 3 analog pins: one joystick (2) and one slider (1), or one of each kind at most.` }
+    return { ok: false, reason: `The ${board.name} has ${board.adc.length} analog pins: a joystick takes 2 and a slider 1.` }
 
   // near-square matrix: fewest pins for n keys
-  const taken = new Set([...(i2c ? Object.values(I2C) : []), ...(spi ? Object.values(SPI) : []), ...analogPins.flatMap((a) => a.pins)])
-  const free = PICO_PINS.filter((p) => !taken.has(p))
+  const taken = new Set([...(i2c ? [I2C.sda, I2C.scl] : []), ...(spi ? [SPI.sck, SPI.mosi, SPI.miso, SPI.cs] : []), ...analogPins.flatMap((a) => a.pins)])
+  const free = board.pins.filter((p) => !taken.has(p))
   const rows = Math.ceil(Math.sqrt(keys.length))
   const cols = Math.ceil(keys.length / rows)
   const reserved = (ledsOn ? 1 : 0) + knobs.length * 2
   if (rows + cols + reserved > free.length)
-    return { ok: false, reason: `Too many keys and parts for one Raspberry Pi Pico: needs ${rows + cols + reserved + taken.size} pins, it has ${PICO_PINS.length}.` }
+    return { ok: false, reason: `Too many keys and parts for the ${board.name}: needs ${rows + cols + reserved + taken.size} pins, it has ${board.pins.length}.${board.pins.length < 26 ? ' A bigger controller has more.' : ''}` }
   const rowPins = free.slice(0, rows)
   const colPins = free.slice(rows, rows + cols)
   const back = [...free].reverse()
@@ -231,9 +229,9 @@ ${i2c ? '#define HAL_USE_I2C TRUE\n' : ''}${spi ? '#define HAL_USE_SPI TRUE\n' :
 `
     extra['mcuconf.h'] = `#pragma once
 #include_next <mcuconf.h>
-${i2c ? '#undef RP_I2C_USE_I2C0\n#define RP_I2C_USE_I2C0 TRUE\n' : ''}${spi ? '#undef RP_SPI_USE_SPI0\n#define RP_SPI_USE_SPI0 TRUE\n' : ''}${analogPins.length ? '#undef RP_ADC_USE_ADC1\n#define RP_ADC_USE_ADC1 TRUE\n' : ''}`
+${i2c ? `#undef RP_I2C_USE_I2C${I2C.n}\n#define RP_I2C_USE_I2C${I2C.n} TRUE\n` : ''}${spi ? `#undef RP_SPI_USE_SPI${SPI.n}\n#define RP_SPI_USE_SPI${SPI.n} TRUE\n` : ''}${analogPins.length ? '#undef RP_ADC_USE_ADC1\n#define RP_ADC_USE_ADC1 TRUE\n' : ''}`
     extra['config.h'] = `#pragma once
-${i2c ? `#define I2C_DRIVER I2CD0\n#define I2C1_SDA_PIN ${I2C.sda}\n#define I2C1_SCL_PIN ${I2C.scl}\n` : ''}${spi ? `#define SPI_DRIVER SPID0\n#define SPI_SCK_PIN ${SPI.sck}\n#define SPI_MOSI_PIN ${SPI.mosi}\n#define SPI_MISO_PIN ${SPI.miso}\n#define PMW33XX_CS_PIN ${SPI.cs}\n` : ''}${touchpad ? '#define CIRQUE_PINNACLE_DIAMETER_MM 40\n#define CIRQUE_PINNACLE_TAP_ENABLE\n' : ''}${joystick ? '#define JOYSTICK_AXIS_COUNT 2\n#define JOYSTICK_BUTTON_COUNT 0\n#define JOYSTICK_AXIS_RESOLUTION 10\n' : ''}`
+${i2c ? `#define I2C_DRIVER I2CD${I2C.n}\n#define I2C1_SDA_PIN ${I2C.sda}\n#define I2C1_SCL_PIN ${I2C.scl}\n` : ''}${spi ? `#define SPI_DRIVER SPID${SPI.n}\n#define SPI_SCK_PIN ${SPI.sck}\n#define SPI_MOSI_PIN ${SPI.mosi}\n#define SPI_MISO_PIN ${SPI.miso}\n#define PMW33XX_CS_PIN ${SPI.cs}\n` : ''}${touchpad ? '#define CIRQUE_PINNACLE_DIAMETER_MM 40\n#define CIRQUE_PINNACLE_TAP_ENABLE\n' : ''}${joystick ? '#define JOYSTICK_AXIS_COUNT 2\n#define JOYSTICK_BUTTON_COUNT 0\n#define JOYSTICK_AXIS_RESOLUTION 10\n' : ''}`
   }
   if (pointing) extra['rules.mk'] = `POINTING_DEVICE_DRIVER = ${trackball ? 'pmw3360' : 'cirque_pinnacle_i2c'}\n`
 
@@ -255,7 +253,7 @@ ${i2c ? `#define I2C_DRIVER I2CD0\n#define I2C1_SDA_PIN ${I2C.sda}\n#define I2C1
     .join('\n')
   const readme = `# ${name} — QMK firmware from BYOKb
 
-Hand-wired keyboard on a **Raspberry Pi Pico (RP2040)** with ${sw.brand} ${sw.model} switches, ${keys.length} keys${parts.map((c) => `, ${COMPONENTS[c.type].name.toLowerCase()}`).join('')}${ledsOn ? ', per-key RGB' : ''}.
+Hand-wired keyboard on a **${board.name}** (RP2040) with ${sw.brand} ${sw.model} switches, ${keys.length} keys${parts.map((c) => `, ${COMPONENTS[c.type].name.toLowerCase()}`).join('')}${ledsOn ? ', per-key RGB' : ''}.
 
 > Generated, not hand-tuned: run \`qmk lint -kb ${name}\` before your first build. The wiring below is an
 > assumed hand-wire layout (there is no PCB yet) — follow it exactly, or change \`matrix_pins\` to match yours.
@@ -265,7 +263,7 @@ Hand-wired keyboard on a **Raspberry Pi Pico (RP2040)** with ${sw.brand} ${sw.mo
 1. Install QMK: https://docs.qmk.fm/newbs_getting_started
 2. Copy this folder to \`qmk_firmware/keyboards/${name}\`
 3. \`qmk compile -kb ${name} -km default\`
-4. Hold the Pico's **BOOTSEL** button while plugging it in, then drag the \`.uf2\` file onto the drive that appears.
+4. Hold the board's **${board.boot}** button while plugging it in, then drag the \`.uf2\` file onto the drive that appears.
 
 ## Wiring
 

@@ -26,7 +26,11 @@ export interface Component {
   rot?: number
   /** The part's visible colour (knob body, trackball, joystick cap, screen bezel, touchpad frame, fader cap). */
   color?: string
+  /** Controllers only: which board (see CONTROLLERS). Unset = the Raspberry Pi Pico. */
+  model?: ControllerId
 }
+
+export type ControllerId = 'xiao' | 'zero' | 'pico'
 
 export type KeycapMaterial = 'solid' | 'frosted' | 'clear'
 

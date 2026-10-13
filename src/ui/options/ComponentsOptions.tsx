@@ -8,9 +8,9 @@ import { familyOf, switchById, switchGroups } from '../../lib/catalog'
 import { PROFILES } from '../../data/keycaps'
 import { KEYCAP_MATERIALS } from '../../data/materials'
 import type { KeycapMaterial } from '../../types'
-import { COMPONENTS, COMPONENT_TYPES } from '../../data/components'
+import { COMPONENTS, COMPONENT_TYPES, CONTROLLERS, CONTROLLER_ORDER, controllerOf, partColor } from '../../data/components'
 import { caseOutline, usbPort } from '../../lib/case'
-import { componentFootprint } from '../../lib/layout'
+import { caseController, componentFootprint } from '../../lib/layout'
 
 const SWATCHES = ['#f4f2ec', '#2b2b30', '#e8d6b8', '#9fb7d6', '#f2b8c6', '#b9d8b0', '#ff8a1f', '#5b5bd6']
 const WIDTHS = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.75, 6.25, 7]
@@ -46,14 +46,37 @@ function Place({ id, rot, rotate }: { id: string; rot: number; rotate: (id: stri
   )
 }
 
+/** Controller size: a slider from the smallest board to the Pico. Switching makes room for a bigger board. */
+function BoardSize({ id }: { id: string }) {
+  const c = useDesign((s) => s.design.components.find((c) => c.id === id))
+  if (!c) return null
+  const board = controllerOf(c)
+  const i = CONTROLLER_ORDER.indexOf(c.model ?? 'pico')
+  const pick = (n: number) => {
+    const { setComponent, dropComponent } = useDesign.getState()
+    setComponent(id, { model: CONTROLLER_ORDER[n], color: undefined })
+    dropComponent(id) // a bigger board pushes the keys in its rows aside
+  }
+  return (
+    <>
+      <label className="slider">
+        <span className="label">Size</span>
+        <input type="range" min={0} max={CONTROLLER_ORDER.length - 1} step={1} value={i} onChange={(e) => pick(Number(e.target.value))} aria-label="Controller size" />
+      </label>
+      <div className="stops">{CONTROLLER_ORDER.map((m, n) => <button key={m} className={n === i ? 'on' : ''} onClick={() => pick(n)}>{CONTROLLERS[m].short}</button>)}</div>
+      <p className="muted"><strong>{board.name}</strong>: {board.w} × {board.l} mm, {board.usb}, {board.pins.length} pins{board.holes ? ', screws onto standoffs' : ', sits in a printed tray'}.</p>
+    </>
+  )
+}
+
 /** Whether the controller's USB end reaches a wall, so the case gets its opening. */
 function PortStatus({ id }: { id: string }) {
   const design = useDesign((s) => s.design)
   const family = familyOf(design.board.switchId)
   const port = useMemo(() => {
     const footprints = [...design.keys, ...design.components.map(componentFootprint)]
-    const c = design.components.find((c) => c.id === id)
-    return c && usbPort(caseOutline(footprints, family, design.pocketFills), componentFootprint(c), family)
+    const ctrl = caseController(design.components.filter((c) => c.id === id))
+    return ctrl && usbPort(caseOutline(footprints, family, design.pocketFills), ctrl, family)
   }, [design.keys, design.components, design.pocketFills, family, id])
   return port
     ? <p className="muted">USB opening: through the wall {port.wall.toFixed(0)} mm past its end.</p>
@@ -122,13 +145,14 @@ export function ComponentsOptions() {
         <section className="selected">
           <h3>Selected {COMPONENTS[selectedKnob.type].name.toLowerCase()}</h3>
           <p className="muted">{COMPONENTS[selectedKnob.type].part}. {COMPONENTS[selectedKnob.type].note}</p>
+          {selectedKnob.type === 'controller' && <BoardSize id={selectedKnob.id} />}
           {selectedKnob.type === 'controller' && <PortStatus id={selectedKnob.id} />}
           <Place id={selectedKnob.id} rot={selectedKnob.rot ?? 0} rotate={rotate} />
           <div className="swatches" aria-label="Part colour">
             {PART_COLORS.map((c) => (
-              <button key={c} className={`swatch ${c === (selectedKnob.color ?? COMPONENTS[selectedKnob.type].color) ? 'active' : ''}`} style={{ background: c }} title={c} onClick={() => setComponent(selectedKnob.id, { color: c })} />
+              <button key={c} className={`swatch ${c === partColor(selectedKnob) ? 'active' : ''}`} style={{ background: c }} title={c} onClick={() => setComponent(selectedKnob.id, { color: c })} />
             ))}
-            <input type="color" value={selectedKnob.color ?? COMPONENTS[selectedKnob.type].color} onChange={(e) => setComponent(selectedKnob.id, { color: e.target.value })} title="Custom colour" />
+            <input type="color" value={partColor(selectedKnob)} onChange={(e) => setComponent(selectedKnob.id, { color: e.target.value })} title="Custom colour" />
           </div>
           <button className="tile wide" onClick={() => deleteKey(selectedKnob.id)}>Remove</button>
         </section>

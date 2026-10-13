@@ -9,7 +9,7 @@ import { familyOf, useDesign } from '../store/design'
 import { Keycap } from './Keycap'
 import { PocketOrb } from './PocketOrb'
 import { hitLocal } from './pointer'
-import { componentFootprint, keyRows } from '../lib/layout'
+import { caseController, componentFootprint, keyRows } from '../lib/layout'
 import { ComponentModel, componentCentre } from './ComponentModel'
 import { Case, caseColors } from './Case'
 import { KeyLed, LedTicker, type Ripple } from './KeyLed'
@@ -45,7 +45,7 @@ export function Board() {
 
   // components (the knob) sit on the plate like a 1u key: the case, well and cutouts include them
   const footprints = useMemo(() => [...keys, ...components.map(componentFootprint)], [keys, components])
-  const controllerFootprint = footprints.find((k) => components.some((c) => c.id === k.id && c.type === 'controller'))
+  const controller = useMemo(() => caseController(components), [components])
   const shape = useMemo(() => caseShape(footprints, family, fills), [footprints, family, fills])
   const invalid = useMemo(() => validate(keys, components, family), [keys, components, family])
   const maxZ = useMemo(() => Math.max(...shape.outline.flat().map((q) => q[1])), [shape])
@@ -91,7 +91,7 @@ export function Board() {
   return (
     <group position={center}>
       <LedTicker effect={board.ledEffect} />
-      <Case keys={footprints} family={family} fills={fills} tilt={tiltDeg} colors={caseColors(board)} controller={controllerFootprint} />
+      <Case keys={footprints} family={family} fills={fills} tilt={tiltDeg} colors={caseColors(board)} controller={controller} />
       {keys.map((k) => {
         const z = (k.y + k.h / 2) * p.y
         const target: [number, number, number] = [(k.x + k.w / 2) * p.x, plateTopAt(z, maxZ, family, tiltDeg) + SWITCH_TRAVEL_HEIGHT[family], z]

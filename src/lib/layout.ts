@@ -271,8 +271,8 @@ export const componentFootprint = (c: Component): Key => {
   }
   const b = controllerOf(c)
   const [w, h] = [b.footprint[0], c.screen ? Math.max(b.footprint[1], SCREEN_ON_TOP_U) : b.footprint[1]]
-  // a raised board sits on a solid plate; otherwise the plate has a window over it
-  return { id: c.id, x: c.x, y: c.y, w, h, rot: c.rot ?? 0, cut: c.mount === 'raised' ? [0, 0] : b.cut }
+  // only the window mount cuts the plate: a covered board is under the case's top, a raised one on a solid plate
+  return { id: c.id, x: c.x, y: c.y, w, h, rot: c.rot ?? 0, cut: (c.mount ?? 'window') === 'window' ? b.cut : [0, 0] }
 }
 /** Length (units) a controller needs with a 0.91" OLED (38 mm module) above it. */
 const SCREEN_ON_TOP_U = 2.5

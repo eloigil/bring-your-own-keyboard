@@ -71,7 +71,7 @@ function BoardSize({ id }: { id: string }) {
 
 const MOUNTS = [
   { id: 'window', label: 'Window', note: 'Under the plate, seen through a window in it.' },
-  { id: 'covered', label: 'Covered', note: 'Under the plate, the window closed by a printed lid (cover.stl).' },
+  { id: 'covered', label: 'Covered', note: 'Enclosed under the case top: the case covers it, only the USB opening shows.' },
   { id: 'raised', label: 'Raised', note: 'On top of a solid plate; the USB plug leaves through a notch in the top of the wall.' },
 ] as const
 
@@ -94,7 +94,7 @@ function BoardMount({ id }: { id: string }) {
           {c.screen ? '✓ ' : '+ '}Screen on top
         </button>
       </div>
-      <p className="muted">{MOUNTS.find((m) => m.id === mount)!.note}{c.screen ? ' A 0.91" OLED sits above it, on the controller\'s I²C.' : ''}</p>
+      <p className="muted">{MOUNTS.find((m) => m.id === mount)!.note}{c.screen ? ` A 0.91" OLED rests ${mount === 'covered' ? 'on the case top above it' : 'on the board'}, on the controller\'s I²C.` : ''}</p>
     </>
   )
 }

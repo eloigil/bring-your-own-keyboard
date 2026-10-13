@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
-import { area, caseAssembly, caseMesh, caseOutline, caseParts, caseShape, caseWell, contains, keyCorners, portSpan, screwPoints, usbPort, wallTopAt, BOTTOM_T, LID_T, PLATE_T, STANDOFF_H, TOP_BEVEL, type PocketFill } from './case'
+import { area, caseAssembly, caseMesh, caseOutline, caseParts, caseShape, caseWell, contains, keyCorners, portSpan, screwPoints, usbPort, wallTopAt, BOTTOM_T, screenRest, STANDOFF_H, TOP_BEVEL, type PocketFill } from './case'
 import { CASE_HEIGHT, PITCH } from './units'
 import { alice, caseController, PRESETS, split, tkl } from './layout'
 import { CONTROLLERS } from '../data/components'
@@ -430,16 +430,26 @@ describe('controller', () => {
     }
   })
 
-  it('covered: a lid drops into the window and rests on the plate; it prints flange down', () => {
-    const { cx, cy, view, print } = mounted('covered')
-    expect(view.lid).not.toBeNull()
-    expect(Math.max(...rayHeights(view.lid!, cx, cy))).toBeCloseTo(plateTop + LID_T, 1)
-    expect(Math.min(...rayHeights(view.lid!, cx, cy))).toBeCloseTo(plateTop - PLATE_T.MX, 1) // the plug fills the window
-    const lid = print.lid!
-    lid.computeBoundingBox()
-    expect(lid.boundingBox!.min.y).toBeCloseTo(0)
-    expect(lid.boundingBox!.max.y).toBeCloseTo(LID_T + PLATE_T.MX)
-    expect(mounted('window').print.lid).toBeNull()
+  it('covered: the case top runs over the board, with a pocket under it big enough for the board and its socket', () => {
+    for (const model of ['pico', 'zero'] as const) {
+      const { ctrl, cx, cy, view, print } = mounted('covered', model)
+      const hits = [...new Set(rayHeights(view.shell, cx, cy))].sort((a, b) => b - a)
+      expect(hits[0], model).toBeCloseTo(CASE_HEIGHT.MX, 1) // straight down onto the case top, not into a well
+      const deckUnderside = hits[1]
+      const boardTop = BOTTOM_T + STANDOFF_H + ctrl.board.pcb + ctrl.board.usbH
+      expect(deckUnderside, model).toBeGreaterThan(boardTop) // room for the board and its USB socket
+      expect(CASE_HEIGHT.MX - deckUnderside, model).toBeGreaterThanOrEqual(1.6) // a deck thick enough to print
+      expect(rayHeights(view.plate, cx, cy), model).toEqual([]) // no plate there
+      print.bottom.computeBoundingBox()
+      expect(print.bottom.boundingBox!.max.y, model).toBeGreaterThan(BOTTOM_T + 1) // its mount is still on the bottom plate
+    }
+  })
+
+  it('the OLED rests on what is under it: the case top over a covered board, the board itself when raised', () => {
+    expect(screenRest('covered', CONTROLLERS.pico)).toBe(2.5) // plate top → case top
+    // over a long Pico the module clears the micro-USB socket and lies on the chips; on a short board it rests on the socket
+    expect(screenRest('raised', CONTROLLERS.pico)).toBeCloseTo(CONTROLLERS.pico.pcb + 0.9)
+    expect(screenRest('raised', CONTROLLERS.zero)).toBeCloseTo(CONTROLLERS.zero.pcb + CONTROLLERS.zero.usbH)
   })
 
   it('a screen on top lengthens the footprint so the 38 mm OLED fits', () => {

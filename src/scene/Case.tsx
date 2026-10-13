@@ -37,7 +37,7 @@ export function Case({ keys, family, fills, tilt, colors, controller }: { keys: 
       isTop.fill(top, i, i + 3)
     }
     g.userData.isTop = isTop
-    for (const part of [a.shell, a.plate, a.bottom, ...(a.lid ? [a.lid] : [])]) grainUVs(part)
+    for (const part of [a.shell, a.plate, a.bottom]) grainUVs(part)
     return a
   }, [keys, family, fills, tilt, controller])
 
@@ -54,7 +54,7 @@ export function Case({ keys, family, fills, tilt, colors, controller }: { keys: 
     g.setAttribute('color', new THREE.BufferAttribute(out, 3))
   }, [parts, colors.top, colors.wall])
 
-  useEffect(() => () => void (parts && Object.values(parts).forEach((g) => g?.dispose())), [parts])
+  useEffect(() => () => void (parts && Object.values(parts).forEach((g) => g.dispose())), [parts])
   if (!parts) return null
   const grain = plasticGrain()
   return (
@@ -68,11 +68,6 @@ export function Case({ keys, family, fills, tilt, colors, controller }: { keys: 
       <mesh geometry={parts.bottom} castShadow receiveShadow>
         <meshStandardMaterial color={colors.bottom} roughness={0.5} metalness={0.05} bumpMap={grain} bumpScale={0.35} />
       </mesh>
-      {parts.lid && (
-        <mesh geometry={parts.lid} castShadow receiveShadow>
-          <meshStandardMaterial color={colors.plate} roughness={0.45} metalness={0.1} bumpMap={grain} bumpScale={0.2} />
-        </mesh>
-      )}
     </group>
   )
 }

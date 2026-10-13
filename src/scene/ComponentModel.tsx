@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import type { Component } from '../types'
 import type { Family } from '../lib/units'
 import { CASE_HEIGHT, PITCH } from '../lib/units'
-import { boardRaise, LID_T, PLATE_RECESS } from '../lib/case'
+import { boardRaise, PLATE_RECESS, screenRest } from '../lib/case'
 import { controllerOf, partColor } from '../data/components'
 import { componentFootprint } from '../lib/layout'
 
@@ -168,7 +168,6 @@ const Slider = ({ c, invalid, selected }: Props) => {
  * The controller board lying below the plate (on standoffs or in its tray), seen through the plate's window.
  * Origin is the plate top, so the board is drawn that far down. USB end towards -z (the back, before rotation).
  */
-const pcbTop = (b: { pcb: number; usbH: number }) => b.pcb + b.usbH
 /** A 0.91" 128×32 OLED module, long side along z (the controller's length). */
 const Oled = () => (
   <group rotation={[0, Math.PI / 2, 0]}>
@@ -194,14 +193,14 @@ const Controller = ({ c, family, invalid, selected, shear = 1 }: Props) => {
   const mat = useTint(invalid, selected, colorOf(c))
   const mount = c.mount ?? 'window'
   const y = (boardRaise(family, mount) - (CASE_HEIGHT[family] - PLATE_RECESS)) * shear // the board's underside, relative to the plate top
-  // the OLED: on the lid when covered, on 8 mm headers above a raised board, just over the plate otherwise
-  const screenY = mount === 'covered' ? LID_T * shear : mount === 'raised' ? pcbTop(board) + 8 : 0.5
+  // the OLED rests on the case's top over a covered board (which stretches with the tilt), or on a raised board
+  const screenY = mount === 'covered' ? screenRest(mount, board) * shear : screenRest(mount, board)
   const { w, l, pcb, usbH } = board
   const usbC = board.usb === 'USB-C'
   const pads = Math.floor((l - 3) / 2.54)
   return (
     <group>
-    {c.screen && <group position={[0, mount === 'raised' ? y + screenY : screenY, 0]}><Oled /></group>}
+    {c.screen && <group position={[0, screenY, 0]}><Oled /></group>}
     <group position={[0, y, 0]}>
       <mesh position={[0, pcb / 2, 0]} castShadow>
         <boxGeometry args={[w, pcb, l]} />

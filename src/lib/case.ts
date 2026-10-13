@@ -379,10 +379,20 @@ const PORT_REACH = 45 // mm past the board's end the opening may tunnel to find 
 
 /** The controller as the case sees it: where it is on the board (its footprint), which board, how it's mounted. */
 export interface CaseController { at: Key; board: ControllerBoard; mount: ControllerMount; screen: boolean }
+/**
+ * Where a 0.91" OLED on top rests, in mm above the plate top: on the case's top over a covered board; on a raised
+ * board itself — on its chips, or on its USB socket when the 38 mm module reaches over it.
+ */
+export function screenRest(mount: ControllerMount, board: ControllerBoard) {
+  if (mount === 'covered') return PLATE_RECESS
+  const socket = board.usb === 'USB-C' ? 7.4 : 5.5
+  return board.pcb + (OLED_L / 2 > board.l / 2 - socket ? board.usbH : 0.9)
+}
+export const OLED_L = 38 // mm: the 0.91" module's length
+
 /** How high a board's underside sits above the bed: on its standoffs/pad under the plate, or on the plate when raised. */
 export const boardRaise = (family: Family, mount: ControllerMount = 'window') =>
   mount === 'raised' ? CASE_HEIGHT[family] - PLATE_RECESS : BOTTOM_T + STANDOFF_H
-export const LID_FLANGE = 1.5, LID_T = 1.2 // mm: the lid's top overlaps the plate by this much all round, and is this thick
 
 /** Maps the controller's own frame (x across, y along, USB end at -y) to layout mm. */
 function controllerFrame(k: Key, family: Family) {
@@ -419,6 +429,13 @@ export function portSpan(family: Family, board: ControllerBoard, mount: Controll
   return { z0, z1, h: z1 - z0 }
 }
 
+/** The board's outline grown by `gap` mm, in layout mm. */
+function boardRect({ at: k, board }: CaseController, family: Family, gap: number): Poly {
+  const at = controllerFrame(k, family)
+  const [hw, hl] = [board.w / 2 + gap, board.l / 2 + gap]
+  return ([[-hw, -hl], [hw, -hl], [hw, hl], [-hw, hl]] as Pt[]).map(at)
+}
+
 /** Splits the slabs at z0 and z1 and cuts `hole` out of every slab between them (a window through the walls). */
 function cutWindow(slabs: Slab[], hole: Path[], z0: number, z1: number): Slab[] {
   return slabs.flatMap((s) => {
@@ -434,7 +451,9 @@ function cutWindow(slabs: Slab[], hole: Path[], z0: number, z1: number): Slab[] 
 function buildParts(keys: Key[], family: Family, fills: PocketFill[], controller?: CaseController) {
   const outer = caseOutline(keys, family, fills)
   if (!outer.length) return null
-  const inner = caseWell(keys, family, outer)
+  // a covered controller lives under the case's top, not in the keys' well
+  const covered = controller?.mount === 'covered' ? controller : null
+  const inner = caseWell(covered ? keys.filter((k) => k.id !== covered.at.id) : keys, family, outer)
   const well = inner.filter((r) => area(r) > 0)
   const islands = inner.filter((r) => area(r) < 0).map((r) => [...r].reverse()) // deck left standing inside the well
   const cutouts = keys.filter((k) => !k.cut || k.cut[0] > 0).map((k) => keyCorners(k, family, 0, k.cut ?? CUTOUT[family]).slice().reverse())
@@ -448,6 +467,12 @@ function buildParts(keys: Key[], family: Family, fills: PocketFill[], controller
   const rebate = offset(outerP, -WALL_LOW)
   const cavity = offset(wellP, -LEDGE)
   const inserts = P(screws.map(([x, y]) => circle(x, y, INSERT_D)))
+  // its pocket: the board plus a millimetre all round, from the bottom plate up to just over the board's USB socket
+  // (at least to the plate's underside, at most leaving a 1.6 mm deck)
+  const pocket = covered ? [toPath(boardRect(covered, family, 1))] : []
+  const pocketTop = covered
+    ? Math.min(H - 1.6, Math.max(plateBottom, boardRaise(family, 'covered') + covered.board.pcb + covered.board.usbH + 0.8))
+    : plateBottom
 
   // Shell, bottom up: rim around the rebate; wall with the insert holes; wall up to the ledge; straight wall around
   // the well; then the rounded top edge as thin slabs, each inset a little more along a quarter circle.
@@ -456,9 +481,10 @@ function buildParts(keys: Key[], family: Family, fills: PocketFill[], controller
   // breaks at concave corners (the inset ring gains arcs the outer ring doesn't have). Creased normals hide the steps.
   const slabs: Slab[] = [
     { section: difference(outerP, rebate), z0: 0, z1: BOTTOM_T },
-    { section: difference(outerP, [...cavity, ...inserts]), z0: BOTTOM_T, z1: holeTop },
-    { section: difference(outerP, cavity), z0: holeTop, z1: plateBottom },
-    { section: difference(outerP, wellP), z0: plateBottom, z1: H - TOP_BEVEL },
+    { section: difference(outerP, [...cavity, ...pocket, ...inserts]), z0: BOTTOM_T, z1: holeTop },
+    { section: difference(outerP, [...cavity, ...pocket]), z0: holeTop, z1: plateBottom },
+    ...(pocketTop > plateBottom ? [{ section: difference(outerP, [...wellP, ...pocket]), z0: plateBottom, z1: pocketTop }] : []),
+    { section: difference(outerP, wellP), z0: pocketTop, z1: H - TOP_BEVEL },
   ]
   for (let k = 1; k <= BEVEL_STEPS; k++) {
     const th = (k / BEVEL_STEPS) * (Math.PI / 2)
@@ -505,20 +531,7 @@ function buildParts(keys: Key[], family: Family, fills: PocketFill[], controller
     ...mount,
   ])
 
-  // the lid for a covered window: a plug that drops into the plate's window, under a flange that rests on the plate
-  // (built flange-down, the way it prints; the view flips it into place)
-  const window = controller?.mount === 'covered' && at && controller.at.cut && controller.at.cut[0] > 0 ? controller.at.cut : null
-  const lid = window && at
-    ? (() => {
-        const rect = (hw: number, hl: number) => [toPath(([[-hw, -hl], [hw, -hl], [hw, hl], [-hw, hl]] as Pt[]).map(at))]
-        const [ww, wl] = [window[0] / 2, window[1] / 2]
-        return stack([
-          { section: rect(ww + LID_FLANGE, wl + LID_FLANGE), z0: 0, z1: LID_T },
-          { section: rect(ww - FIT, wl - FIT), z0: LID_T, z1: LID_T + pt },
-        ])
-      })()
-    : null
-  return { shell, plate, bottom, lid, plateBottom, screws, H, outer, port: controller && span ? (port ? { w: PORT_W, h: span.h } : 'blocked' as const) : null }
+  return { shell, plate, bottom, plateBottom, screws, H, outer, port: controller && span ? (port ? { w: PORT_W, h: span.h } : 'blocked' as const) : null }
 }
 
 /** Layout-space extrusion → world (Y up, layout y → +Z), then the typing angle: everything above the bottom plate
@@ -554,8 +567,6 @@ export function caseParts(keys: Key[], family: Family, fills: PocketFill[] = [],
     cavity: b.plateBottom - BOTTOM_T,
     /** USB opening size, 'blocked' if the controller is too far from an edge, null without a controller. */
     port: b.port,
-    /** The lid for a covered controller window, flange down (how it prints), or null. */
-    lid: b.lid && flat(b.lid),
   }
 }
 
@@ -570,33 +581,13 @@ export function caseAssembly(keys: Key[], family: Family, fills: PocketFill[] = 
   const back = Math.max(...b.outer.flat().map((q) => q[1]))
   // smooth shading across curved walls, sharp where faces meet at > 40° (top edge, cutouts)
   const place = (parts: THREE.BufferGeometry[]) => toCreasedNormals(toWorld(mergeGeometries(parts)!, b.H, tilt, back), (40 * Math.PI) / 180)
-  const plateTop = b.plateBottom + PLATE_T[family]
-  return {
-    shell: place(b.shell),
-    plate: place(b.plate.map((g) => g.translate(0, 0, b.plateBottom))),
-    bottom: place(b.bottom),
-    // the lid is built flange-down for printing: turn it over so the plug sits in the window and the flange on the plate
-    lid: b.lid && place(b.lid.map((g) => flipZ(g).translate(0, 0, plateTop + LID_T))),
-  }
-}
-
-/** Mirror a non-indexed geometry through z = 0, keeping its faces pointing outward. */
-function flipZ(g: THREE.BufferGeometry) {
-  const flat = g.index ? g.toNonIndexed() : g
-  flat.scale(1, 1, -1)
-  const pos = flat.attributes.position
-  for (let i = 0; i < pos.count; i += 3) {
-    const [x, y, z] = [pos.getX(i + 1), pos.getY(i + 1), pos.getZ(i + 1)]
-    pos.setXYZ(i + 1, pos.getX(i + 2), pos.getY(i + 2), pos.getZ(i + 2))
-    pos.setXYZ(i + 2, x, y, z)
-  }
-  return flat
+  return { shell: place(b.shell), plate: place(b.plate.map((g) => g.translate(0, 0, b.plateBottom))), bottom: place(b.bottom) }
 }
 
 /** The assembled case as one geometry (for tests and measurements). */
 export function caseMesh(keys: Key[], family: Family, fills: PocketFill[] = [], tilt = TILT_DEG, controller?: CaseController): THREE.BufferGeometry | null {
   const a = caseAssembly(keys, family, fills, tilt, controller)
-  return a && mergeGeometries([a.shell, a.plate, a.bottom, ...(a.lid ? [a.lid] : [])])
+  return a && mergeGeometries([a.shell, a.plate, a.bottom])
 }
 
 /** World height of the wall top at depth `zWorld`. */

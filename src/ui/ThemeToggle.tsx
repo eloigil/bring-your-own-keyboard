@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Moon, Sun } from '@phosphor-icons/react'
 import { useDesign } from '../store/design'
 
 /** Top-right switch between the light studio and a dark room (to see the LEDs glow). The scene plays a sunset / sunrise. */
@@ -15,8 +16,8 @@ export function ThemeToggle() {
     return () => clearTimeout(t)
   }, [dark])
   return (
-    <button className="card theme-toggle" onClick={useDesign.getState().toggleDark} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'} title={dark ? 'Light mode' : 'Dark mode'}>
-      <span key={String(dark)} className="glyph">{dark ? '☀' : '☾'}</span>
+    <button className="icon theme-toggle" onClick={useDesign.getState().toggleDark} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'} title={dark ? 'Light mode' : 'Dark mode'}>
+      <span key={String(dark)} className="glyph">{dark ? <Sun size={18} /> : <Moon size={18} />}</span>
     </button>
   )
 }

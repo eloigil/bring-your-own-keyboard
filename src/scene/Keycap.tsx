@@ -11,7 +11,7 @@ import { plasticGrain } from './textures'
 
 const GAP = 1.2 // mm between neighbouring caps
 const RED = new THREE.Color('#e5484d')
-const ACCENT = new THREE.Color('#5b5bd6')
+const ACCENT = new THREE.Color('#e8590c') // the UI accent: selection
 
 // Keycap and switch geometries are shared between keys with the same shape (a TKL needs only a handful).
 /**

@@ -45,7 +45,7 @@ export function PocketOrb({ pocket, maxZ, family, offset, tilt }: { pocket: Pock
       scale={hover || drag ? 1.3 : 1}
     >
       <sphereGeometry args={[R, 24, 16]} />
-      <meshStandardMaterial color="#5b5bd6" emissive="#5b5bd6" emissiveIntensity={hover || drag ? 0.6 : 0.25} roughness={0.3} />
+      <meshStandardMaterial color="#f4f4f5" emissive="#ffffff" emissiveIntensity={hover || drag ? 0.45 : 0.12} roughness={0.25} />
     </mesh>
   )
 }

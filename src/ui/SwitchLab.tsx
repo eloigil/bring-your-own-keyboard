@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
+import { Eye, Play, X } from '@phosphor-icons/react'
 import { useDesign } from '../store/design'
 import { SWITCHES, switchById, type SoundProfile } from '../lib/catalog'
 import { playKeystroke, playStroke } from '../lib/switchSound'
@@ -83,7 +84,7 @@ export function SwitchLab({ onClose }: { onClose: () => void }) {
       <div className="card lab" role="dialog" aria-label="Switch lab">
         <header>
           <h2>Switch lab</h2>
-          <button className="close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="icon close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </header>
 
         <aside className="lab-list">
@@ -123,8 +124,8 @@ export function SwitchLab({ onClose }: { onClose: () => void }) {
             <span>{press.toFixed(1)} mm</span>
           </label>
           <div className="row">
-            <button className="tile" onClick={() => playKeystroke(s)}>▶ Hear it</button>
-            <button className={`tile ${xray ? 'active' : ''}`} onClick={() => setXray(!xray)}>See inside</button>
+            <button className="button" onClick={() => playKeystroke(s)}><Play size={14} weight="fill" /> Hear it</button>
+            <button className={`button ${xray ? 'on' : ''}`} onClick={() => setXray(!xray)}><Eye size={14} /> See inside</button>
           </div>
         </section>
 
@@ -158,7 +159,7 @@ export function SwitchLab({ onClose }: { onClose: () => void }) {
           <p className="muted small">Specs are best-effort from public sources; the curve is modelled from them and the sound is synthesized, both approximate.</p>
 
           <button
-            className="tile wide active use"
+            className="button primary use"
             disabled={id === boardSwitch}
             onClick={() => {
               useDesign.getState().setSwitch(id)

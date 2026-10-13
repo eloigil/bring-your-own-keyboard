@@ -2,14 +2,14 @@ import { useEffect } from 'react'
 import { Stage } from '../scene/Stage'
 import { Board } from '../scene/Board'
 import { useDesign } from '../store/design'
-import { StepsPanel } from './StepsPanel'
 import { OptionsPanel } from './OptionsPanel'
-import { ThemeToggle } from './ThemeToggle'
-import { UndoRedo } from './UndoRedo'
+import { TopBar } from './TopBar'
+import { SelectionPanel } from './options/ComponentsOptions'
 import { redo, undo } from '../store/history'
 import { readDesignFile, readShareFragment } from '../lib/share'
 
 export function Editor() {
+  const step = useDesign((s) => s.step)
   // a share link (#d=…) opens its design; the fragment is then cleared so a reload keeps your edits
   useEffect(() => {
     const fromLink = () => {
@@ -71,10 +71,9 @@ export function Editor() {
       <Stage onPointerMissed={() => useDesign.getState().select(null)}>
         <Board />
       </Stage>
-      <StepsPanel />
+      <TopBar />
       <OptionsPanel />
-      <UndoRedo />
-      <ThemeToggle />
+      {step === 'Build' && <SelectionPanel />}
     </>
   )
 }

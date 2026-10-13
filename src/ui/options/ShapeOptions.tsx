@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Plus, Trash } from '@phosphor-icons/react'
 import { useDesign } from '../../store/design'
 import { caseColors } from '../../scene/Case'
 
@@ -21,22 +22,21 @@ export function ShapeOptions() {
   const auto = part !== 'caseColor' && board[part] === undefined
   return (
     <section>
-      <h3>Shape it</h3>
       <div className="row">
-        <button className="tile" onClick={addKey}>+ Add key</button>
-        <button className="tile" disabled={!selectedId} onClick={() => selectedId && deleteKey(selectedId)}>Delete key</button>
+        <button className="button" onClick={addKey}><Plus size={14} weight="bold" /> Add key</button>
+        <button className="button" disabled={!selectedId} onClick={() => selectedId && deleteKey(selectedId)}><Trash size={14} /> Delete key</button>
       </div>
-      <p className="muted">Drag keys to reshape your board. Drag the purple orbs to fill or open the dips in the case.</p>
-      <h3>Case colour</h3>
-      <div className="chips" aria-label="Case part">
+      <p className="muted">Drag keys to reshape the board. Drag the orbs to fill or open the dips in the case.</p>
+      <h3>Colour</h3>
+      <div className="segmented" aria-label="Case part">
         {PARTS.map((p) => (
-          <button key={p.id} className={`chip ${part === p.id ? 'active' : ''}`} onClick={() => setPart(p.id)}>
-            <span className="dot" style={{ background: caseColors(board)[SHOWN[p.id]], marginRight: 6 }} />
+          <button key={p.id} className={part === p.id ? 'active' : ''} onClick={() => setPart(p.id)}>
+            <span className="dot" style={{ background: caseColors(board)[SHOWN[p.id]], width: 9, height: 9, marginRight: 5, borderRadius: 3 }} />
             {p.label}
           </button>
         ))}
       </div>
-      <div className="swatches" aria-label={`${PARTS.find((p) => p.id === part)!.label} colour`}>
+      <div className="swatches" style={{ marginTop: 10 }} aria-label={`${PARTS.find((p) => p.id === part)!.label} colour`}>
         {part !== 'caseColor' && (
           <button className={`swatch eraser ${auto ? 'active' : ''}`} title="Auto: a lighter tint of the top" onClick={() => setKeycaps({ [part]: undefined })}>A</button>
         )}

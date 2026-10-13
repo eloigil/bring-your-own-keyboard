@@ -10,7 +10,7 @@ import { controllerOf, partColor } from '../data/components'
 import { componentFootprint } from '../lib/layout'
 
 const RED = new THREE.Color('#e5484d')
-const ACCENT = new THREE.Color('#5b5bd6')
+const ACCENT = new THREE.Color('#e8590c') // the UI accent: selection
 const BODY = '#3a3940'
 const GLASS = '#15141a'
 

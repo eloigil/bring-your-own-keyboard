@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { ArrowCounterClockwise, CaretRight, Check, Plus, Trash, X } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
 import { useDesign } from '../../store/design'
 import { SwitchLab } from '../SwitchLab'
@@ -24,7 +25,7 @@ function SwitchSelect({ value, onChange, family, allowDefault }: { value: string
       {switchGroups(family ? (s) => s.family === family : undefined).map(([label, list]) => (
         <optgroup key={label} label={label}>
           {list.map((s) => (
-            <option key={s.id} value={s.id}>{s.model} — {s.actuationG} g</option>
+            <option key={s.id} value={s.id}>{s.model}, {s.actuationG} g</option>
           ))}
         </optgroup>
       ))}
@@ -91,7 +92,7 @@ function BoardMount({ id }: { id: string }) {
           <button key={m.id} className={`chip ${mount === m.id ? 'active' : ''}`} onClick={() => set({ mount: m.id, ...(m.id === 'window' && { screen: false }) })}>{m.label}</button>
         ))}
         <button className={`chip ${c.screen ? 'active' : ''}`} disabled={mount === 'window'} onClick={() => set({ screen: !c.screen })} title={mount === 'window' ? 'Cover the window or raise the board first' : 'A 0.91" OLED above the controller'}>
-          {c.screen ? '✓ ' : '+ '}Screen on top
+          {c.screen ? <Check size={12} weight="bold" /> : <Plus size={12} weight="bold" />} Screen on top
         </button>
       </div>
       <p className="muted">{MOUNTS.find((m) => m.id === mount)!.note}{c.screen ? ` A 0.91" OLED rests ${mount === 'covered' ? 'on the case top above it' : 'on the board'}, on the controller\'s I²C.` : ''}</p>
@@ -113,84 +114,117 @@ function PortStatus({ id }: { id: string }) {
     : <p className="blocked">Its USB end doesn't reach a wall, so the case has no USB opening. Move it to an edge or rotate it so the USB end points outward.</p>
 }
 
-export function ComponentsOptions() {
+/** Build → Switches: the board's switch (opens the lab) and housing colour. */
+export function SwitchOptions() {
   const board = useDesign((s) => s.design.board)
-  const selected = useDesign((s) => s.design.keys.find((k) => k.id === s.selectedId))
-  const selectedKnob = useDesign((s) => s.design.components.find((c) => c.id === s.selectedId))
-  const { setKeycaps, setOverride, addComponent, deleteKey, setKeySize, rotate, setComponent } = useDesign.getState()
+  const { setKeycaps } = useDesign.getState()
   const sw = switchById(board.switchId)
   const [lab, setLab] = useState(false)
   return (
-    <>
-      <section>
-        <h3>Switches</h3>
-        <button className="switch-card" onClick={() => setLab(true)} aria-label={`${sw.brand} ${sw.model}. Open the switch lab`}>
-          <SwitchSide s={sw} housing={board.switchColor} />
-          <span className="info">
-            <BrandLogo brand={brandOf(sw)} />
-            <strong>{sw.model}</strong>
-            <small>{sw.type} · {sw.actuationG} g · {sw.sound.profile}{sw.family === 'Choc' ? ' · low profile' : ''}</small>
-            <span className="open">Open switch lab ›</span>
-          </span>
-        </button>
-        {lab && createPortal(<SwitchLab onClose={() => setLab(false)} />, document.body)}
-        <h3>Housing colour</h3>
-        <div className="swatches" aria-label="Switch housing colour">
-          {HOUSINGS.map((c) => (
-            <button key={c} className={`swatch ${c === board.switchColor ? 'active' : ''}`} style={{ background: c }} title={`Housing ${c}`} onClick={() => setKeycaps({ switchColor: c })} />
-          ))}
-          <input type="color" value={board.switchColor} onChange={(e) => setKeycaps({ switchColor: e.target.value })} title="Custom housing colour" />
-        </div>
-      </section>
-      <section>
-        <h3>Keycaps</h3>
-        <select value={board.profileId} onChange={(e) => setKeycaps({ profileId: e.target.value })}>
-          {PROFILES.map((p) => <option key={p.id} value={p.id}>{p.name} profile</option>)}
-        </select>
-        <div className="swatches">
-          {SWATCHES.map((c) => (
-            <button key={c} className={`swatch ${c === board.keycapColor ? 'active' : ''}`} style={{ background: c }} title={c} onClick={() => setKeycaps({ keycapColor: c })} />
-          ))}
-          <input type="color" value={board.keycapColor} onChange={(e) => setKeycaps({ keycapColor: e.target.value })} title="Custom colour" />
-        </div>
-        <div className="grid">
-          {(Object.keys(KEYCAP_MATERIALS) as KeycapMaterial[]).map((id) => (
-            <button key={id} className={`tile ${board.keycapMaterial === id ? 'active' : ''}`} onClick={() => setKeycaps({ keycapMaterial: id })}>
-              {KEYCAP_MATERIALS[id].name}
-            </button>
-          ))}
-        </div>
-        <p className="muted">{KEYCAP_MATERIALS[board.keycapMaterial].note}</p>
-      </section>
-      <section>
-        <h3>Components</h3>
-        <div className="grid">
-          {COMPONENT_TYPES.map((t) => (
-            <button key={t} className="tile" onClick={() => addComponent(t)} title={COMPONENTS[t].part}>+ {COMPONENTS[t].name}</button>
-          ))}
-        </div>
-        <p className="muted">Drag a part onto your board; when you let go, keys in its rows slide aside to make room.</p>
-      </section>
+    <section>
+      <button className="switch-card" onClick={() => setLab(true)} aria-label={`${sw.brand} ${sw.model}. Open the switch lab`}>
+        <SwitchSide s={sw} housing={board.switchColor} />
+        <span className="info">
+          <BrandLogo brand={brandOf(sw)} />
+          <strong>{sw.model}</strong>
+          <small>{sw.type}, {sw.actuationG} g, {sw.sound.profile}{sw.family === 'Choc' ? ', low profile' : ''}</small>
+          <span className="open">Open switch lab <CaretRight size={12} weight="bold" /></span>
+        </span>
+      </button>
+      {lab && createPortal(<SwitchLab onClose={() => setLab(false)} />, document.body)}
+      <h3>Housing colour</h3>
+      <div className="swatches" aria-label="Switch housing colour">
+        {HOUSINGS.map((c) => (
+          <button key={c} className={`swatch ${c === board.switchColor ? 'active' : ''}`} style={{ background: c }} title={`Housing ${c}`} onClick={() => setKeycaps({ switchColor: c })} />
+        ))}
+        <input type="color" value={board.switchColor} onChange={(e) => setKeycaps({ switchColor: e.target.value })} title="Custom housing colour" />
+      </div>
+    </section>
+  )
+}
+
+/** Build → Keycaps: profile, colour and plastic. */
+export function KeycapOptions() {
+  const board = useDesign((s) => s.design.board)
+  const { setKeycaps } = useDesign.getState()
+  return (
+    <section>
+      <h3>Profile</h3>
+      <select value={board.profileId} onChange={(e) => setKeycaps({ profileId: e.target.value })}>
+        {PROFILES.map((p) => <option key={p.id} value={p.id}>{p.name} profile</option>)}
+      </select>
+      <h3>Colour</h3>
+      <div className="swatches">
+        {SWATCHES.map((c) => (
+          <button key={c} className={`swatch ${c === board.keycapColor ? 'active' : ''}`} style={{ background: c }} title={c} onClick={() => setKeycaps({ keycapColor: c })} />
+        ))}
+        <input type="color" value={board.keycapColor} onChange={(e) => setKeycaps({ keycapColor: e.target.value })} title="Custom colour" />
+      </div>
+      <h3>Plastic</h3>
+      <div className="segmented">
+        {(Object.keys(KEYCAP_MATERIALS) as KeycapMaterial[]).map((id) => (
+          <button key={id} className={board.keycapMaterial === id ? 'active' : ''} onClick={() => setKeycaps({ keycapMaterial: id })}>
+            {KEYCAP_MATERIALS[id].name}
+          </button>
+        ))}
+      </div>
+      <p className="muted">{KEYCAP_MATERIALS[board.keycapMaterial].note}</p>
+    </section>
+  )
+}
+
+/** Build → Parts: add a controller, knob, screen… */
+export function PartsOptions() {
+  const { addComponent } = useDesign.getState()
+  return (
+    <section>
+      <div className="part-grid">
+        {COMPONENT_TYPES.map((t) => (
+          <button key={t} className="part" onClick={() => addComponent(t)} title={COMPONENTS[t].part}>
+            <Plus size={14} weight="bold" />
+            {COMPONENTS[t].name}
+          </button>
+        ))}
+      </div>
+      <p className="muted">Drag a part onto your board. When you let go, keys in its rows slide aside to make room.</p>
+    </section>
+  )
+}
+
+/** The selected key or part, in a card of its own (Build step): everything that changes just that one thing. */
+export function SelectionPanel() {
+  const board = useDesign((s) => s.design.board)
+  const selected = useDesign((s) => s.design.keys.find((k) => k.id === s.selectedId))
+  const selectedKnob = useDesign((s) => s.design.components.find((c) => c.id === s.selectedId))
+  const { setOverride, deleteKey, setKeySize, rotate, setComponent, select } = useDesign.getState()
+  if (!selected && !selectedKnob) return null
+  const title = selectedKnob ? COMPONENTS[selectedKnob.type].name : `Key${selected!.legend ? ` ${selected!.legend}` : ''}`
+  return (
+    <aside className="surface selection" aria-label="Selection">
+      <header>
+        <h2>{title}</h2>
+        <button className="icon" onClick={() => select(null)} aria-label="Deselect"><X size={16} /></button>
+      </header>
       {selectedKnob && (
-        <section className="selected">
-          <h3>Selected {COMPONENTS[selectedKnob.type].name.toLowerCase()}</h3>
+        <>
           <p className="muted">{COMPONENTS[selectedKnob.type].part}. {COMPONENTS[selectedKnob.type].note}</p>
           {selectedKnob.type === 'controller' && <BoardSize id={selectedKnob.id} />}
           {selectedKnob.type === 'controller' && <BoardMount id={selectedKnob.id} />}
           {selectedKnob.type === 'controller' && <PortStatus id={selectedKnob.id} />}
           <Place id={selectedKnob.id} rot={selectedKnob.rot ?? 0} rotate={rotate} />
+          <h3>Colour</h3>
           <div className="swatches" aria-label="Part colour">
             {PART_COLORS.map((c) => (
               <button key={c} className={`swatch ${c === partColor(selectedKnob) ? 'active' : ''}`} style={{ background: c }} title={c} onClick={() => setComponent(selectedKnob.id, { color: c })} />
             ))}
             <input type="color" value={partColor(selectedKnob)} onChange={(e) => setComponent(selectedKnob.id, { color: e.target.value })} title="Custom colour" />
           </div>
-          <button className="tile wide" onClick={() => deleteKey(selectedKnob.id)}>Remove</button>
-        </section>
+          <button className="button danger" onClick={() => deleteKey(selectedKnob.id)}><Trash size={14} /> Remove</button>
+        </>
       )}
       {selected && (
-        <section className="selected">
-          <h3>Selected key{selected.legend ? `: ${selected.legend}` : ''}</h3>
+        <>
+          <h3>Width</h3>
           <div className="chips" aria-label="Key width">
             {WIDTHS.map((w) => (
               <button key={w} className={`chip ${selected.w === w ? 'active' : ''}`} onClick={() => setKeySize(selected.id, w, selected.h)}>{w}u</button>
@@ -205,27 +239,32 @@ export function ComponentsOptions() {
               title="Custom width (units)"
             />
           </div>
-          <div className="chips" aria-label="Key height">
+          <h3>Height</h3>
+          <div className="segmented">
             {[1, 2].map((h) => (
-              <button key={h} className={`chip ${selected.h === h ? 'active' : ''}`} onClick={() => setKeySize(selected.id, selected.w, h)}>{h}u tall</button>
+              <button key={h} className={selected.h === h ? 'active' : ''} onClick={() => setKeySize(selected.id, selected.w, h)}>{h}u</button>
             ))}
           </div>
+          <Place id={selected.id} rot={selected.rot} rotate={rotate} />
+          <h3>Keycap</h3>
           <div className="swatches">
             {SWATCHES.map((c) => (
               <button key={c} className={`swatch ${c === selected.override?.keycapColor ? 'active' : ''}`} style={{ background: c }} title={c} onClick={() => setOverride(selected.id, { keycapColor: c })} />
             ))}
             <input type="color" value={selected.override?.keycapColor ?? board.keycapColor} onChange={(e) => setOverride(selected.id, { keycapColor: e.target.value })} title="Custom colour" />
           </div>
-          <Place id={selected.id} rot={selected.rot} rotate={rotate} />
           <select value={selected.override?.profileId ?? ''} onChange={(e) => setOverride(selected.id, { profileId: e.target.value || undefined })}>
             <option value="">Board profile</option>
             {PROFILES.map((p) => <option key={p.id} value={p.id}>{p.name} profile</option>)}
           </select>
           {/* a key can only use a switch of the board's family: MX and Choc need different plates */}
           <SwitchSelect value={selected.override?.switchId ?? ''} onChange={(id) => setOverride(selected.id, { switchId: id || undefined })} family={familyOf(board.switchId)} allowDefault />
-          <button className="tile" onClick={() => setOverride(selected.id, null)}>Reset this key</button>
-        </section>
+          <div className="row">
+            <button className="button" onClick={() => setOverride(selected.id, null)}><ArrowCounterClockwise size={14} /> Reset</button>
+            <button className="button danger" onClick={() => deleteKey(selected.id)}><Trash size={14} /> Delete</button>
+          </div>
+        </>
       )}
-    </>
+    </aside>
   )
 }

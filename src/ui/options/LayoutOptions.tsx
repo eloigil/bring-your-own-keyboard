@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { ArrowRight, FolderOpen } from '@phosphor-icons/react'
 import { useDesign } from '../../store/design'
 import { readDesignFile } from '../../lib/share'
 import { PRESET_CATEGORIES } from '../../lib/layout'
@@ -32,7 +33,7 @@ export function LayoutOptions() {
       </section>
       <OpenDesign />
       <div className="row cta">
-        <button className="tile active" onClick={() => setStep('Build')}>Start building →</button>
+        <button className="button primary" onClick={() => setStep('Build')}>Start building <ArrowRight size={14} weight="bold" /></button>
       </div>
     </>
   )
@@ -54,7 +55,7 @@ function OpenDesign() {
     <section>
       <h3>Or open a saved design</h3>
       <input ref={input} type="file" accept=".json,application/json" hidden onChange={(e) => (open(e.target.files?.[0]), (e.target.value = ''))} />
-      <button className="tile wide" onClick={() => input.current?.click()}>Open design file…</button>
+      <button className="button" onClick={() => input.current?.click()}><FolderOpen size={14} /> Open design file</button>
       {error && <p className="blocked">That file isn't a BYOKb design.</p>}
     </section>
   )

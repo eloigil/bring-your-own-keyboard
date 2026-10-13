@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Check, Cpu, Cube, DownloadSimple, LinkSimple } from '@phosphor-icons/react'
 import type { LedEffect } from '../../types'
 import { useDesign, ledsConfigured } from '../../store/design'
 import { familyOf, switchById } from '../../lib/catalog'
@@ -37,25 +38,25 @@ export function ExportOptions() {
       <section>
         <h3>Files</h3>
         <button
-          className="tile wide download"
+          className="button primary download"
           disabled={!!blocked}
           onClick={() => {
             const files = caseFiles(design)
             if (files) download('byokb-case.zip', new Uint8Array(caseZip(files)), 'application/zip')
           }}
         >
-          ⬇ Case for 3D printing (.zip)
+          <Cube size={16} /> Case for 3D printing
         </button>
         {!components.some((c) => c.type === 'controller') && (
-          <p className="muted">Tip: add a <strong>Controller</strong> in Build → Components to get the Pico's mount and a USB opening in the case.</p>
+          <p className="muted">Tip: add a <strong>Controller</strong> in Build, Parts, to get its mount and a USB opening in the case.</p>
         )}
-        <p className="muted">Three STLs that print flat without supports — shell, switch plate{components.length ? ' with the holes for your parts' : ''}, bottom plate — plus printing and assembly notes (M2 inserts and screws).</p>
+        <p className="muted">A zip with three STLs that print flat without supports (shell, switch plate{components.length ? ' with the holes for your parts' : ''}, bottom plate) and printing notes.</p>
         <button
-          className="tile wide download"
+          className="button primary download"
           disabled={!!blocked || !firmware.ok}
           onClick={() => firmware.ok && download('byokb-firmware.zip', new Uint8Array(firmwareZip(firmware.firmware)), 'application/zip')}
         >
-          ⬇ QMK firmware (.zip)
+          <Cpu size={16} /> QMK firmware
         </button>
         <p className="muted">
           {firmware.ok
@@ -79,9 +80,9 @@ function ShareDesign() {
   return (
     <>
       <div className="row">
-        <button className="tile" onClick={() => download('byokb-design.json', designFile(design), 'application/json')}>⬇ Design file</button>
+        <button className="button" onClick={() => download('byokb-design.json', designFile(design), 'application/json')}><DownloadSimple size={14} /> Design file</button>
         <button
-          className="tile"
+          className="button"
           onClick={() =>
             navigator.clipboard.writeText(link()).then(
               () => setCopied('ok'),
@@ -89,7 +90,7 @@ function ShareDesign() {
             )
           }
         >
-          {copied === 'ok' ? '✓ Link copied' : '🔗 Copy link'}
+          {copied === 'ok' ? <><Check size={14} weight="bold" /> Link copied</> : <><LinkSimple size={14} /> Copy link</>}
         </button>
       </div>
       <p className="muted">

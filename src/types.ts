@@ -15,7 +15,7 @@ export interface Key {
   cut?: [number, number]
 }
 
-export type ComponentType = 'knob' | 'screen' | 'trackball' | 'joystick' | 'touchpad' | 'slider'
+export type ComponentType = 'controller' | 'knob' | 'screen' | 'trackball' | 'joystick' | 'touchpad' | 'slider'
 
 export interface Component {
   id: string

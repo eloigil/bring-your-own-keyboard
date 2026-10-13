@@ -22,7 +22,8 @@ export interface CaseFiles { 'shell.stl': Uint8Array; 'plate.stl': Uint8Array; '
 export function caseFiles(design: Design): CaseFiles | null {
   const family = familyOf(design.board.switchId)
   const footprints = [...design.keys, ...design.components.map(componentFootprint)]
-  const parts = caseParts(footprints, family, design.pocketFills, design.board.tiltDeg)
+  const ctrl = design.components.find((c) => c.type === 'controller')
+  const parts = caseParts(footprints, family, design.pocketFills, design.board.tiltDeg, ctrl && componentFootprint(ctrl))
   if (!parts) return null
   const sw = switchById(design.board.switchId)
   const col = caseColors(design.board)
@@ -50,7 +51,10 @@ Three parts, millimetres, each exported lying the way it prints. ${sw.brand} ${s
 
 - ${parts.screws} × **M2 heat-set inserts** (Ø 3.2 mm hole, ~4–6 mm long) — press into the holes in the shell's underside.
 - ${parts.screws} × **M2 × 6 mm screws** through the bottom plate into the inserts.
-- Under the plate there is ${parts.cavity.toFixed(1)} mm of room for a PCB or hand-wiring, the diodes, the LED strip and the controller. The Raspberry Pi Pico fits in a filled pocket or along a wall; cut its USB opening in the shell wall where you want it.
+- Under the plate there is ${parts.cavity.toFixed(1)} mm of room for hand-wiring, the diodes and the LED strip.
+${parts.port === null ? '- **No controller placed.** Add one in BYOKb (Build → Components → Controller) to get the Raspberry Pi Pico\'s standoffs and the USB opening in the shell; otherwise mount it yourself and cut the opening.'
+  : parts.port === 'blocked' ? '- **The controller is too far from an edge**: there is no wall within reach of its USB end, so the shell has no USB opening. Move or rotate it in BYOKb so its USB end faces a nearby edge.'
+  : `- **Raspberry Pi Pico:** 4 × M2 × 8 mm screws up through the bottom plate and its standoffs, M2 nuts on top. The shell has a ${parts.port.w} × ${parts.port.h.toFixed(1)} mm USB opening facing its USB end${parts.port.h < 6 ? ' — low-profile cases are thin, so use a cable with a slim plug or an angled adapter' : ''}.`}
 
 ## Assembly
 

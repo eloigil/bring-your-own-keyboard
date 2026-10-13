@@ -4,7 +4,8 @@ import { RoundedBox } from '@react-three/drei'
 import * as THREE from 'three'
 import type { Component } from '../types'
 import type { Family } from '../lib/units'
-import { PITCH } from '../lib/units'
+import { CASE_HEIGHT, PITCH } from '../lib/units'
+import { BOTTOM_T, PICO, PLATE_RECESS, STANDOFF_H } from '../lib/case'
 import { COMPONENTS } from '../data/components'
 
 const RED = new THREE.Color('#e5484d')
@@ -160,7 +161,50 @@ const Slider = ({ c, invalid, selected }: Props) => {
   )
 }
 
-const MODELS: Record<Component['type'], (p: Props) => React.ReactElement> = { knob: Knob, screen: Screen, trackball: Trackball, joystick: Joystick, touchpad: Touchpad, slider: Slider }
+/**
+ * A Raspberry Pi Pico lying on its standoffs below the plate, seen through the plate's window. Origin is the plate
+ * top, so the board is drawn that far down. USB end towards -z (the back, before rotation).
+ */
+const Controller = ({ c, family, invalid, selected }: Props) => {
+  const mat = useTint(invalid, selected, colorOf(c))
+  const y = BOTTOM_T + STANDOFF_H - (CASE_HEIGHT[family] - PLATE_RECESS) // the board's underside, relative to the plate top
+  const { w, l, pcb, usbH } = PICO
+  return (
+    <group position={[0, y, 0]}>
+      <mesh position={[0, pcb / 2, 0]} castShadow>
+        <boxGeometry args={[w, pcb, l]} />
+        <meshStandardMaterial ref={mat} color={colorOf(c)} roughness={0.6} />
+      </mesh>
+      {/* RP2040, flash chip, BOOTSEL button, the micro-USB socket at the back end, and the castellated pads */}
+      <mesh position={[0, pcb + 0.45, 2]}>
+        <boxGeometry args={[7, 0.9, 7]} />
+        <meshStandardMaterial color="#1a1a1e" roughness={0.4} />
+      </mesh>
+      <mesh position={[0, pcb + 0.4, -9]}>
+        <boxGeometry args={[4, 0.8, 5]} />
+        <meshStandardMaterial color="#1a1a1e" roughness={0.4} />
+      </mesh>
+      <mesh position={[-5, pcb + 0.6, -14]}>
+        <boxGeometry args={[3, 1.2, 4]} />
+        <meshStandardMaterial color="#f4f2ec" roughness={0.5} />
+      </mesh>
+      <mesh position={[0, pcb + usbH / 2, -l / 2 + 2.2]} castShadow>
+        <boxGeometry args={[8, usbH, 5.5]} />
+        <meshStandardMaterial color="#c9cdd4" metalness={0.9} roughness={0.25} />
+      </mesh>
+      {[-1, 1].map((side) =>
+        Array.from({ length: 20 }, (_, i) => (
+          <mesh key={`${side}${i}`} position={[side * (w / 2 - 0.9), pcb + 0.02, -l / 2 + 2.4 + i * 2.54]}>
+            <boxGeometry args={[1.5, 0.04, 1.6]} />
+            <meshStandardMaterial color="#d4a64a" metalness={0.9} roughness={0.3} />
+          </mesh>
+        )),
+      )}
+    </group>
+  )
+}
+
+const MODELS: Record<Component['type'], (p: Props) => React.ReactElement> = { controller: Controller, knob: Knob, screen: Screen, trackball: Trackball, joystick: Joystick, touchpad: Touchpad, slider: Slider }
 
 /** Where a component's model sits: the centre of its footprint, in mm. */
 export function componentCentre(c: Component, family: Family): [number, number] {

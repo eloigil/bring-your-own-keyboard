@@ -45,6 +45,9 @@ export function ExportOptions() {
         >
           ⬇ Case for 3D printing (.zip)
         </button>
+        {!components.some((c) => c.type === 'controller') && (
+          <p className="muted">Tip: add a <strong>Controller</strong> in Build → Components to get the Pico's mount and a USB opening in the case.</p>
+        )}
         <p className="muted">Three STLs that print flat without supports — shell, switch plate{components.length ? ' with the holes for your parts' : ''}, bottom plate — plus printing and assembly notes (M2 inserts and screws).</p>
         <button
           className="tile wide download"

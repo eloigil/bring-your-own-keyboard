@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useDesign } from '../../store/design'
 import { SwitchLab } from '../SwitchLab'
@@ -9,6 +9,8 @@ import { PROFILES } from '../../data/keycaps'
 import { KEYCAP_MATERIALS } from '../../data/materials'
 import type { KeycapMaterial } from '../../types'
 import { COMPONENTS, COMPONENT_TYPES } from '../../data/components'
+import { caseOutline, usbPort } from '../../lib/case'
+import { componentFootprint } from '../../lib/layout'
 
 const SWATCHES = ['#f4f2ec', '#2b2b30', '#e8d6b8', '#9fb7d6', '#f2b8c6', '#b9d8b0', '#ff8a1f', '#5b5bd6']
 const WIDTHS = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.75, 6.25, 7]
@@ -42,6 +44,20 @@ function Place({ id, rot, rotate }: { id: string; rot: number; rotate: (id: stri
       <p className="muted">Arrow keys nudge it 1 mm (Shift: ¼ u). Double-click the slider to reset.</p>
     </>
   )
+}
+
+/** Whether the controller's USB end reaches a wall, so the case gets its opening. */
+function PortStatus({ id }: { id: string }) {
+  const design = useDesign((s) => s.design)
+  const family = familyOf(design.board.switchId)
+  const port = useMemo(() => {
+    const footprints = [...design.keys, ...design.components.map(componentFootprint)]
+    const c = design.components.find((c) => c.id === id)
+    return c && usbPort(caseOutline(footprints, family, design.pocketFills), componentFootprint(c), family)
+  }, [design.keys, design.components, design.pocketFills, family, id])
+  return port
+    ? <p className="muted">USB opening: through the wall {port.wall.toFixed(0)} mm past its end.</p>
+    : <p className="blocked">Its USB end doesn't reach a wall, so the case has no USB opening. Move it to an edge or rotate it so the USB end points outward.</p>
 }
 
 export function ComponentsOptions() {
@@ -106,6 +122,7 @@ export function ComponentsOptions() {
         <section className="selected">
           <h3>Selected {COMPONENTS[selectedKnob.type].name.toLowerCase()}</h3>
           <p className="muted">{COMPONENTS[selectedKnob.type].part}. {COMPONENTS[selectedKnob.type].note}</p>
+          {selectedKnob.type === 'controller' && <PortStatus id={selectedKnob.id} />}
           <Place id={selectedKnob.id} rot={selectedKnob.rot ?? 0} rotate={rotate} />
           <div className="swatches" aria-label="Part colour">
             {PART_COLORS.map((c) => (

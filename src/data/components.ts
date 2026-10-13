@@ -20,6 +20,7 @@ export const COMPONENTS: Record<ComponentType, {
   /** Default colour of the part's visible piece. */
   color: string
 }> = {
+  controller: { name: 'Controller', w: 1.25, h: 3.25, cut: [23, 53], bus: 'gpio', pins: 0, part: 'Raspberry Pi Pico (RP2040)', note: 'Runs the firmware. Shows through a window in the plate; the case gets a USB opening where its USB end points — rotate it to choose the wall.', color: '#2e6b3c' },
   knob: { name: 'Knob', w: 1, h: 1, cut: [7.5, 7.5], bus: 'gpio', pins: 2, part: 'EC11 rotary encoder', note: 'Turns the volume; press to mute.', color: '#3a3940' },
   screen: { name: 'Screen', w: 2, h: 1, cut: [30, 12], bus: 'i2c', pins: 2, part: '0.91" 128×32 OLED (SSD1306)', note: 'Shows the active layer and a logo.', color: '#1d2a3a' },
   trackball: { name: 'Trackball', w: 2, h: 2, cut: [32, 32], bus: 'spi', pins: 4, part: '34 mm trackball on a PMW3360 sensor', note: 'Moves the mouse.', color: '#6b2a2f' },

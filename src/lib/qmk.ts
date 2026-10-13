@@ -85,6 +85,7 @@ export function generateFirmware(design: Design, name = 'byokb'): FirmwareResult
   const pointing = of('trackball').length + of('touchpad').length
   if (pointing > 1) return { ok: false, reason: 'QMK drives one pointing device: keep either one trackball or one touchpad.' }
   if (of('screen').length > 1) return { ok: false, reason: 'One screen: the OLED driver supports a single display.' }
+  if (of('controller').length > 1) return { ok: false, reason: 'One controller: this firmware runs on a single Raspberry Pi Pico.' }
 
   // analog parts share the three ADC pins
   const adc = [...ADC_PINS]

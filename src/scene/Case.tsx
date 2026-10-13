@@ -21,9 +21,9 @@ function grainUVs(g: THREE.BufferGeometry) {
   g.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
 }
 
-export function Case({ keys, family, fills, tilt, colors }: { keys: Key[]; family: Family; fills: PocketFill[]; tilt: number; colors: ReturnType<typeof caseColors> }) {
+export function Case({ keys, family, fills, tilt, colors, controller }: { keys: Key[]; family: Family; fills: PocketFill[]; tilt: number; colors: ReturnType<typeof caseColors>; controller?: Key }) {
   const parts = useMemo(() => {
-    const a = caseAssembly(keys, family, fills, tilt)
+    const a = caseAssembly(keys, family, fills, tilt, controller)
     if (!a) return null
     // the shell is two-tone: up-facing triangles at top-face height take the top colour, the rest are walls
     const g = a.shell
@@ -39,7 +39,7 @@ export function Case({ keys, family, fills, tilt, colors }: { keys: Key[]; famil
     g.userData.isTop = isTop
     for (const part of [a.shell, a.plate, a.bottom]) grainUVs(part)
     return a
-  }, [keys, family, fills, tilt])
+  }, [keys, family, fills, tilt, controller])
 
   // recolouring doesn't rebuild the geometry
   useMemo(() => {

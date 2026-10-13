@@ -412,16 +412,18 @@ function buildParts(keys: Key[], family: Family, fills: PocketFill[]) {
   ])
   // bottom: fills the rebate, screws up into the inserts
   const bottom = stack([{ section: difference(offset(outerP, -(WALL_LOW + FIT)), P(screws.map(([x, y]) => circle(x, y, CLEAR_D)))), z0: 0, z1: BOTTOM_T }])
-  return { shell, plate, bottom, plateBottom, screws, H }
+  return { shell, plate, bottom, plateBottom, screws, H, outer }
 }
 
 /** Layout-space extrusion → world (Y up, layout y → +Z), then the typing angle: everything above the bottom plate
  *  is lifted in proportion to its height, more at the back. The bottom stays flat. */
-function toWorld(g: THREE.BufferGeometry, H: number, tilt: number) {
+function toWorld(g: THREE.BufferGeometry, H: number, tilt: number, maxZ?: number) {
   g.rotateX(-Math.PI / 2)
   const pos = g.attributes.position
-  let maxZ = -Infinity
-  for (let i = 0; i < pos.count; i++) maxZ = Math.max(maxZ, pos.getZ(i))
+  if (maxZ === undefined) {
+    maxZ = -Infinity
+    for (let i = 0; i < pos.count; i++) maxZ = Math.max(maxZ, pos.getZ(i))
+  }
   for (let i = 0; i < pos.count; i++) {
     const y = pos.getY(i)
     pos.setY(i, y + (Math.max(0, y - BOTTOM_T) / (H - BOTTOM_T)) * tiltLift(pos.getZ(i), maxZ, tilt))
@@ -448,15 +450,23 @@ export function caseParts(keys: Key[], family: Family, fills: PocketFill[] = [],
 }
 
 /**
- * The assembled case for the 3D view: shell, plate on its ledge and bottom in its rebate, tilted together.
- * Returned in mm, world orientation (Y up, layout y → +Z).
+ * The assembled case for the 3D view, one geometry per part so each can have its own colour: shell, plate on its
+ * ledge and bottom in its rebate, tilted together (one shared back edge, so the parts stay seated).
+ * In mm, world orientation (Y up, layout y → +Z).
  */
-export function caseMesh(keys: Key[], family: Family, fills: PocketFill[] = [], tilt = TILT_DEG): THREE.BufferGeometry | null {
+export function caseAssembly(keys: Key[], family: Family, fills: PocketFill[] = [], tilt = TILT_DEG) {
   const b = buildParts(keys, family, fills)
   if (!b) return null
-  const merged = mergeGeometries([...b.shell, ...b.plate.map((g) => g.translate(0, 0, b.plateBottom)), ...b.bottom])!
+  const back = Math.max(...b.outer.flat().map((q) => q[1]))
   // smooth shading across curved walls, sharp where faces meet at > 40° (top edge, cutouts)
-  return toCreasedNormals(toWorld(merged, b.H, tilt), (40 * Math.PI) / 180)
+  const place = (parts: THREE.BufferGeometry[]) => toCreasedNormals(toWorld(mergeGeometries(parts)!, b.H, tilt, back), (40 * Math.PI) / 180)
+  return { shell: place(b.shell), plate: place(b.plate.map((g) => g.translate(0, 0, b.plateBottom))), bottom: place(b.bottom) }
+}
+
+/** The assembled case as one geometry (for tests and measurements). */
+export function caseMesh(keys: Key[], family: Family, fills: PocketFill[] = [], tilt = TILT_DEG): THREE.BufferGeometry | null {
+  const a = caseAssembly(keys, family, fills, tilt)
+  return a && mergeGeometries([a.shell, a.plate, a.bottom])
 }
 
 /** World height of the wall top at depth `zWorld`. */

@@ -67,7 +67,7 @@ interface State {
   setLedEffect: (e: Design['board']['ledEffect']) => void
   setLedColor: (c: string) => void
   setSwitch: (id: string) => void
-  setKeycaps: (patch: { profileId?: string; keycapColor?: string; keycapMaterial?: KeycapMaterial; switchColor?: string; caseColor?: string }) => void
+  setKeycaps: (patch: Partial<Pick<Design['board'], 'profileId' | 'keycapColor' | 'keycapMaterial' | 'switchColor' | 'caseColor' | 'wallColor' | 'plateColor' | 'bottomColor'>>) => void
   /** Dark room to see the LEDs; a viewing preference, saved but not part of the design. */
   dark: boolean
   toggleDark: () => void

@@ -6,6 +6,7 @@ import { BOTTOM_T, PLATE_T, caseParts } from './case'
 import { familyOf, switchById } from './catalog'
 import { componentFootprint } from './layout'
 import { COMPONENTS } from '../data/components'
+import { caseColors } from '../scene/Case'
 
 /** A geometry as a binary STL in millimetres, rotated so +Z is up and the front faces -Y, how slicers expect a part. */
 function stl(geometry: THREE.BufferGeometry): Uint8Array {
@@ -24,6 +25,7 @@ export function caseFiles(design: Design): CaseFiles | null {
   const parts = caseParts(footprints, family, design.pocketFills, design.board.tiltDeg)
   if (!parts) return null
   const sw = switchById(design.board.switchId)
+  const col = caseColors(design.board)
   const files: CaseFiles = {
     'shell.stl': stl(parts.shell),
     'plate.stl': stl(parts.plate),
@@ -37,6 +39,12 @@ Three parts, millimetres, each exported lying the way it prints. ${sw.brand} ${s
 | shell.stl | **upside down** (top face on the bed) | The case walls with the typing angle built in. The 2 mm ledge the plate rests on is a short overhang; enable supports only if your printer can't bridge 2 mm. |
 | plate.stl | flat, as exported | ${PLATE_T[family]} mm switch plate with the cutouts${design.components.length ? ` and the holes for your parts (${design.components.map((c) => COMPONENTS[c.type].name.toLowerCase()).join(', ')})` : ''}. Print in a stiff material (PETG, ASA or PC) at 100 % infill. |
 | bottom.stl | flat, as exported | ${BOTTOM_T} mm bottom plate, sits flush in the shell's rebate. |
+
+## Colours from your design
+
+- shell: top face ${col.top}${col.wall !== col.top ? `, walls ${col.wall} — one colour per print, so either print it in one, paint the top, or use a multi-material printer (change filament at the start of the rounded top edge)` : ''}
+- plate: ${col.plate}
+- bottom: ${col.bottom}
 
 ## Hardware
 

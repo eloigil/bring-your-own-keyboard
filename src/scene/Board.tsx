@@ -6,12 +6,12 @@ import { PITCH, SWITCH_TRAVEL_HEIGHT, CASE_HEIGHT, type Family } from '../lib/un
 import { caseShape, plateTilt, plateTopAt, wallTopAt } from '../lib/case'
 import { validate } from '../lib/validate'
 import { familyOf, useDesign } from '../store/design'
-import { Case } from './Case'
 import { Keycap } from './Keycap'
 import { PocketOrb } from './PocketOrb'
 import { hitLocal } from './pointer'
 import { componentFootprint, keyRows } from '../lib/layout'
 import { ComponentModel, componentCentre } from './ComponentModel'
+import { Case, caseColors } from './Case'
 import { KeyLed, LedTicker, type Ripple } from './KeyLed'
 import { profileById } from '../data/keycaps'
 import { switchById } from '../lib/catalog'
@@ -90,7 +90,7 @@ export function Board() {
   return (
     <group position={center}>
       <LedTicker effect={board.ledEffect} />
-      <Case keys={footprints} family={family} fills={fills} tilt={tiltDeg} color={board.caseColor} />
+      <Case keys={footprints} family={family} fills={fills} tilt={tiltDeg} colors={caseColors(board)} />
       {keys.map((k) => {
         const z = (k.y + k.h / 2) * p.y
         const target: [number, number, number] = [(k.x + k.w / 2) * p.x, plateTopAt(z, maxZ, family, tiltDeg) + SWITCH_TRAVEL_HEIGHT[family], z]

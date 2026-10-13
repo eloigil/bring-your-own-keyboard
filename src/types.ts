@@ -49,8 +49,12 @@ export interface Design {
     keycapMaterial: KeycapMaterial
     /** Switch housing colour. */
     switchColor: string
-    /** Case colour (the top face; the walls are a lighter tint of it). */
+    /** Case colour (the top face). */
     caseColor: string
+    /** Side walls, switch plate and bottom plate; unset = a lighter tint of the top. */
+    wallColor?: string
+    plateColor?: string
+    bottomColor?: string
   }
   /** Pocket fills set by orbs (t: 0 = open, 1 = flush), anchored at the pocket's mouth (mm, layout coords). */
   pocketFills: { x: number; y: number; t: number }[]

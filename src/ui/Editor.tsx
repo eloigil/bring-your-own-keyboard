@@ -7,8 +7,39 @@ import { OptionsPanel } from './OptionsPanel'
 import { ThemeToggle } from './ThemeToggle'
 import { UndoRedo } from './UndoRedo'
 import { redo, undo } from '../store/history'
+import { readDesignFile, readShareFragment } from '../lib/share'
 
 export function Editor() {
+  // a share link (#d=…) opens its design; the fragment is then cleared so a reload keeps your edits
+  useEffect(() => {
+    const fromLink = () => {
+      const d = readShareFragment(location.hash)
+      if (!d) return
+      useDesign.getState().openDesign(d)
+      useDesign.getState().setStep('Build')
+      history.replaceState(null, '', location.pathname + location.search)
+    }
+    fromLink()
+    window.addEventListener('hashchange', fromLink)
+    return () => window.removeEventListener('hashchange', fromLink)
+  }, [])
+  // dropping a design file anywhere on the page opens it
+  useEffect(() => {
+    const over = (e: DragEvent) => e.dataTransfer?.types.includes('Files') && e.preventDefault()
+    const drop = async (e: DragEvent) => {
+      const file = e.dataTransfer?.files[0]
+      if (!file) return
+      e.preventDefault()
+      const d = readDesignFile(await file.text())
+      if (d) {
+        useDesign.getState().openDesign(d)
+        useDesign.getState().setStep('Build')
+      }
+    }
+    window.addEventListener('dragover', over)
+    window.addEventListener('drop', drop)
+    return () => (window.removeEventListener('dragover', over), window.removeEventListener('drop', drop))
+  }, [])
   useEffect(() => {
     // Build step, something selected, focus not in a field: Delete removes it, arrows nudge it (Shift: a quarter unit,
     // plain: 0.05u ≈ 1 mm), [ and ] rotate it by 5° (Shift: 15°)

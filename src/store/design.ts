@@ -18,18 +18,24 @@ export function defaultDesign(): Design {
   }
 }
 
-/** Accept a saved design only if it has the current version and a sane shape; otherwise start over on TKL. */
-export function loadDesign(raw: unknown): Design {
+/** Whether something read back (saved state, a design file, a share link) is a design this version understands. */
+export function isDesign(raw: unknown): raw is Design {
   const d = raw as Design | undefined
-  const ok =
+  return (
     d?.version === 1 &&
     Array.isArray(d.keys) &&
     d.keys.every((k) => typeof k?.id === 'string' && [k.x, k.y, k.w, k.h, k.rot].every(Number.isFinite)) &&
     Array.isArray(d.components) &&
+    d.components.every((c) => typeof c?.id === 'string' && typeof c.type === 'string' && [c.x, c.y].every(Number.isFinite)) &&
     typeof d.board?.switchId === 'string' &&
     Array.isArray(d.pocketFills)
-  // designs saved before the tilt slider existed get the default angle
-  if (!ok) return defaultDesign()
+  )
+}
+
+/** Accept a saved design only if it has the current version and a sane shape; otherwise start over on TKL. */
+export function loadDesign(raw: unknown): Design {
+  const d = raw as Design
+  if (!isDesign(raw)) return defaultDesign()
   // designs saved before newer board settings existed get their defaults
   const missing = { ...defaultDesign().board, ...d.board }
   return Object.keys(missing).length === Object.keys(d.board).length ? d : { ...d, board: missing }
@@ -47,6 +53,8 @@ interface State {
   selectedId: string | null
   setStep: (s: Step) => void
   setPreset: (p: PresetName) => void
+  /** Replace the whole design (opened from a file or a share link); undoable like any edit. */
+  openDesign: (d: Design) => void
   select: (id: string | null) => void
   moveKey: (id: string, x: number, y: number) => void
   addKey: () => void
@@ -88,6 +96,7 @@ export const useDesign = create<State>()(
       selectedId: null,
       setPreset: (p) => set((s) => ({ preset: p, selectedId: null, design: { ...s.design, keys: PRESETS[p](), components: [], pocketFills: [] } })),
       select: (selectedId) => set({ selectedId }),
+      openDesign: (d) => set({ design: loadDesign(d), preset: null, selectedId: null }),
       // moves a key or a component (knob): flush against a nearby key when close, else on the 0.25u grid
       moveKey: (id, x, y) =>
         set((s) => {

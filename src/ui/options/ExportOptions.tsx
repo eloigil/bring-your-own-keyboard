@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { LedEffect } from '../../types'
 import { useDesign, ledsConfigured } from '../../store/design'
 import { familyOf, switchById } from '../../lib/catalog'
@@ -7,6 +7,7 @@ import { KEYCAP_MATERIALS } from '../../data/materials'
 import { validate } from '../../lib/validate'
 import { caseFiles, caseZip, download } from '../../lib/exportStl'
 import { firmwareZip, generateFirmware } from '../../lib/qmk'
+import { designFile, shareFragment } from '../../lib/share'
 import { COMPONENTS, controllerOf } from '../../data/components'
 
 const EFFECT_NAMES: Record<LedEffect, string> = { none: 'off', breathing: 'breathing', wave: 'wave', rainbow: 'rainbow', pinwheel: 'pinwheel', raindrops: 'raindrops', reactive: 'reactive', ripple: 'ripple' }
@@ -62,6 +63,40 @@ export function ExportOptions() {
             : firmware.reason}
         </p>
       </section>
+      <section>
+        <h3>Your design</h3>
+        <ShareDesign />
+      </section>
+    </>
+  )
+}
+
+/** Keep or pass on the design itself: a file to open later, or a link that carries the whole design. */
+function ShareDesign() {
+  const design = useDesign((s) => s.design)
+  const [copied, setCopied] = useState<'ok' | 'failed' | null>(null)
+  const link = () => location.origin + location.pathname + shareFragment(design)
+  return (
+    <>
+      <div className="row">
+        <button className="tile" onClick={() => download('byokb-design.json', designFile(design), 'application/json')}>⬇ Design file</button>
+        <button
+          className="tile"
+          onClick={() =>
+            navigator.clipboard.writeText(link()).then(
+              () => setCopied('ok'),
+              () => setCopied('failed'),
+            )
+          }
+        >
+          {copied === 'ok' ? '✓ Link copied' : '🔗 Copy link'}
+        </button>
+      </div>
+      <p className="muted">
+        {copied === 'failed'
+          ? 'Could not reach the clipboard. Save the design file instead.'
+          : 'Open the file again from step 1, or drop it on the page. The link holds the whole design in itself, so whoever opens it gets your board. Nothing is uploaded.'}
+      </p>
     </>
   )
 }

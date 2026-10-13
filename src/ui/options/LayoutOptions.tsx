@@ -1,4 +1,6 @@
+import { useRef, useState } from 'react'
 import { useDesign } from '../../store/design'
+import { readDesignFile } from '../../lib/share'
 import { PRESET_CATEGORIES } from '../../lib/layout'
 import { TILT_MAX } from '../../lib/case'
 
@@ -28,9 +30,32 @@ export function LayoutOptions() {
           <span>{tilt}°</span>
         </label>
       </section>
+      <OpenDesign />
       <div className="row cta">
         <button className="tile active" onClick={() => setStep('Build')}>Start building →</button>
       </div>
     </>
+  )
+}
+
+/** Open a design file saved from the Export step (or dropped on the page, see Editor). */
+function OpenDesign() {
+  const input = useRef<HTMLInputElement>(null)
+  const [error, setError] = useState(false)
+  const open = async (file?: File) => {
+    const d = file && readDesignFile(await file.text())
+    setError(!d)
+    if (d) {
+      useDesign.getState().openDesign(d)
+      useDesign.getState().setStep('Build')
+    }
+  }
+  return (
+    <section>
+      <h3>Or open a saved design</h3>
+      <input ref={input} type="file" accept=".json,application/json" hidden onChange={(e) => (open(e.target.files?.[0]), (e.target.value = ''))} />
+      <button className="tile wide" onClick={() => input.current?.click()}>Open design file…</button>
+      {error && <p className="blocked">That file isn't a BYOKb design.</p>}
+    </section>
   )
 }

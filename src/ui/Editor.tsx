@@ -5,12 +5,19 @@ import { useDesign } from '../store/design'
 import { StepsPanel } from './StepsPanel'
 import { OptionsPanel } from './OptionsPanel'
 import { ThemeToggle } from './ThemeToggle'
+import { UndoRedo } from './UndoRedo'
+import { redo, undo } from '../store/history'
 
 export function Editor() {
   useEffect(() => {
     // Build step, something selected, focus not in a field: Delete removes it, arrows nudge it (Shift: a quarter unit,
     // plain: 0.05u ≈ 1 mm), [ and ] rotate it by 5° (Shift: 15°)
     const onKey = (e: KeyboardEvent) => {
+      const typing = e.target instanceof HTMLInputElement && e.target.type !== 'range' && e.target.type !== 'color'
+      if ((e.metaKey || e.ctrlKey) && !typing && (e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) {
+        e.preventDefault()
+        return e.shiftKey || e.key.toLowerCase() === 'y' ? redo() : undo()
+      }
       const { selectedId, deleteKey, nudge, rotate, step, design } = useDesign.getState()
       if (step !== 'Build' || !selectedId || e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return
       if (e.key === 'Delete' || e.key === 'Backspace') return deleteKey(selectedId)
@@ -35,6 +42,7 @@ export function Editor() {
       </Stage>
       <StepsPanel />
       <OptionsPanel />
+      <UndoRedo />
       <ThemeToggle />
     </>
   )

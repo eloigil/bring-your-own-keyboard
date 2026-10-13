@@ -181,3 +181,7 @@ select { width: calc(100% - 8px); margin: 0 4px 6px; font: inherit; font-size: 1
 .theme-toggle { overflow: hidden; }
 .theme-toggle .glyph { display: inline-block; animation: glyph-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1.2); }
 @keyframes glyph-rise { from { transform: translateY(26px) rotate(-120deg); opacity: 0; } }
+
+/* undo / redo, left of the theme toggle */
+.undo-redo { top: 16px; right: 64px; height: 40px; padding: 0 2px; display: flex; align-items: center; gap: 0; }
+.undo-redo button { width: 36px; height: 36px; padding: 0; font-size: 18px; }

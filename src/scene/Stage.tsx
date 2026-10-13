@@ -10,6 +10,7 @@ import { sky } from './sky'
 
 /** Studio: backdrop, sun / moon lighting, contact shadow, scale grid. No remote HDR, works offline. */
 export function Stage({ children, onPointerMissed }: { children: ReactNode; onPointerMissed?: () => void }) {
+  const showcase = useShowcase()
   return (
     // frameloop="demand": draw only when something changes (orbit, drag, animation) — idle costs nothing
     <Canvas
@@ -19,7 +20,8 @@ export function Stage({ children, onPointerMissed }: { children: ReactNode; onPo
         gl.transmissionResolutionScale = 0.5 // see-through keycaps: the blurred view behind them doesn't need full resolution
         gl.shadowMap.autoUpdate = false // shadows are refreshed only when the board's shape changes (see Shadows)
       }}
-      onPointerMissed={onPointerMissed} camera={{ position: [0, 380, 440], fov: 35, near: 1, far: 5000 }} dpr={[1, 1.5]}>
+      onPointerMissed={onPointerMissed} camera={{ position: [0, 380, 440], fov: 35, near: 1, far: 5000, manual: true }} dpr={[1, 1.5]}>
+      <ClearOfPanel />
       <Sky />
       <StudioEnvironment />
       {children}
@@ -39,9 +41,41 @@ export function Stage({ children, onPointerMissed }: { children: ReactNode; onPo
       />
       <Shadows />
       <Effects />
-      <OrbitControls enableDamping makeDefault maxPolarAngle={Math.PI / 2.1} minDistance={120} maxDistance={900} />
+      <Showcase />
+      <OrbitControls autoRotate={showcase} autoRotateSpeed={0.5} enableDamping makeDefault maxPolarAngle={Math.PI / 2.1} minDistance={120} maxDistance={900} />
     </Canvas>
   )
+}
+
+const calm = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+/** On Export the finished board turns slowly on its stand (not with reduced motion). */
+const useShowcase = () => useDesign((s) => s.step === 'Export') && !calm
+/** Keeps frames coming while the showcase turns: the frameloop only draws on demand. */
+function Showcase() {
+  const on = useShowcase()
+  const invalidate = useThree((s) => s.invalidate)
+  useEffect(() => void (on && invalidate()), [on, invalidate])
+  useFrame(() => void (on && invalidate()))
+  return null
+}
+
+/**
+ * The inspector floats over the right of the canvas (a bottom sheet on phones), so centre the view in what's left
+ * visible: render the canvas as a window onto a wider (or taller) frame, which slides the board out from under the panel.
+ * Orbiting and picking keep working, they use the same projection.
+ */
+function ClearOfPanel() {
+  const { camera, size, invalidate } = useThree()
+  useEffect(() => {
+    const cam = camera as THREE.PerspectiveCamera
+    const { width: w, height: h } = size
+    // ponytail: panel sizes mirror styles.css (.inspector: 304px + 16px gutter; phone sheet ≈ 40% of the height)
+    const right = w > 760 ? 320 : 0, bottom = w > 760 ? 0 : Math.round(h * 0.4)
+    cam.aspect = (w + right) / (h + bottom)
+    cam.setViewOffset(w + right, h + bottom, right, bottom, w, h)
+    invalidate()
+  }, [camera, size, invalidate])
+  return null
 }
 
 /**

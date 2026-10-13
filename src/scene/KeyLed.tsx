@@ -20,6 +20,36 @@ const seedOf = (id: string) => (id.split('').reduce((h, ch) => (h * 31 + ch.char
  * The effect drives its colour. Only an active effect keeps the frame loop running.
  * `u`/`v` are the key's centre as a 0–1 fraction of the board; `ux`/`uy` the centre in units.
  */
+const glowCache = new Map<string, THREE.BufferGeometry>()
+/**
+ * The light a key's LED throws, with no visible surface of its own (it's drawn additively, so black is nothing):
+ * faint under the middle of the switch, brightest at the key's edge, where it escapes through the gaps between
+ * caps, then fading to nothing HALO mm out. Built from vertex colours so the falloff is the same width on every key size.
+ */
+function glowGeometry(w: number, d: number) {
+  const key = `${w.toFixed(2)},${d.toFixed(2)}`
+  let g = glowCache.get(key)
+  if (!g) {
+    const ring = (hw: number, hd: number) => [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd]]
+    const pts = [[0, 0], ...ring(w / 2, d / 2), ...ring(w / 2 + HALO, d / 2 + HALO)]
+    const level = [CENTRE, EDGE, EDGE, EDGE, EDGE, 0, 0, 0, 0]
+    const index: number[] = []
+    for (let a = 0; a < 4; a++) {
+      const b = (a + 1) % 4
+      index.push(0, 1 + a, 1 + b) // middle → edge
+      index.push(1 + a, 5 + a, 5 + b, 1 + a, 5 + b, 1 + b) // edge → out
+    }
+    g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pts.flatMap(([x, y]) => [x, y, 0]), 3))
+    g.setAttribute('color', new THREE.Float32BufferAttribute(level.flatMap((l) => [l, l, l]), 3))
+    g.setIndex(index)
+    glowCache.set(key, g)
+  }
+  return g
+}
+const EDGE = 0.45 // brightness where the light escapes between caps; neighbouring glows add up, so well under 1
+const CENTRE = 0.12 // how much light shows straight under the switch (seen only through clear caps or a lifted key)
+
 export function KeyLed({ id, w, d, y, effect, effectColor, u, v, ux, uy, hot, ripple, glow }: {
   id: string; w: number; d: number; y: number; effect: LedEffect; effectColor: string
   u: number; v: number; ux: number; uy: number; hot: React.RefObject<number>; ripple: React.RefObject<Ripple | null>
@@ -77,10 +107,9 @@ export function KeyLed({ id, w, d, y, effect, effectColor, u, v, ux, uy, hot, ri
   })
   if (!lit) return null
   return (
-    <mesh position={[0, y, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[w + HALO, d + HALO]} />
+    <mesh position={[0, y, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={glowGeometry(w, d)}>
       {/* additive: neighbouring glows add up, so the light spills into the gaps like real underglow */}
-      <meshBasicMaterial ref={mat} toneMapped={false} transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <meshBasicMaterial ref={mat} toneMapped={false} vertexColors transparent blending={THREE.AdditiveBlending} depthWrite={false} />
     </mesh>
   )
 }

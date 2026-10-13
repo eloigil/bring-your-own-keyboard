@@ -21,7 +21,7 @@ function useTint(invalid?: boolean, selected?: boolean, base = BODY) {
   const tint = (t: number) => {
     if (!mat.current) return
     const c = mat.current.color.set(base)
-    if (selected) c.lerp(ACCENT, 0.4)
+    if (selected) c.lerp(ACCENT, 0.75)
     if (invalid) c.lerp(RED, 0.45 + 0.35 * Math.sin(t * 5))
   }
   useEffect(() => (tint(0), invalidate()), [selected, invalid]) // eslint-disable-line react-hooks/exhaustive-deps

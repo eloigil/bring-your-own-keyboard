@@ -6,7 +6,7 @@ import { PITCH, SWITCH_TRAVEL_HEIGHT, CASE_HEIGHT, type Family } from '../lib/un
 import { BOTTOM_T, caseShape, plateTilt, plateTopAt, tiltLift, wallTopAt } from '../lib/case'
 import { validate } from '../lib/validate'
 import { familyOf, useDesign } from '../store/design'
-import { Keycap } from './Keycap'
+import { Keycap, LIFT } from './Keycap'
 import { PocketOrb } from './PocketOrb'
 import { hitLocal } from './pointer'
 import { caseController, componentFootprint, keyRows } from '../lib/layout'
@@ -15,8 +15,10 @@ import { Case, caseColors } from './Case'
 import { KeyLed, LedTicker, type Ripple } from './KeyLed'
 import { profileById } from '../data/keycaps'
 import { switchById } from '../lib/catalog'
+import { playKeystroke } from '../lib/switchSound'
 
 /** The keyboard: case, keycaps and pocket orbs, centered on the origin. Keys are draggable. */
+
 export function Board() {
   const keys = useDesign((s) => s.design.keys)
   const fills = useDesign((s) => s.design.pocketFills)
@@ -83,6 +85,7 @@ export function Board() {
     if (!dragging) return
     ;(e.target as Element).releasePointerCapture(e.pointerId)
     if (components.some((c) => c.id === dragging.id)) useDesign.getState().dropComponent(dragging.id)
+    playKeystroke(switchById(board.switchId)) // set down with the sound of the board's own switch
     if (controls) controls.enabled = true
     setDragging(null)
   }
@@ -144,7 +147,7 @@ export function Board() {
       {components.map((c) => {
         const [x, z] = componentCentre(c, family)
         return (
-          <Eased key={c.id} target={[x, plateTopAt(z, maxZ, family, tiltDeg), z]} rotation={[tilt, (-(c.rot ?? 0) * Math.PI) / 180, 0]}>
+          <Eased key={c.id} target={[x, plateTopAt(z, maxZ, family, tiltDeg) + (shaping && c.id === selectedId ? LIFT : 0), z]} rotation={[tilt, (-(c.rot ?? 0) * Math.PI) / 180, 0]}>
             <group onPointerDown={onDown(c)} onPointerMove={onMove} onPointerUp={onUp}>
               <ComponentModel c={c} family={family} invalid={invalid.has(c.id)} selected={shaping && c.id === selectedId} shear={1 + tiltLift(z, maxZ, tiltDeg) / (CASE_HEIGHT[family] - BOTTOM_T)} />
             </group>

@@ -12,6 +12,8 @@ import { plasticGrain } from './textures'
 const GAP = 1.2 // mm between neighbouring caps
 const RED = new THREE.Color('#e5484d')
 const ACCENT = new THREE.Color('#e8590c') // the UI accent: selection
+/** mm a selected key or part rises out of the board: picked up, so it can't be missed. Its LED stays on the plate. */
+export const LIFT = 9
 
 // Keycap and switch geometries are shared between keys with the same shape (a TKL needs only a handful).
 /**
@@ -47,6 +49,27 @@ function capGeometry(w: number, d: number, height: number, tilt: number, inset: 
   return g
 }
 
+const legendCache = new Map<string, THREE.CanvasTexture>()
+/** A key's legend, printed top-left like a real cap. Drawn once per legend, colour and cap proportion. */
+function legendTexture(text: string, ink: string, aspect: number) {
+  const key = [text, ink, aspect.toFixed(2)].join()
+  let tex = legendCache.get(key)
+  if (!tex) {
+    const h = 128, w = Math.round(h * aspect)
+    const canvas = Object.assign(document.createElement('canvas'), { width: w, height: h })
+    const g = canvas.getContext('2d')!
+    g.fillStyle = ink
+    g.textBaseline = 'top'
+    g.font = `500 ${text.length > 2 ? 26 : 38}px "Geist Variable", system-ui, sans-serif`
+    g.fillText(text, 16, 16)
+    tex = new THREE.CanvasTexture(canvas)
+    tex.colorSpace = THREE.SRGBColorSpace
+    tex.anisotropy = 4
+    legendCache.set(key, tex)
+  }
+  return tex
+}
+
 const switchCache = new Map<Family, { housing: THREE.BufferGeometry; stem: THREE.BufferGeometry; hh: number }>()
 function switchGeometry(family: Family) {
   let s = switchCache.get(family)
@@ -76,24 +99,36 @@ export function Keycap({ k, family, color, profile, row, stemColor, housingColor
   const height = family === 'Choc' ? shape.height * 0.55 : shape.height, tilt = family === 'Choc' ? shape.tilt * 0.5 : shape.tilt
   const geometry = useMemo(() => capGeometry(k.w * p.x - GAP, k.h * p.y - GAP, height, tilt, profile.inset), [k.w, k.h, p.x, p.y, height, tilt, profile.inset])
   const sw = switchGeometry(family)
+  // legend on the cap's top face: tapered by the profile's inset and tilted with it
+  const top = [k.w * p.x - GAP - 2 * profile.inset - 1.5, k.h * p.y - GAP - 2 * profile.inset - 1.5]
+  const ink = new THREE.Color(color).getHSL({ h: 0, s: 0, l: 0 }).l > 0.55 ? '#2b2b30' : '#f4f4f6'
   const mat = useRef<THREE.MeshStandardMaterial>(null)
   const invalidate = useThree((s) => s.invalidate)
   const tint = (t: number) => {
     if (!mat.current) return
     const c = mat.current.color.set(bodyColor(color, material))
-    if (selected) c.lerp(ACCENT, 0.35)
+    if (selected) c.lerp(ACCENT, 0.75)
     if (invalid) c.lerp(RED, 0.45 + 0.35 * Math.sin(t * 5))
   }
   useEffect(() => (tint(0), invalidate()), [color, selected, invalid, material]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => void (mat.current && (mat.current.emissive = glow)), [glow, material])
-  // only an invalid key keeps the frame loop running (for its pulse)
-  useFrame(({ clock, invalidate }) => {
+  const lift = useRef<THREE.Group>(null)
+  useEffect(() => invalidate(), [selected, invalidate])
+  // only an invalid key (its pulse) or a key rising / settling keeps the frame loop running
+  useFrame(({ clock, invalidate }, dt) => {
+    const g = lift.current
+    if (g) {
+      const to = selected ? LIFT : 0
+      g.position.y = THREE.MathUtils.damp(g.position.y, to, 14, dt)
+      if (Math.abs(g.position.y - to) > 0.01) invalidate()
+      else g.position.y = to
+    }
     if (!invalid) return
     tint(clock.elapsedTime)
     invalidate()
   })
   return (
-    <>
+    <group ref={lift}>
       <mesh geometry={geometry} castShadow>
         {/* how much backlight the cap lets through depends on its plastic (see data/materials.ts) */}
         {m.glass ? (
@@ -117,12 +152,18 @@ export function Keycap({ k, family, color, profile, row, stemColor, housingColor
           <meshStandardMaterial ref={mat} color={color} roughness={m.roughness} emissiveIntensity={m.glow} bumpMap={plasticGrain()} bumpScale={0.12} />
         )}
       </mesh>
+      {k.legend && (
+        <mesh position={[0, height + 0.02, 0]} rotation-x={-Math.PI / 2 + (tilt * Math.PI) / 180}>
+          <planeGeometry args={[top[0], top[1]]} />
+          <meshStandardMaterial map={legendTexture(k.legend, ink, top[0] / top[1])} transparent depthWrite={false} roughness={m.roughness} polygonOffset polygonOffsetFactor={-2} />
+        </mesh>
+      )}
       <mesh geometry={sw.housing}>
         <meshStandardMaterial color={housingColor} roughness={0.6} />
       </mesh>
       <mesh geometry={sw.stem}>
         <meshStandardMaterial color={stemColor} roughness={0.5} />
       </mesh>
-    </>
+    </group>
   )
 }

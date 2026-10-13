@@ -12,7 +12,7 @@ export function TopBar() {
       <div className="app-mark">BYOKb</div>
       <nav className="surface stepper" aria-label="Steps">
         {STEPS.map(({ step, label, icon: Icon }) => (
-          <button key={step} className={step === current ? 'active' : ''} onClick={() => setStep(step)} aria-current={step === current ? 'step' : undefined}>
+          <button key={step} className={step === current ? 'active' : ''} onClick={() => setStep(step)} aria-current={step === current ? 'step' : undefined} aria-label={label}>
             <Icon size={16} weight={step === current ? 'fill' : 'regular'} />
             <span>{label}</span>
           </button>

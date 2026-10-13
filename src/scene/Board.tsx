@@ -3,7 +3,7 @@ import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Key } from '../types'
 import { PITCH, SWITCH_TRAVEL_HEIGHT, CASE_HEIGHT, type Family } from '../lib/units'
-import { caseShape, plateTilt, plateTopAt, wallTopAt } from '../lib/case'
+import { BOTTOM_T, caseShape, plateTilt, plateTopAt, tiltLift, wallTopAt } from '../lib/case'
 import { validate } from '../lib/validate'
 import { familyOf, useDesign } from '../store/design'
 import { Keycap } from './Keycap'
@@ -146,7 +146,7 @@ export function Board() {
         return (
           <Eased key={c.id} target={[x, plateTopAt(z, maxZ, family, tiltDeg), z]} rotation={[tilt, (-(c.rot ?? 0) * Math.PI) / 180, 0]}>
             <group onPointerDown={onDown(c)} onPointerMove={onMove} onPointerUp={onUp}>
-              <ComponentModel c={c} family={family} invalid={invalid.has(c.id)} selected={shaping && c.id === selectedId} />
+              <ComponentModel c={c} family={family} invalid={invalid.has(c.id)} selected={shaping && c.id === selectedId} shear={1 + tiltLift(z, maxZ, tiltDeg) / (CASE_HEIGHT[family] - BOTTOM_T)} />
             </group>
           </Eased>
         )

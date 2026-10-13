@@ -78,11 +78,12 @@ export function generateFirmware(design: Design, name = 'byokb'): FirmwareResult
   const { i2c: I2C, spi: SPI } = board
   const knobs = of('knob')
   const ledsOn = design.board.ledEffect !== 'none'
-  const i2c = parts.some((c) => COMPONENTS[c.type].bus === 'i2c')
+  const screenOnTop = of('controller').some((c) => c.screen)
+  const i2c = screenOnTop || parts.some((c) => COMPONENTS[c.type].bus === 'i2c')
   const spi = parts.some((c) => COMPONENTS[c.type].bus === 'spi')
   const pointing = of('trackball').length + of('touchpad').length
   if (pointing > 1) return { ok: false, reason: 'QMK drives one pointing device: keep either one trackball or one touchpad.' }
-  if (of('screen').length > 1) return { ok: false, reason: 'One screen: the OLED driver supports a single display.' }
+  if (of('screen').length + (screenOnTop ? 1 : 0) > 1) return { ok: false, reason: 'One screen: the OLED driver supports a single display (the controller already has one on top).' }
   if (of('controller').length > 1) return { ok: false, reason: 'One controller: this firmware runs on a single board.' }
 
   // analog parts share the three ADC pins
@@ -106,7 +107,7 @@ export function generateFirmware(design: Design, name = 'byokb'): FirmwareResult
   const encoderPins = knobs.map(() => [back.shift()!, back.shift()!].reverse())
   const joystick = analogPins.find((a) => a.c.type === 'joystick')
   const slider = analogPins.find((a) => a.c.type === 'slider')
-  const screen = of('screen').length > 0
+  const screen = of('screen').length > 0 || screenOnTop
   const trackball = of('trackball').length > 0
   const touchpad = of('touchpad').length > 0
 
@@ -237,7 +238,7 @@ ${i2c ? `#define I2C_DRIVER I2CD${I2C.n}\n#define I2C1_SDA_PIN ${I2C.sda}\n#defi
 
   const partLines = [
     ...knobs.map((_, i) => `- **Knob ${i + 1} (EC11 encoder):** A → ${encoderPins[i][0]}, B → ${encoderPins[i][1]}, C → GND`),
-    screen && `- **Screen (${COMPONENTS.screen.part}):** SDA → ${I2C.sda}, SCL → ${I2C.scl}, VCC → 3V3, GND → GND`,
+    screen && `- **Screen (${COMPONENTS.screen.part}${screenOnTop ? ', above the controller' : ''}):** SDA → ${I2C.sda}, SCL → ${I2C.scl}, VCC → 3V3, GND → GND`,
     touchpad && `- **Touchpad (${COMPONENTS.touchpad.part}, I²C):** SDA → ${I2C.sda}, SCL → ${I2C.scl}, VCC → 3V3, GND → GND`,
     trackball && `- **Trackball (${COMPONENTS.trackball.part}, SPI):** SCK → ${SPI.sck}, MOSI → ${SPI.mosi}, MISO → ${SPI.miso}, CS → ${SPI.cs}, VCC → 3V3, GND → GND`,
     joystick && `- **Joystick (${COMPONENTS.joystick.part}):** X → ${joystick.pins[0]}, Y → ${joystick.pins[1]}, VCC → 3V3, GND → GND`,

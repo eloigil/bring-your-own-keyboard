@@ -11,7 +11,7 @@ export interface Key {
   rot: number
   legend?: string
   override?: { switchId?: string; keycapColor?: string; profileId?: string }
-  /** Plate cutout [width, depth] in mm when it isn't the family's switch cutout (component footprints). */
+  /** Plate cutout [width, depth] in mm when it isn't the family's switch cutout (component footprints); [0, 0] = none. */
   cut?: [number, number]
 }
 
@@ -28,7 +28,13 @@ export interface Component {
   color?: string
   /** Controllers only: which board (see CONTROLLERS). Unset = the Raspberry Pi Pico. */
   model?: ControllerId
+  /** Controllers only: under the plate seen through a window (default), under a printed lid, or on top of the plate. */
+  mount?: ControllerMount
+  /** Controllers only: a 0.91" OLED mounted above it (on the lid, or on headers over a raised board). */
+  screen?: boolean
 }
+
+export type ControllerMount = 'window' | 'covered' | 'raised'
 
 export type ControllerId = 'xiao' | 'zero' | 'pico'
 

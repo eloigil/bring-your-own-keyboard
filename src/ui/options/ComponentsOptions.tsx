@@ -69,6 +69,36 @@ function BoardSize({ id }: { id: string }) {
   )
 }
 
+const MOUNTS = [
+  { id: 'window', label: 'Window', note: 'Under the plate, seen through a window in it.' },
+  { id: 'covered', label: 'Covered', note: 'Under the plate, the window closed by a printed lid (cover.stl).' },
+  { id: 'raised', label: 'Raised', note: 'On top of a solid plate; the USB plug leaves through a notch in the top of the wall.' },
+] as const
+
+/** How the controller sits (window / covered / raised) and whether an OLED goes on top. */
+function BoardMount({ id }: { id: string }) {
+  const c = useDesign((s) => s.design.components.find((c) => c.id === id))
+  if (!c) return null
+  const mount = c.mount ?? 'window'
+  const set = (patch: Parameters<ReturnType<typeof useDesign.getState>['setComponent']>[1]) => {
+    useDesign.getState().setComponent(id, patch)
+    useDesign.getState().dropComponent(id) // a screen lengthens the footprint: make room
+  }
+  return (
+    <>
+      <div className="chips" aria-label="Controller mount">
+        {MOUNTS.map((m) => (
+          <button key={m.id} className={`chip ${mount === m.id ? 'active' : ''}`} onClick={() => set({ mount: m.id, ...(m.id === 'window' && { screen: false }) })}>{m.label}</button>
+        ))}
+        <button className={`chip ${c.screen ? 'active' : ''}`} disabled={mount === 'window'} onClick={() => set({ screen: !c.screen })} title={mount === 'window' ? 'Cover the window or raise the board first' : 'A 0.91" OLED above the controller'}>
+          {c.screen ? '✓ ' : '+ '}Screen on top
+        </button>
+      </div>
+      <p className="muted">{MOUNTS.find((m) => m.id === mount)!.note}{c.screen ? ' A 0.91" OLED sits above it, on the controller\'s I²C.' : ''}</p>
+    </>
+  )
+}
+
 /** Whether the controller's USB end reaches a wall, so the case gets its opening. */
 function PortStatus({ id }: { id: string }) {
   const design = useDesign((s) => s.design)
@@ -146,6 +176,7 @@ export function ComponentsOptions() {
           <h3>Selected {COMPONENTS[selectedKnob.type].name.toLowerCase()}</h3>
           <p className="muted">{COMPONENTS[selectedKnob.type].part}. {COMPONENTS[selectedKnob.type].note}</p>
           {selectedKnob.type === 'controller' && <BoardSize id={selectedKnob.id} />}
+          {selectedKnob.type === 'controller' && <BoardMount id={selectedKnob.id} />}
           {selectedKnob.type === 'controller' && <PortStatus id={selectedKnob.id} />}
           <Place id={selectedKnob.id} rot={selectedKnob.rot ?? 0} rotate={rotate} />
           <div className="swatches" aria-label="Part colour">

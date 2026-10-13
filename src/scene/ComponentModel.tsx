@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import type { Component } from '../types'
 import type { Family } from '../lib/units'
 import { CASE_HEIGHT, PITCH } from '../lib/units'
-import { boardRaise, PLATE_RECESS } from '../lib/case'
+import { boardRaise, LID_T, PLATE_RECESS } from '../lib/case'
 import { controllerOf, partColor } from '../data/components'
 import { componentFootprint } from '../lib/layout'
 
@@ -33,7 +33,9 @@ function useTint(invalid?: boolean, selected?: boolean, base = BODY) {
   return mat
 }
 
-type Props = { c: Component; family: Family; invalid?: boolean; selected?: boolean }
+/** `shear`: how much the case stretches heights here (the typing angle lifts the back in proportion to height),
+ *  so a part tied to the case — a board on its standoffs, an OLED on the lid — lines up with it. 1 when flat. */
+type Props = { c: Component; family: Family; invalid?: boolean; selected?: boolean; shear?: number }
 
 /** A part sitting on the plate, origin at the centre of its footprint on the plate's top. */
 export function ComponentModel(props: Props) {
@@ -166,14 +168,40 @@ const Slider = ({ c, invalid, selected }: Props) => {
  * The controller board lying below the plate (on standoffs or in its tray), seen through the plate's window.
  * Origin is the plate top, so the board is drawn that far down. USB end towards -z (the back, before rotation).
  */
-const Controller = ({ c, family, invalid, selected }: Props) => {
+const pcbTop = (b: { pcb: number; usbH: number }) => b.pcb + b.usbH
+/** A 0.91" 128×32 OLED module, long side along z (the controller's length). */
+const Oled = () => (
+  <group rotation={[0, Math.PI / 2, 0]}>
+    <mesh position={[0, 0.6, 0]} castShadow>
+      <boxGeometry args={[38, 1.2, 12]} />
+      <meshStandardMaterial color="#1d2a3a" roughness={0.6} />
+    </mesh>
+    <mesh position={[2, 1.5, 0]}>
+      <boxGeometry args={[30, 0.6, 11.5]} />
+      <meshStandardMaterial color={GLASS} roughness={0.15} metalness={0.2} />
+    </mesh>
+    {[[-4, -3, 14], [-7, 0, 8], [-2, 3, 18]].map(([x, z, w]) => (
+      <mesh key={z} position={[x + 2, 1.85, z]}>
+        <boxGeometry args={[w, 0.05, 1.2]} />
+        <meshBasicMaterial color="#9fe7ff" toneMapped={false} />
+      </mesh>
+    ))}
+  </group>
+)
+
+const Controller = ({ c, family, invalid, selected, shear = 1 }: Props) => {
   const board = controllerOf(c)
   const mat = useTint(invalid, selected, colorOf(c))
-  const y = boardRaise(board) - (CASE_HEIGHT[family] - PLATE_RECESS) // the board's underside, relative to the plate top
+  const mount = c.mount ?? 'window'
+  const y = (boardRaise(family, mount) - (CASE_HEIGHT[family] - PLATE_RECESS)) * shear // the board's underside, relative to the plate top
+  // the OLED: on the lid when covered, on 8 mm headers above a raised board, just over the plate otherwise
+  const screenY = mount === 'covered' ? LID_T * shear : mount === 'raised' ? pcbTop(board) + 8 : 0.5
   const { w, l, pcb, usbH } = board
   const usbC = board.usb === 'USB-C'
   const pads = Math.floor((l - 3) / 2.54)
   return (
+    <group>
+    {c.screen && <group position={[0, mount === 'raised' ? y + screenY : screenY, 0]}><Oled /></group>}
     <group position={[0, y, 0]}>
       <mesh position={[0, pcb / 2, 0]} castShadow>
         <boxGeometry args={[w, pcb, l]} />
@@ -212,6 +240,7 @@ const Controller = ({ c, family, invalid, selected }: Props) => {
           </mesh>
         )),
       )}
+    </group>
     </group>
   )
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
-import { area, caseMesh, caseOutline, caseParts, caseShape, caseWell, contains, keyCorners, portSpan, screwPoints, usbPort, wallTopAt, BOTTOM_T, STANDOFF_H, TOP_BEVEL, type PocketFill } from './case'
+import { area, caseAssembly, caseMesh, caseOutline, caseParts, caseShape, caseWell, contains, keyCorners, portSpan, screwPoints, usbPort, wallTopAt, BOTTOM_T, LID_T, PLATE_T, STANDOFF_H, TOP_BEVEL, type PocketFill } from './case'
 import { CASE_HEIGHT, PITCH } from './units'
 import { alice, caseController, PRESETS, split, tkl } from './layout'
 import { CONTROLLERS } from '../data/components'
@@ -401,6 +401,51 @@ describe('controller', () => {
       expect(small.cut![0]).toBeGreaterThan(CONTROLLERS[model].w) // the window shows the whole board
       expect(small.cut![1]).toBeGreaterThan(CONTROLLERS[model].l)
     }
+  })
+
+  const mounted = (mount: 'window' | 'covered' | 'raised', model: 'pico' | 'zero' = 'pico', screen = false) => {
+    const ctrl = caseController([{ id: 'ctrl', type: 'controller', x: 9, y: -3.6, model, mount, screen }])!
+    const keys = [...tkl(), ctrl.at]
+    const [cx, cy] = [(ctrl.at.x + ctrl.at.w / 2) * PITCH.MX.x, (ctrl.at.y + ctrl.at.h / 2) * PITCH.MX.y]
+    return { ctrl, keys, cx, cy, view: caseAssembly(keys, 'MX', [], 0, ctrl)!, print: caseParts(keys, 'MX', [], 0, ctrl)! }
+  }
+  const plateTop = CASE_HEIGHT.MX - 2.5
+
+  it('raised: a solid plate over the board, its mount on the plate, and a notch open at the top of the wall', () => {
+    for (const model of ['pico', 'zero'] as const) {
+      const { ctrl, keys, cx, cy, view, print } = mounted('raised', model)
+      // no window: straight down through the board's centre, the first thing hit is the plate's top (or the tray on it)
+      const first = Math.max(...rayHeights(view.plate, cx, cy))
+      expect(first, model).toBeGreaterThanOrEqual(plateTop - 0.05)
+      print.bottom.computeBoundingBox()
+      expect(print.bottom.boundingBox!.max.y, model).toBeCloseTo(BOTTOM_T, 1) // nothing on the bottom plate
+      // the notch: a horizontal ray at the plug's height, from outside to the board's end, meets no wall
+      const span = portSpan('MX', ctrl.board, 'raised')
+      expect(span.z1).toBeGreaterThan(CASE_HEIGHT.MX) // open at the top
+      const back = Math.min(...caseOutline(keys, 'MX').flat().map((q) => q[1]))
+      const port = usbPort(caseOutline(keys, 'MX'), ctrl, 'MX')!
+      const plug = plateTop + ctrl.board.pcb + ctrl.board.usbH / 2
+      const hits = new THREE.Raycaster(new THREE.Vector3(cx, plug, back - 20), new THREE.Vector3(0, 0, 1), 0, 20 + port.wall).intersectObject(solid(view.shell))
+      expect(hits, model).toEqual([])
+    }
+  })
+
+  it('covered: a lid drops into the window and rests on the plate; it prints flange down', () => {
+    const { cx, cy, view, print } = mounted('covered')
+    expect(view.lid).not.toBeNull()
+    expect(Math.max(...rayHeights(view.lid!, cx, cy))).toBeCloseTo(plateTop + LID_T, 1)
+    expect(Math.min(...rayHeights(view.lid!, cx, cy))).toBeCloseTo(plateTop - PLATE_T.MX, 1) // the plug fills the window
+    const lid = print.lid!
+    lid.computeBoundingBox()
+    expect(lid.boundingBox!.min.y).toBeCloseTo(0)
+    expect(lid.boundingBox!.max.y).toBeCloseTo(LID_T + PLATE_T.MX)
+    expect(mounted('window').print.lid).toBeNull()
+  })
+
+  it('a screen on top lengthens the footprint so the 38 mm OLED fits', () => {
+    expect(mounted('raised', 'zero', true).ctrl.at.h).toBeGreaterThanOrEqual(2.5)
+    expect(mounted('raised', 'zero', false).ctrl.at.h).toBe(1.5)
+    expect(2.5 * PITCH.Choc.y).toBeGreaterThan(38) // fits at the tighter Choc pitch too
   })
 
   it('reports a controller buried mid-board as blocked (no wall within reach)', () => {

@@ -103,6 +103,18 @@ describe('QMK firmware', () => {
     }
   })
 
+  it('a screen on top of the controller is an OLED on its I²C, and counts as the one screen', () => {
+    const top = { id: 'c', type: 'controller' as const, x: -3, y: -6, model: 'zero' as const, mount: 'raised' as const, screen: true }
+    const r = generateFirmware(design({ components: [top] }, '60%'))
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect((r.firmware.keyboardJson as { features: Record<string, boolean> }).features.oled).toBe(true)
+      expect(r.firmware.extra['config.h']).toContain('I2C1_SDA_PIN GP4')
+      expect(r.firmware.keymapC).toContain('oled_task_user')
+    }
+    expect(generateFirmware(design({ components: [top, { id: 's', type: 'screen', x: -3, y: -3 }] }, '60%')).ok).toBe(false)
+  })
+
   it('leaves RGB out entirely when the LEDs were never configured', () => {
     const json = fw(design()).keyboardJson as Record<string, unknown>
     expect(json.rgb_matrix).toBeUndefined()

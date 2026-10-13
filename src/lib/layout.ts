@@ -265,15 +265,22 @@ export function keyRows(keys: Key[]): Map<string, number> {
 
 /** A component's footprint as a key, so the case, well, plate cutout and overlap checks treat it like one. */
 export const componentFootprint = (c: Component): Key => {
-  const b = c.type === 'controller' ? controllerOf(c) : null
-  const [w, h] = b ? b.footprint : [COMPONENTS[c.type].w, COMPONENTS[c.type].h]
-  return { id: c.id, x: c.x, y: c.y, w, h, rot: c.rot ?? 0, cut: b ? b.cut : COMPONENTS[c.type].cut }
+  if (c.type !== 'controller') {
+    const { w, h, cut } = COMPONENTS[c.type]
+    return { id: c.id, x: c.x, y: c.y, w, h, rot: c.rot ?? 0, cut }
+  }
+  const b = controllerOf(c)
+  const [w, h] = [b.footprint[0], c.screen ? Math.max(b.footprint[1], SCREEN_ON_TOP_U) : b.footprint[1]]
+  // a raised board sits on a solid plate; otherwise the plate has a window over it
+  return { id: c.id, x: c.x, y: c.y, w, h, rot: c.rot ?? 0, cut: c.mount === 'raised' ? [0, 0] : b.cut }
 }
+/** Length (units) a controller needs with a 0.91" OLED (38 mm module) above it. */
+const SCREEN_ON_TOP_U = 2.5
 
 /** The design's controller as the case needs it (where, and which board), if one is placed. */
 export function caseController(components: Component[]): CaseController | undefined {
   const c = components.find((c) => c.type === 'controller')
-  return c && { at: componentFootprint(c), board: controllerOf(c) }
+  return c && { at: componentFootprint(c), board: controllerOf(c), mount: c.mount ?? 'window', screen: !!c.screen }
 }
 
 /** Axis-aligned box around a (possibly rotated) key, in units. */

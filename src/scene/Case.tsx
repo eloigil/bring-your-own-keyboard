@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import type { Key } from '../types'
 import type { Family } from '../lib/units'
 import { caseMesh, wallTopAt, type PocketFill } from '../lib/case'
+import { plasticGrain } from './textures'
 
 const LIGHT = new THREE.Color('#e4e2e8')
 
@@ -25,13 +26,17 @@ export function Case({ keys, family, fills, tilt, color }: { keys: Key[]; family
       for (let j = i; j < i + 3; j++) colors.set([c.r, c.g, c.b], j * 3)
     }
     g.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    // planar UVs (1 repeat per cm) so the plastic grain has somewhere to sit; walls get it slightly stretched
+    const uv = new Float32Array(pos.count * 2)
+    for (let i = 0; i < pos.count; i++) uv.set([pos.getX(i) / 10, (pos.getZ(i) + pos.getY(i)) / 10], i * 2)
+    g.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
     return g
   }, [keys, family, fills, tilt, color])
   useEffect(() => () => geometry?.dispose(), [geometry])
   if (!geometry) return null
   return (
     <mesh geometry={geometry} castShadow receiveShadow>
-      <meshStandardMaterial vertexColors roughness={0.55} metalness={0.05} />
+      <meshStandardMaterial vertexColors roughness={0.5} metalness={0.05} bumpMap={plasticGrain()} bumpScale={0.35} />
     </mesh>
   )
 }

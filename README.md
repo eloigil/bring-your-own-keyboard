@@ -57,3 +57,7 @@ Built with React, Three.js (react-three-fiber, drei, postprocessing), Zustand, C
 A proof of concept built for the Devpost *Build With AI* hackathon with [Claude Code](https://claude.com/claude-code).
 
 Next up: a KiCad PCB export, routed PCB traces, more sound effects and general polish.
+
+## License
+
+[MIT](LICENSE)
